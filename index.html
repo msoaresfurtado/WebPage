@@ -1,14 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Example</title>
+    <title>Dr. Melinda Soares-Furtado - Astrophysicist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
+
+    <style>
+        /* General Styles */
+        body {
+            font-family: Merriweather Sans, serif;
+            margin: 40px auto;
+            max-width: 900px;
+            padding: 20px;
+            line-height: 1.5;
+            background-color: #ffffff;
+            color: #1a1b1c;
+            font-size: 16px;
+        }
+
+        a {
+            color: #20578A;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .highlighted {
+            color: #9b0000;
+        }
+
+        /* Profile Styles */
+        .profile-picture {
+            display: block;
+            width: 160px;
+            height: 160px;
+            border: 2.5px solid #20578A;
+            border-radius: 50%;
+            margin: 20px auto;
+            background-image: url('https://static.wixstatic.com/media/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg/v1/fill/w_914,h_1742,al_tl,q_85,usm_0.66_1.00_0.01,enc_auto/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg');
+            background-size: 130%;
+            background-position: 50% 38%;
+        }
+
+        .profile-name {
+            font-size: 1.5em;
+            margin: 20px 10px;
+            color: #20578A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5.0px;
+        }
+
+        .orcid-logo {
+            height: 24px;
+            border: 1px solid #20578A;
+            border-radius: 50%;
+        }
+
+        .header,
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1.0px solid #20578A;
+            padding-bottom: 1px;
+            border-top: 1.0px solid #20578A;
+       }
+
+        .footer {
+            margin-top: 30px;
+            border-top: 1.0px solid #20578A;
+            padding-top: 10px;
+        }
+
+
+
+        .update-date {
+            display: inline-block;
+            margin: 5px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        /* Gallery Styles */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 20px;
+        }
+
+        .figure-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .figure {
+            width: 150px;
+            height: 150px;
+            border: 2.5px solid #20578A;
+            background-color: #fff;
+            background-size: 170%;
+            background-position: center;
+            background-image: url('https://video-images.vice.com/articles/612ce922da372d009443fbce/lede/1630333494301-gettyimages-1316904768.jpeg?crop=1xw:0.8435613682092555xh;center,center&resize=500:');
+            <!-- background-image: url('https://static01.nyt.com/images/2023/05/16/multimedia/03sci-hungry-star-vidcover-vlwz/03sci-hungry-star-vidcover-vlwz-superJumbo.jpg'); -->
+        }
+
+         .figure2 {
+            width: 150px;
+            height: 150px;
+            border: 2.5px solid #20578A;
+            background-size: 150%;
+            background-color: #eee;
+            background-position: right;
+            background-image: url('https://aasnova.org/wp-content/uploads/2019/08/222_corot_ill.jpg'); 
+        }
+
+         .figure3 {
+            border: 2.5px solid #20578A;
+            width: 150px;
+            height: 150px;
+            background-color: #eee;
+            background-size: 100%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/800px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg'); 
+        }
+
+
+         .figure4 {
+            width: 150px;
+            border: 2.5px solid #20578A;
+            height: 150px;
+            background-color: #eee;
+            background-size: 150%;
+            background-image: url('https://scx1.b-cdn.net/csz/news/800a/2017/2-astronomersr.jpg'); 
+        }
+
+         .figure5 {
+            width: 150px;
+            border: 2.5px solid #20578A;
+            height: 150px;
+            background-color: #eee;
+            background-size: 150%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Ursa_Major_%C5%81azy.jpg/2560px-Ursa_Major_%C5%81azy.jpg'); 
+        }
+
+
+     .description {
+            margin-left: 20px;
+            flex: 1;
+        }
+
+        .research{
+            font-size: 1.35em;
+            margin: 20px 0px;
+            color: #20578A;
+            display: flex;
+            justify-content: left;
+            gap: 1.0px;
+        }
+
+
+    </style>
 </head>
+
+
+
 <body>
+    <div class="header">
+        <a href="#">Home</a> |
+        <a href="#">About</a> |
+        <a href="#">CV+Publications</a> |
+        <a href="#">Outreach</a> |
+        <a href="#">Resources</a> |
+        <a href="#">Photography</a>
+    </div>
+    <div class="profile-picture"></div>
+    <div class="profile-name">
+        Melinda Soares-Furtado, Ph.D.
+        <a href="https://orcid.org/0000-0001-7493-7419"><img class="orcid-logo" src="https://upload.wikimedia.org/wikipedia/commons/0/06/ORCID_iD.svg" alt="ORCID iD icon"></a>
+    </div>
 
-    <h1>Hello, Wisconsin!</h1>
-    <p>This is a paragraph.</p>
+    <!-- Introduction and Announcement -->
+    <p>I am an astrophysicist investigating stars, exoplanets, and exomoons. To investigate open questions in these astrophyscial subdomains, I combine observational data and computational methods. I am currently working as a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021">NASA Hubble Postdoctoral Fellow</a> at the <a href="https://www.wisc.edu/"> University of Wisconsin-Madison</a> and as a Science Affiliate at the <a href="https://space.mit.edu/">MIT Kavli Institute for Astrophysics and Space Research</a>.</p>
+    <p>I am happy to announce that I will begin a tenure-track faculty appointment in the Department of Physics and the Department of Astronomy at the University of Wisconsin-Madison in Fall 2024. <em><a href="https://badgerband.wisc.edu/music/on-wisconsin-2/" class="highlighted">On, Wisconsin!</a></em></p>
+    <hr>
 
+    <div class="research">
+    Scientific Research
+    </div>
+
+    <p>I am interested in stars and the environments in which they are formed, as these early environmental conditions impact the star's subsequent evolution. Most everything we know about stars relies on the ability to collect and measure photons. These photons offer key insights into a star's three-dimensional motion, rate of rotation, seismic properties, chemical composition, and the presence of transiting bodies. I am also interested in detecting and characterizing the planets. Unusual planets are my favorite of all, as they sometimes offer new insights and can challeng prevailing theories. Free-floating planets are one such category, however, they may appear to be far more common than anticipated. These planets are not gravitationally bound to stars. Instead, they float freely through space. <em>What percentage of these worlds were dynamically ejected from stellar systems and what percentage formed in this isolated state? Do free-floating planets have moons and, if so, are these moons distinct from the 200+ known moons in our Solar System?</em> <br><br>
+Investigating the diverse population of detected worlds has given me a deeper appreciation of our home planet. I hope that one day my work might contribute to what I think are two of the ultimate scientific questions: <blockquote><br><em>Are the conditions that give rise to life remarkably rare, or is the case that in many cases <a href="https://tenor.com/view/jeff-goldblum-jeff-goldblum-life-finds-a-way-gif-8405245">"life finds a way"</a>? <br>If it is not unusual for life to emerge, say in the presence of a planet with liquid water, what are the unifying principles among lifeforms in the Universe?</em></blockquote> <br>Perhaps insights into these questions will be possible in the near future. For example, the primary goal of the forthcoming <a href="https://www.jpl.nasa.gov/missions/europa-clipper"> Europa Clipper mission </a> (launching late next year) is to determine whether the liquid ocean beneath the surface of Jupiter's icy moon is capable of supporting life. These are indeed exciting times to be in the field of astrophysical science!<br><br>
+Below I list some of the ongoing research projects that my team is working on and the student collaborators contributing to these efforts. </p>
+
+    <!-- Gallery -->
+    <div class="gallery">
+        <div class="figure-container">
+            <div class="figure"></div>
+            <p class="description"><b> <font color="#20578A"><font size="+0.1">Planetary Engulfment</font></b></font>
+             <br> 
+            Description for the first image goes here. [link to engulfment paper] </p>
+        </div>
+        <div class="figure-container">
+            <div class="figure2"></div>
+           <p class="description"><b> <font color="#20578A"><font size="+0.1">Young Exoplanets</font></b></font>
+           <br> Description for the second image goes here. [link to hd 63433 d paper] </p>
+        </div>
+        <div class="figure-container">
+            <div class="figure3"></div>
+            <p class="description"><b> <font color="#20578A"><font size="+0.1">Exomoon Searches</font></b></font>
+            <br> Description for the third image goes here. [link to TEMPO paper] </p>
+        </div>
+        <div class="figure-container">
+            <div class="figure4"></div>
+            <p class="description"><b> <font color="#20578A"><font size="+0.1">Variable Star Classification</font></b></font>
+            <br> Description for the fourth image goes here. I am just adding a lot more text to see how this impact the layout and look of what I have in this section. I'm curious if each project should make up an independent row rather than having two projects share a given row.  [link to stellar variability paper]</p>
+        </div>
+        <div class="figure-container">
+            <div class="figure5"></div>
+            <p class="description"><b> <font color="#20578A"><font size="+0.1">The Ursa Major Co-Moving Group: <em>Planet Searches, Age-Dating, and Spectroscopy</em></font></b></font>
+            <br> Description for the fifth image goes here. I am just adding a lot more text to see how this impact the layout and look of what I have in this section. I'm curious if each project should make up an independent row rather than having two projects share a given row.  [link to stellar variability paper]</p>
+        </div>
+
+    </div>
+
+    <hr>
+
+    <div class="research">
+    Research Collaboration Members
+    </div>
+
+
+    <font size="+0.1">Affiliated Postdocs/Research Scientists</font></b>
+    <UL>
+    <li> <a href="https://sites.google.com/view/maryannelimbach/home">Mary Anne Limbach</a> (University of Michigan)  
+    </UL>
+    
+    <font size="+0.1"> Graduate Students </font>
+    <UL>
+    <li> <a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/">Julia K. Scheffler</a> (UW-Madison)
+    <li> <a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ErinMotherway">Erin Motherway<sup>*</sup></a> (UW-Madison)
+    <li> <a href="https://astro.ufl.edu/directory/ben-capistrant/">Benjamin K. Capistrant<sup>*</sup></a> (University of Florida, former UW-Madison undergraduate student)
+    <li> <a href="https://ryarza.github.io">Ricardo Yarza<sup>*</sup></a> (NASA FINESST Fellow at the University of California, Santa Cruz)
+    <li> <a href="https://www.linkedin.com/in/andrew-nine-28a683111/">Andrew Nine<sup>*</sup></a> (UW-Madison)
+    </UL>
+    
+    <font size="+0.1"> Undergraduate Students </font>
+    <UL>
+    <li> <a href="https://www.linkedin.com/in/brooke-kotten-23b359242/">Brooke Kotten</a> (William F. Vilas Scholar and Lamat Fellow at UW-Madison) 
+    <li> <a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/">Alyssa Jankowski</a> (UW-Madison)  
+    <li> <a href="https://www.linkedin.com/in/nick-marston-9520a5204/">Nicholas Marston</a> (UW-Madison)  
+    </UL>
+    
+    <font size="+0.1"> Former Group Members </font>
+    <br>
+    <UL>    
+    <LI> <a href="https://www.linkedin.com/in/sarah-kubiak-520898205">Sarah Kubiak</a> (2022-2023, UW-Madison undergraduate student) 
+    <UL><LI>Current position: science journalism & media graduate student at Colorado State University</UL>  
+    <LI> <a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/">Rianna Kuenzi</a> (2020-2022, Lamat Fellow and UW-Madison undergraduate student)
+    <UL><LI>Current position: senior undergraduate at UW-Madison</UL>  
+    <LI> <a href="https://cse.umn.edu/mifa/tyler-barna">Tyler Barna</a> (2017-2019, Rutgers University undergraduate student)
+    <UL><LI>Current position: astronomy graduate student at the Minnesota Institute for Astrophysics</UL>  
+    <LI> <a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/?trk=public_profile_browsemap">Atirath Dhara</a> (2017-2019, West Windsor Plainsboro High School South)
+    <UL><LI>Current position: Regent Scholar & physics undergraduate at the University of California, Santa Cruz</UL>
+    </UL>
+    <sup>*</sup>  denotes that served as a co-mentor to the graduate student
+    <br>
+    <div class="footer">
+        <span class="contact">email: mmsoares (at) wisc (dot) edu</span>
+        <span class="update-date"> updated september 2023</span>
+    </div>
 </body>
+
 </html>
+
