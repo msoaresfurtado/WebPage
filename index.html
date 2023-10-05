@@ -51,7 +51,6 @@
         .profile-name {
             font-size: 1.5em;
             margin: 20px 10px;
-            color: #20578A;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -79,8 +78,13 @@
             padding-top: 10px;
         }
 
-
-
+       /* Media query for screens with a max width of 768px (typically tablets and mobiles) */
+     @media only screen and (max-width: 768px) {
+    footer {
+        height: 50px;
+        padding: 10px;
+    }
+}
         .update-date {
             display: inline-block;
             margin: 5px;
@@ -181,7 +185,7 @@
     </div>
     <div class="profile-picture"></div>
     <div class="profile-name">
-        Melinda Soares-Furtado, Ph.D.
+        Dr. Melinda Soares-Furtado
         <a href="https://orcid.org/0000-0001-7493-7419"><img class="orcid-logo" src="https://upload.wikimedia.org/wikipedia/commons/0/06/ORCID_iD.svg" alt="ORCID iD icon"></a>
     </div>
 
@@ -196,44 +200,56 @@
     Scientific Research
     </div>
 
-    <p>Below I list some of the ongoing research projects that my team is working on and the student collaborators contributing to these efforts. </p>
+    <p>Below I list some of the ongoing research projects that my team is working on. Click <a href="<a href="#collab">here</a> to learn more about the team members contributing to these wide-ranging efforts. </p>
 
     <!-- Gallery -->
     <div class="gallery">
         <div class="figure-container">
             <div class="figure"></div>
-            <p class="description"><b> <font color="#20578A"><font size="+0.1">Planetary Engulfment</font></b></font>
+            <p class="description"><b> <font color="#20578A"><font size="+0.1">Planetary Engulfment Events</font></b></font>
              <br> 
-            Description for the first image goes here. [link to engulfment paper] </p>
+            The final fate of a non-negligible fraction of planets is to be engulfed by their host stars. 
+            Our research focuses on identifying long-devoured planets via the observatioanl signatures they impart upon the stars that consume them. 
+            More specificially, we identify statistically-significant chemical tracers, leveraging these signatures to place constraints on the bulk chemical composition and mass of the detsroyed planet. 
+            Our team also investigates the process of planetary disassociation, probing the transfer of angular momentum, energy, and mass during the engulfment process. <br>
+            Links to selected papers on this topic: <a href="https://ui.adsabs.harvard.edu/abs/2021AJ....162..273S/abstract" class="highlighted">[a]</a>, 
+            <a href="https://ui.adsabs.harvard.edu/abs/2018ApJ...853L...1M/abstract" class='highlighted' >[b], </a>   
+            <a href="https://ui.adsabs.harvard.edu/abs/2022ApJ...940...23T/abstract" class='highlighted'>[c],
+            <a href="https://ui.adsabs.harvard.edu/abs/2023ApJ...954..176Y/abstract" class='highlighted'>[d]</a></p>
+
         </div>
         <div class="figure-container">
             <div class="figure2"></div>
-           <p class="description"><b> <font color="#20578A"><font size="+0.1">Young Exoplanets</font></b></font>
+           <p class="description"><b> <font color="#20578A"><font size="+0.1">Detecting & Characterizing Young Exoplanets</font></b></font>
            <br> Description for the second image goes here. [link to hd 63433 d paper] </p>
         </div>
         <div class="figure-container">
             <div class="figure3"></div>
-            <p class="description"><b> <font color="#20578A"><font size="+0.1">Exomoon Searches</font></b></font>
+            <p class="description"><b> <font color="#20578A"><font size="+0.1">The Search for Young Exomoons</font></b></font>
             <br> Description for the third image goes here. [link to TEMPO paper] </p>
         </div>
         <div class="figure-container">
             <div class="figure4"></div>
-            <p class="description"><b> <font color="#20578A"><font size="+0.1">Variable Star Classification</font></b></font>
-            <br> Description for the fourth image goes here. I am just adding a lot more text to see how this impact the layout and look of what I have in this section. I'm curious if each project should make up an independent row rather than having two projects share a given row.  [link to stellar variability paper]</p>
+            <p class="description"><b> <font color="#20578A"><font size="+0.1">Open Cluster Variable Star Investigations</font></b></font>
+            <br> Description for the fourth image goes here. I am just adding a lot more text to see how this impacts the layout and look of what I have in this section. I'm curious if each project should make up an independent row rather than having two projects share a given row.  
+            [link to stellar variability paper]</p>
         </div>
         <div class="figure-container">
             <div class="figure5"></div>
             <p class="description"><b> <font color="#20578A"><font size="+0.1">The Ursa Major Co-Moving Group: <em>Planet Searches, Age-Dating, and Spectroscopy</em></font></b></font>
-            <br> Description for the fifth image goes here. I am just adding a lot more text to see how this impact the layout and look of what I have in this section. I'm curious if each project should make up an independent row rather than having two projects share a given row.  [link to stellar variability paper]</p>
+            <br> Description for the fifth image goes here. I am just adding a lot more text to see how this impacts the layout and look of what I have in this section. I'm curious if each project should make up an independent row rather than having two projects share a given row.  
+            [link to stellar variability paper]</p>
         </div>
 
     </div>
 
     <hr>
 
+    <section id="collab">
     <div class="research">
     Research Collaboration Members
-    </div>
+    </section>
+     </div>
 
 
     <font size="+0.1">Affiliated Postdocs/Research Scientists</font></b>
@@ -269,7 +285,7 @@
     <LI> <a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/?trk=public_profile_browsemap">Atirath Dhara</a> (2017-2019, West Windsor Plainsboro High School South)
     <UL><LI>Current position: Regent Scholar & physics undergraduate at the University of California, Santa Cruz</UL>
     </UL>
-    <sup>*</sup>  denotes that served as a co-mentor to the graduate student
+    <sup>*</sup>  I served as a co-mentor to the graduate student
     <br>
     <div class="footer">
         <span class="contact">email: mmsoares (at) wisc (dot) edu</span>
