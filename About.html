@@ -1,9 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About Me</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
+
+    <style>
+        /* General Styles */
+        body {
+            font-family: Merriweather Sans, serif;
+            margin: 40px auto;
+            max-width: 900px;
+            padding: 20px;
+            line-height: 1.5;
+            background-color: #ffffff;
+            color: #1a1b1c;
+            font-size: 16px;
+        }
+
+        a {
+            color: #20578A;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .highlighted {
+            color: #9b0000;
+        }
+
+        /* Profile Styles */
+        .profile-picture {
+            display: block;
+            width: 160px;
+            height: 160px;
+            border: 2.5px solid #20578A;
+            border-radius: 50%;
+            margin: 20px auto;
+            background-image: url('https://static.wixstatic.com/media/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg/v1/fill/w_914,h_1742,al_tl,q_85,usm_0.66_1.00_0.01,enc_auto/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg');
+            background-size: 130%;
+            background-position: 50% 38%;
+        }
+
+        .profile-name {
+            font-size: 1.5em;
+            margin: 20px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5.0px;
+        }
+
+        .orcid-logo {
+            height: 24px;
+            border: 1px solid #20578A;
+            border-radius: 50%;
+        }
+
+        .header,
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1.0px solid #20578A;
+            padding-bottom: 1px;
+            border-top: 1.0px solid #20578A;
+       }
+
+        .footer {
+            margin-top: 30px;
+            border-top: 1.0px solid #20578A;
+            padding-top: 10px;
+        }
+
+       /* Media query for screens with a max width of 768px (typically tablets and mobiles) */
+     @media only screen and (max-width: 768px) {
+    footer {
+        height: 50px;
+        padding: 10px;
+    }
+}
+        .update-date {
+            display: inline-block;
+            margin: 5px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        /* Gallery Styles */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 20px;
+        }
+
+        .figure-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .figure {
+            width: 150px;
+            height: 150px;
+            border: 2.5px solid #20578A;
+            background-color: #fff;
+            background-size: 170%;
+            background-position: center;
+            background-image: url('https://video-images.vice.com/articles/612ce922da372d009443fbce/lede/1630333494301-gettyimages-1316904768.jpeg?crop=1xw:0.8435613682092555xh;center,center&resize=500:');
+            <!-- background-image: url('https://static01.nyt.com/images/2023/05/16/multimedia/03sci-hungry-star-vidcover-vlwz/03sci-hungry-star-vidcover-vlwz-superJumbo.jpg'); -->
+        }
+
+         .figure2 {
+            width: 150px;
+            height: 150px;
+            border: 2.5px solid #20578A;
+            background-size: 150%;
+            background-color: #eee;
+            background-position: right;
+            background-image: url('https://aasnova.org/wp-content/uploads/2019/08/222_corot_ill.jpg'); 
+        }
+
+         .figure3 {
+            border: 2.5px solid #20578A;
+            width: 150px;
+            height: 150px;
+            background-color: #eee;
+            background-size: 100%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/800px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg'); 
+        }
+
+
+         .figure4 {
+            width: 150px;
+            border: 2.5px solid #20578A;
+            height: 150px;
+            background-color: #eee;
+            background-size: 150%;
+            background-image: url('https://scx1.b-cdn.net/csz/news/800a/2017/2-astronomersr.jpg'); 
+        }
+
+         .figure5 {
+            width: 150px;
+            border: 2.5px solid #20578A;
+            height: 150px;
+            background-color: #eee;
+            background-size: 150%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Ursa_Major_%C5%81azy.jpg/2560px-Ursa_Major_%C5%81azy.jpg'); 
+        }
+
+     .description {
+            margin-left: 20px;
+            flex: 1;
+        }
+
+        .research{
+            font-size: 1.35em;
+            margin: 20px 0px;
+            color: #20578A;
+            display: flex;
+            justify-content: left;
+            gap: 1.0px;
+        }
+    </style>
 </head>
 <body>
 <div style="max-width: 800px; margin: auto; padding: 20px; font-family: Arial, sans-serif;">
