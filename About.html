@@ -34,34 +34,51 @@
         .highlighted {
             color: #9b0000;
         }
-
-        /* Profile Styles */
-        .profile-picture {
-            display: block;
-            width: 160px;
-            height: 160px;
-            border: 2.5px solid #20578A;
-            border-radius: 50%;
-            margin: 20px auto;
-            background-image: url('https://static.wixstatic.com/media/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg/v1/fill/w_914,h_1742,al_tl,q_85,usm_0.66_1.00_0.01,enc_auto/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg');
-            background-size: 130%;
-            background-position: 50% 38%;
-        }
-
-        .profile-name {
-            font-size: 1.5em;
-            margin: 20px 10px;
+        /* Updated styles for image container */
+        .image-container {
             display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 5.0px;
+            align-items: center;
+            margin-top: 20px;
+            overflow: auto;
         }
 
-        .orcid-logo {
-            height: 24px;
-            border: 1px solid #20578A;
-            border-radius: 50%;
+        .image-container .image {
+            height: 150px;            
+            width: 150px;             
+            border-radius: 0%;       
+            background-size: 225%;    /* 150% of the original size */
+            background-position: center; 
+            margin: 0 15px;           
         }
+
+        .image-container .image:first-child {
+            background-size: 150%; 
+            background-position: 60% 8%; }        
+        .image-container .image:nth-child(2) {
+            background-size: 275%;    /* Adjusted background size for the second child */
+            background-position: 40% 25%; }        
+        .image-container .image:nth-child(3) {
+            background-size: 175%;    /* Adjusted background size for the second child */
+            background-position: 60% 40%; }        
+         .image-container .image:nth-child(4) {
+            background-size: 100%;    /* Adjusted background size for the second child */}
+       .family {
+            background-image: url('https://msoaresfurtado.github.io/WebPage/IMG_20200912_153841.jpg');
+        }
+
+        .mom {
+            background-image: url('https://msoaresfurtado.github.io/WebPage/HolidayCard8.jpg');
+        }
+
+        .dome {
+            background-image: url('https://msoaresfurtado.github.io/WebPage/refractor-2.jpg');
+        }
+
+        .dogs {
+            background-image: url('https://msoaresfurtado.github.io/WebPage/PXL_20220725_215912636.MP.jpg');
+        }
+
 
         .header,
         .footer {
@@ -78,141 +95,46 @@
             padding-top: 10px;
         }
 
-       /* Media query for screens with a max width of 768px (typically tablets and mobiles) */
-     @media only screen and (max-width: 768px) {
-    footer {
-        height: 50px;
-        padding: 10px;
-    }
-}
-        .update-date {
-            display: inline-block;
-            margin: 5px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-
-        /* Gallery Styles */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(1, 1fr);
-            gap: 20px;
-        }
-
-        .figure-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .figure {
-            width: 150px;
-            height: 150px;
-            border: 2.5px solid #20578A;
-            background-color: #fff;
-            background-size: 170%;
-            background-position: center;
-            background-image: url('https://video-images.vice.com/articles/612ce922da372d009443fbce/lede/1630333494301-gettyimages-1316904768.jpeg?crop=1xw:0.8435613682092555xh;center,center&resize=500:');
-            <!-- background-image: url('https://static01.nyt.com/images/2023/05/16/multimedia/03sci-hungry-star-vidcover-vlwz/03sci-hungry-star-vidcover-vlwz-superJumbo.jpg'); -->
-        }
-
-         .figure2 {
-            width: 150px;
-            height: 150px;
-            border: 2.5px solid #20578A;
-            background-size: 150%;
-            background-color: #eee;
-            background-position: right;
-            background-image: url('https://aasnova.org/wp-content/uploads/2019/08/222_corot_ill.jpg'); 
-        }
-
-         .figure3 {
-            border: 2.5px solid #20578A;
-            width: 150px;
-            height: 150px;
-            background-color: #eee;
-            background-size: 100%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/800px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg'); 
-        }
-
-
-         .figure4 {
-            width: 150px;
-            border: 2.5px solid #20578A;
-            height: 150px;
-            background-color: #eee;
-            background-size: 150%;
-            background-image: url('https://scx1.b-cdn.net/csz/news/800a/2017/2-astronomersr.jpg'); 
-        }
-
-         .figure5 {
-            width: 150px;
-            border: 2.5px solid #20578A;
-            height: 150px;
-            background-color: #eee;
-            background-size: 150%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Ursa_Major_%C5%81azy.jpg/2560px-Ursa_Major_%C5%81azy.jpg'); 
-        }
-
-     .description {
-            margin-left: 20px;
-            flex: 1;
-        }
-
-        .research{
-            font-size: 1.35em;
-            margin: 20px 0px;
-            color: #20578A;
-            display: flex;
-            justify-content: left;
-            gap: 1.0px;
-        }
-
-    /* New styles added */
-    .image-container {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        margin-top: 20px;
-    }
-
-    .image-container img {
-        border-radius: 50%;
-        margin: 10px;
-        max-width: 150px; /* adjust this as required */
-    }
-</style>
+    </style>
 </head>
-<body>
     <div class="header">
-        <a href="#">Home</a> |
+        <a href="https://msoaresfurtado.github.io/WebPage">Home</a> |
         <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a> |
         <a href="https://msoaresfurtado.github.io/WebPage/CV_2023.pdf" target="_blank" rel="noopener noreferrer">CV</a>|
         <a href="#">Outreach</a> 
     </div>
+
+<body>
     <!-- Image Container -->
     <div class="image-container">
-        <!-- Family Photo -->
-        <img src="https://static.wixstatic.com/media/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg/v1/fill/w_914,h_1742,al_tl,q_85,usm_0.66_1.00_0.01,enc_auto/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg" alt="Family Photo">
-        <!-- Headshot Photo -->
-        <img src="msoares.png" alt="Headshot">
+        <div class="image family"></div>
+        <div class="image mom"></div>
+        <div class="image dome"></div>
+        <div class="image dogs"></div>
     </div>
-    <p>
-        I am an astrophysicist studying stellar clusters, stars, exoplanets, and exomoons. 
-        To investigate open questions in these astrophysical subdomains, I draw insights from observational data (photometric and spectroscopic) and computational simulations. 
-        I am currently working as a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a> at the <a href="https://www.wisc.edu/"> University of Wisconsin-Madison</a> and as a Science Affiliate at the <a href="https://space.mit.edu/">MIT Kavli Institute for Astrophysics and Space Research</a>.</p>
-    <p>I will begin a tenure-track faculty appointment in the Department of Physics and the Department of Astronomy at the University of Wisconsin-Madison in Fall 2024.</p>
-    <p>
-      I obtained my Bachelor's degree in physics from the University of California, Santa Cruz. 
-      In 2020, I received my Ph.D. in astrophysical sciences from Princeton University. 
-      I am a first-generation college student and the daughter of an immigrant family (migration to the US from the <a href="https://vimeo.com/317880007" target="_blank" rel="noopener noreferrer">Povoação and Nordeste regions</a> of <a href="https://vimeo.com/304666918" target="_blank"rel="noopener noreferrer">São Miguel, Azores</a> in 1966). 
-      Here, you can learn more about the history of the Azores</a> (long considered a colony of Portugal and now an autonomous, self-governing region of Portugal). 
-      A study of the genetic make-up of the people who inhabit this remote archipelago can be found <a href="https://cdn.intechopen.com/pdfs/21207/InTech-The_genetic_makeup_of_azoreans_versus_mainland_portugal_population.pdf" target="_blank" rel="noopener noreferrer">here</a>.
-    </p>
-    <p>
-      My hobbies include photography and amassing a collection of rare astronomy textbooks. 
-      Our family recently adopted Murphy and Lily Belle, two energetic golden retrievers that love hiking and snacks.
-    </p>
-</div>
 
-</body>
+<body>
+
+
+<p>
+    I am an astrophysicist studying stellar clusters, stars, exoplanets, and exomoons. 
+    To investigate open questions in these astrophysical subdomains, I draw insights from observational data (photometric and spectroscopic) and computational simulations. 
+    I am currently working as a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a> at the <a href="https://www.wisc.edu/"> University of Wisconsin-Madison</a> and as a Science Affiliate at the <a href="https://space.mit.edu/">MIT Kavli Institute for Astrophysics and Space Research</a>.</p>
+<p>I will begin a tenure-track faculty appointment in the Department of Physics and the Department of Astronomy at the University of Wisconsin-Madison in Fall 2024.</p>
+<p>
+  I obtained my Bachelor's degree in physics from the University of California, Santa Cruz. 
+  In 2020, I received my Ph.D. in astrophysical sciences from Princeton University. 
+  I am a first-generation college student and the daughter of an immigrant family (migration to the US from the <a href="https://vimeo.com/317880007" target="_blank" rel="noopener noreferrer">Povoação and Nordeste regions</a> of <a href="https://vimeo.com/304666918" target="_blank"rel="noopener noreferrer">São Miguel, Azores</a> in 1966). 
+  Here, you can learn more about the history of the Azores</a> (long considered a colony of Portugal and now an autonomous, self-governing region of Portugal). 
+  A study of the genetic make-up of the people who inhabit this remote archipelago can be found <a href="https://cdn.intechopen.com/pdfs/21207/InTech-The_genetic_makeup_of_azoreans_versus_mainland_portugal_population.pdf" target="_blank" rel="noopener noreferrer">here</a>.
+</p>
+<p>
+  My hobbies include photography and amassing a collection of rare astronomy textbooks. 
+  Our family recently adopted Murphy and Lily Belle, two energetic golden retrievers that love hiking and snacks.
+</p>
+    <div class="footer">
+        <span class="contact">email: mmsoares (at) wisc (dot) edu</span>
+        <span class="update-date"> updated september 2023</span>
+    </div>
+
 </html>
