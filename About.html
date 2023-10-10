@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Me</title>
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
 
     <style>
@@ -34,7 +33,6 @@
         .highlighted {
             color: #9b0000;
         }
-        /* Updated styles for image container */
         .image-container {
             display: flex;
             justify-content: center;
@@ -44,27 +42,28 @@
         }
 
         .image-container .image {
+            flex: 1; /* This ensures each image takes an equal amount of space */
+            max-height: 150px; /* This restricts the maximum height to maintain design */
+            background-size: cover; /* This ensures the background covers the entire element */
+            background-position: center; /* This centers the background image */
             height: 150px;            
             width: 150px;             
             border-radius: 0%;       
             background-size: 225%;    /* 150% of the original size */
-            background-position: center; 
             margin: 0 15px;           
+            border: 1.5px solid #20578A;
         }
 
         .image-container .image:first-child {
             background-size: 150%; 
             background-position: 60% 8%; 
-            border: 1.5px solid #20578A;
 }        
         .image-container .image:nth-child(2) {
             background-size: 180%;   
-            border: 1.5px solid #20578A;
             background-position: 35% 50%; 
 }        
          .image-container .image:nth-child(3) {
             background-size: 100%;   
-            border: 1.5px solid #20578A;
 }
        .family {
             background-image: url('https://msoaresfurtado.github.io/WebPage/IMG_20200912_153841.jpg');background-repeat: no-repeat;
@@ -113,7 +112,7 @@
 
 <body>
 
-
+<title>About Me</title>
 <p>
     I am an astrophysicist studying stellar clusters, stars, exoplanets, and exomoons. 
     To investigate open questions in these astrophysical subdomains, I draw insights from observational data (photometric and spectroscopic) and computational simulations. 
