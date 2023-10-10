@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dr. Melinda Soares-Furtado - Astrophysicist</title>
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
 
     <style>
@@ -34,287 +33,102 @@
         .highlighted {
             color: #9b0000;
         }
-
-        /* Profile Styles */
-        .profile-picture {
-            display: block;
-            width: 160px;
-            height: 160px;
-            border: 2.5px solid #20578A;
-            border-radius: 50%;
-            margin: 20px auto;
-            background-image: url('https://static.wixstatic.com/media/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg/v1/fill/w_914,h_1742,al_tl,q_85,usm_0.66_1.00_0.01,enc_auto/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg');
-            background-size: 130%;
-            background-position: 50% 38%;
-        }
-
-        .profile-name {
-            font-size: 1.5em;
-            margin: 20px 10px;
+        .image-container {
             display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 5.0px;
+            align-items: center;
+            margin-top: 20px;
+            overflow: auto;
         }
 
-        .orcid-logo {
-            height: 24px;
-            border: 1px solid #20578A;
-            border-radius: 50%;
+        .image-container .image {
+            max-height: 150px; /* This restricts the maximum height to maintain design */
+            max-width: 150px; /* This restricts the maximum height to maintain design */
+            background-size: cover; /* This ensures the background covers the entire element */
+            background-position: center; /* This centers the background image */
+            height: 150px;            
+            width: 150px;             
+            border-radius: 0%;       
+            background-size: 225%;    /* 150% of the original size */
+            margin: 0 10px;           
+            border: 1.5px solid #20578A;
         }
+
+        .image-container .image:first-child {
+            background-size: 150%; 
+            background-position: 60% 8%; 
+}        
+        .image-container .image:nth-child(2) {
+            background-size: 230%;   
+            background-position: 37% 90%; 
+}        
+         .image-container .image:nth-child(3) {
+            background-size: 110%;   
+            background-position: 0% 35%; 
+
+}
+       .family {
+            background-image: url('https://msoaresfurtado.github.io/WebPage/IMG_20200912_153841.jpg');background-repeat: no-repeat;
+        }
+
+        .dome {
+            background-image: url('https://msoaresfurtado.github.io/WebPage/refractor-2.jpg');background-repeat: no-repeat;
+        }
+
+        .dogs {
+            background-image: url('https://msoaresfurtado.github.io/WebPage/PXL_20220725_215912636.MP.jpg');background-repeat: no-repeat;
+        }
+
 
         .header,
         .footer {
             display: flex;
             justify-content: space-between;
             border-bottom: 1.0px solid #20578A;
-            padding-bottom: 1px;
             border-top: 1.0px solid #20578A;
-       }
+            padding-bottom: 1.5px;
+            padding-top: 1.5px;
+            font-size: 13px;}
 
-        .footer {
-            margin-top: 30px;
-            border-top: 1.0px solid #20578A;
-            padding-top: 10px;
-        }
-
-       /* Media query for screens with a max width of 768px (typically tablets and mobiles) */
-     @media only screen and (max-width: 768px) {
-    footer {
-        height: 50px;
-        padding: 10px;
-    }
-}
-        .update-date {
-            display: inline-block;
-            margin: 5px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-
-        /* Gallery Styles */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(1, 1fr);
-            gap: 20px;
-        }
-
-        .figure-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .figure {
-            width: 150px;
-            height: 150px;
-            border: 2.5px solid #20578A;
-            background-color: #fff;
-            background-size: 170%;
-            background-position: center;
-            background-image: url('https://video-images.vice.com/articles/612ce922da372d009443fbce/lede/1630333494301-gettyimages-1316904768.jpeg?crop=1xw:0.8435613682092555xh;center,center&resize=500:');
-            <!-- background-image: url('https://static01.nyt.com/images/2023/05/16/multimedia/03sci-hungry-star-vidcover-vlwz/03sci-hungry-star-vidcover-vlwz-superJumbo.jpg'); -->
-        }
-
-         .figure2 {
-            width: 150px;
-            height: 150px;
-            border: 2.5px solid #20578A;
-            background-size: 150%;
-            background-color: #eee;
-            background-position: right;
-            background-image: url('https://aasnova.org/wp-content/uploads/2019/08/222_corot_ill.jpg'); 
-        }
-
-         .figure3 {
-            border: 2.5px solid #20578A;
-            width: 150px;
-            height: 150px;
-            background-color: #eee;
-            background-size: 100%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/800px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg'); 
-        }
-
-
-         .figure4 {
-            width: 150px;
-            border: 2.5px solid #20578A;
-            height: 150px;
-            background-color: #eee;
-            background-size: 150%;
-            background-image: url('https://scx1.b-cdn.net/csz/news/800a/2017/2-astronomersr.jpg'); 
-        }
-
-         .figure5 {
-            width: 150px;
-            border: 2.5px solid #20578A;
-            height: 150px;
-            background-color: #eee;
-            background-size: 150%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Ursa_Major_%C5%81azy.jpg/2560px-Ursa_Major_%C5%81azy.jpg'); 
-        }
-
-
-     .description {
-            margin-left: 20px;
-            flex: 1;
-        }
-
-        .research{
-            font-size: 1.35em;
-            margin: 20px 0px;
-            color: #20578A;
-            display: flex;
-            justify-content: left;
-            gap: 1.0px;
-        }
     </style>
 </head>
-
-<body>
     <div class="header">
-        <a href="https://msoaresfurtado.github.io/WebPage">Home</a> |
+        <a href="https://msoaresfurtado.com">Home</a> |
         <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/CV_2023.html" target="_blank" rel="noopener noreferrer">CV</a>|
+        <a href="https://msoaresfurtado.github.io/WebPage/CV_2023.pdf" target="_blank" rel="noopener noreferrer">CV</a>|
         <a href="#">Outreach</a> 
     </div>
-    <div class="profile-picture"></div>
-    <div class="profile-name">
-        Dr. Melinda Soares-Furtado
-        <a href="https://orcid.org/0000-0001-7493-7419" target="_blank" rel="noopener noreferrer"><img class="orcid-logo" src="https://upload.wikimedia.org/wikipedia/commons/0/06/ORCID_iD.svg" alt="ORCID iD icon"></a>
+
+<body>
+    <!-- Image Container -->
+    <div class="image-container">
+        <div class="image family"></div>
+        <div class="image dome"></div>
+        <div class="image dogs"></div>
     </div>
 
-    <!-- Introduction and Announcement -->
-    <p>🔨 This website is under construction.  🚧 <br>
-    I am working to create a retro, up-to-date website without relying on pricey website builders. <br>
-    Thank you for your patience. <br><br>
+<body>
 
-        I am an astrophysicist studying stellar clusters, stars, exoplanets, and exomoons. 
-        To investigate open questions in these astrophysical subdomains, I draw insights from observational data (photometric and spectroscopic) and computational simulations. 
-        I am currently working as a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a> at the <a href="https://www.wisc.edu/"> University of Wisconsin-Madison</a> and as a Science Affiliate at the <a href="https://space.mit.edu/">MIT Kavli Institute for Astrophysics and Space Research</a>.</p>
-    <p>I will begin a tenure-track faculty appointment in the Department of Physics and the Department of Astronomy at the University of Wisconsin-Madison in Fall 2024. <em><a href="https://badgerband.wisc.edu/music/on-wisconsin-2/" class="highlighted">On, Wisconsin!</a></em></p>
-    <hr>
-
-    <div class="research">
-    Scientific Research
-    </div>
-
-    <p>Below, I list some of the ongoing research projects that my team is working on. 
-    Click <a href="#collab">here</a> to learn more about the team members contributing to these wide-ranging efforts. </p>
-    <!-- Gallery -->
-    <div class="gallery">
-        <div class="figure-container">
-            <div class="figure"></div>
-            <p class="description"><b> <font color="#20578A"><font size="+0.1">Planetary Engulfment Events</font></b></font>
-             <br> 
-            The final fate of a non-negligible fraction of planets is to be engulfed by their host stars. 
-            Our research focuses on identifying long-devoured planets via the observational signatures they impart upon the stars that consume them. 
-            More specifically, we identify statistically-significant chemical tracers, leveraging these signatures to place constraints on the bulk chemical composition and mass of the detsroyed planet. 
-            Our team also investigates the process of planetary disassociation, probing the transfer of angular momentum, energy, and mass during the engulfment process. <br>
-            Links to selected papers on this topic: <a href="https://ui.adsabs.harvard.edu/abs/2021AJ....162..273S/abstract" class="highlighted">[a]</a>, 
-            <a href="https://ui.adsabs.harvard.edu/abs/2018ApJ...853L...1M/abstract" target="_blank" rel="noopener noreferrer" class='highlighted' >[b], </a>   
-            <a href="https://ui.adsabs.harvard.edu/abs/2022ApJ...940...23T/abstract" target="_blank" rel="noopener noreferrer" class='highlighted'>[c],
-            <a href="https://ui.adsabs.harvard.edu/abs/2023ApJ...954..176Y/abstract" target="_blank" rel="noopener noreferrer" class='highlighted'>[d]</a></p>
-
-        </div>
-        <div class="figure-container">
-            <div class="figure2"></div>
-           <p class="description"><b> <font color="#20578A"><font size="+0.1">The Detection and Characterization of Young Exoplanets</font></b></font>
-           <br> Despite the discovery of over 5,000 exoplanets, the census of young Earth-sized worlds remains scarce. 
-            Those discovered offer critical insights that enhance our knowledge of the formation and evolution of rocky planets. 
-            Our team recently detected and characterized the nearest Earth-sized exoplanet orbiting a Sun-like star. 
-            This newly-discovered world is the third planet found in this system, and it closely orbits its stellar host with a period of 4 days. 
-            Notably, the host star is a member of a 400 Myr stellar association (10x younger than our own planet). 
-            Future Science: Given the fact that the planet transits its host star, there is a valuable opportunity to further characterize this system via follow-up observational investigations. 
-            Our team is working to better understand the physical/atmospheric properties of this young world. We are also working to detect more young Earth-sized planets in nearby stellar associations.</p>
-        </div>
-        <div class="figure-container">
-            <div class="figure3"></div>
-            <p class="description"><b> <font color="#20578A"><font size="+0.1">The Search for Young Exomoons</font></b></font>
-            <br> Leveraging the infrared capabilities of the Nancy Grace Roman Space Telescope, it is possible to probe for transiting exosatellites in young star-forming regions.
-            One such region, the Orion Nebula Cluster (ONC), is a densely populated and extremely young (1-3 Myr), harboring a large number of infrared-bright brown dwarfs (BDs) and free-floating planets (FFPs). 
-            Our team has investigated the expected transit yields of a 30-day survey of the ONC.  
-            Our preliminary findings suggest that Roman would discover approximately 14 exomoons/exosatellites transiting FFPs and 54 exosatellites transiting BDs.  
-            Future Science: We are exploring yields in other star-forming regions and assembling the science goals that would be enabled by a time-domain infrared investigation of young, star-forming regions with Roman. 
-            Links to selected papers:
-            <a href="https://arxiv.org/abs/2209.12916" class='highlighted' >[a] </a> </p>
-        </div>
-        <div class="figure-container">
-            <div class="figure4"></div>
-            <p class="description"><b> <font color="#20578A"><font size="+0.1">Open Cluster Variable Star Investigations</font></b></font>
-            <br>  
-            The analysis of variable stars in stellar clusters provides a critical opportunity probe a number of astrophysical phenomena. 
-            For example, rotational variables permit an investigation of stellar angular moment evolution in and across systems.
-            <em>What physical mechanisms are responsible for the enhanced/reduced rotation among the outliers within a given system?</em>  
-            Pulsational variables provide an opportunity to explore the relationships between stellar structure, stellar activity, age, and mass. 
-            Eclipsing binaries (EBs) provide estimates of masses, radii, ages, atmospheres, and the stellar density.
-            Further, cluster EBs enable more stringent tests of stellar evolutionary theory than field binaries. 
-            Moreover, cluster variable investigations enable the search for exoplanets among stellar hosts with known ages and compositions. 
-            <em>Are the planet occurrence rates and orbital architectures among cluster members distinct from those of field stars?</em> 
-            Links to selected papers: <a href="https://ui.adsabs.harvard.edu/abs/2017PASP..129d4501S/abstract" class='highlighted' >[a] </a>,
-            <a href="https://ui.adsabs.harvard.edu/abs/2020ApJS..246...15S/abstract" class='highlighted' >[b] </a>
- </p>
-        </div>
-        <div class="figure-container">
-            <div class="figure5"></div>
-            <p class="description"><b> <font color="#20578A"><font size="+0.1">The Ursa Major Co-Moving Group: <em>Planet Searches, Age-Dating, and Spectroscopy</em></font></b></font>
-            <br> Description for the fifth image goes here. I am just adding a lot more text to see how this impacts the layout and look of what I have in this section. I'm curious if each project should make up an independent row rather than having two projects share a given row.  
-            </p>
-        </div>
-
-    </div>
-
-    <hr>
-
-    <section id="collab">
-    <div class="research">
-    Research Collaboration Members
-    </div>
-    </section>
-
-    <font size="+0.1">Affiliated Postdocs/Research Scientists</font></b>
-    <UL>
-    <li> <a href="https://sites.google.com/view/maryannelimbach/home">Mary Anne Limbach</a> (University of Michigan)  
-    </UL>
-    
-    <font size="+0.1"> Graduate Students </font>
-    <UL>
-    <li> <a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/">Julia K. Scheffler</a> (UW-Madison)
-    <li> <a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ErinMotherway">Erin Motherway<sup>*</sup></a> (UW-Madison)
-    <li> <a href="https://astro.ufl.edu/directory/ben-capistrant/">Benjamin K. Capistrant<sup>*</sup></a> (University of Florida, former UW-Madison undergraduate student)
-    <li> <a href="https://ryarza.github.io">Ricardo Yarza<sup>*</sup></a> (NASA FINESST Fellow at the University of California, Santa Cruz)
-    <li> <a href="https://www.linkedin.com/in/andrew-nine-28a683111/">Andrew Nine<sup>*</sup></a> (UW-Madison)
-    </UL>
-    
-    <font size="+0.1"> Undergraduate Students </font>
-    <UL>
-    <li> <a href="https://www.linkedin.com/in/brooke-kotten-23b359242/">Brooke Kotten</a> (William F. Vilas Scholar and Lamat Fellow at UW-Madison) 
-    <li> <a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/">Alyssa Jankowski</a> (UW-Madison)  
-    <li> <a href="https://www.linkedin.com/in/nick-marston-9520a5204/">Nicholas Marston</a> (UW-Madison)  
-    </UL>
-    
-    <font size="+0.1"> Former Group Members </font>
-    <br>
-    <UL>    
-    <LI> <a href="https://www.linkedin.com/in/sarah-kubiak-520898205">Sarah Kubiak</a> (2022-2023, UW-Madison undergraduate student) 
-    <UL><LI>Current position: science journalism & media graduate student at Colorado State University</UL>  
-    <LI> <a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/">Rianna Kuenzi</a> (2020-2022, Lamat Fellow and UW-Madison undergraduate student)
-    <UL><LI>Current position: senior undergraduate at UW-Madison</UL>  
-    <LI> <a href="https://cse.umn.edu/mifa/tyler-barna">Tyler Barna</a> (2017-2019, Rutgers University undergraduate student)
-    <UL><LI>Current position: astronomy graduate student at the Minnesota Institute for Astrophysics</UL>  
-    <LI> <a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/?trk=public_profile_browsemap">Atirath Dhara</a> (2017-2019, West Windsor Plainsboro High School South)
-    <UL><LI>Current position: Regent Scholar & physics undergraduate at the University of California, Santa Cruz</UL>
-    </UL>
-    <sup>*</sup>  I served as a co-mentor to the graduate student
-    </div>
-
-    <br>
-        <div class="footer"">
+<title>About Me</title>
+<p>
+    I am an astrophysicist studying stellar clusters, stars, exoplanets, and exomoons. 
+    To investigate open questions in these astrophysical subdomains, I draw insights from observational data (photometric and spectroscopic) and computational simulations. 
+    I am currently working as a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a> at the <a href="https://www.wisc.edu/"> University of Wisconsin-Madison</a> and as a Science Affiliate at the <a href="https://space.mit.edu/">MIT Kavli Institute for Astrophysics and Space Research</a>.</p>
+<p>I will begin a tenure-track faculty appointment in the Department of Physics and the Department of Astronomy at the University of Wisconsin-Madison in Fall 2024.</p>
+<p>
+  I obtained my Bachelor's degree in physics from the University of California, Santa Cruz. 
+  In 2020, I received my Ph.D. in astrophysical sciences from Princeton University. 
+  I am a first-generation college student and the daughter of an immigrant family (migration to the US from the <a href="https://vimeo.com/317880007" target="_blank" rel="noopener noreferrer">Povoação and Nordeste regions</a> of <a href="https://vimeo.com/304666918" target="_blank"rel="noopener noreferrer">São Miguel, Azores</a> in 1966). 
+  Here, you can learn more about the history of the Azores</a> (long considered a colony of Portugal and now an autonomous, self-governing region of Portugal). 
+  A study of the genetic make-up of the people who inhabit this remote archipelago can be found <a href="https://cdn.intechopen.com/pdfs/21207/InTech-The_genetic_makeup_of_azoreans_versus_mainland_portugal_population.pdf" target="_blank" rel="noopener noreferrer">here</a>.
+</p>
+<p>
+  My hobbies include photography and amassing a collection of rare astronomy textbooks. 
+  Our family recently adopted Murphy and Lily Belle, two energetic golden retrievers that love off-leash hiking and snacks.
+</p>
+    <div class="footer"">
         <span class="contact">&#9993; mmsoares(at)wisc(dot)edu</span>⊕
         <span class="update-date"> Updated 09/2023</span>
     </div>
 
-    </div>
-</body>
-
 </html>
-
