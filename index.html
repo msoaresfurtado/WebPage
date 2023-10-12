@@ -24,7 +24,6 @@
         a {
             color: #20578A;
             text-decoration: none;
-            transition: background-color 0.2s;
         }
 
         a:hover {
@@ -50,17 +49,15 @@
 
         .profile-name {
             font-size: 1.5em;
-            margin: 20px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5.0px;
+            margin: 20px auto;
+            text-align: center;
         }
 
         .orcid-logo {
             height: 24px;
             border: 1px solid #20578A;
             border-radius: 50%;
+
         }
 
         .header {            
@@ -73,7 +70,7 @@
             font-size: 16px;}
 
         .footer {
-            align-items: center; /* This will vertically center align items */
+            align-items: center;
             display: flex;
             justify-content: space-between;
             border-bottom: 1.0px solid #20578A;
@@ -96,66 +93,71 @@
             font-size: 0.9em;
         }
 
-        /* Gallery Styles */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(1, 1fr);
-            gap: 20px;
-        }
-
-        .figure-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .figure {
-            width: 150px;
-            height: 150px;
-            border: 2.5px solid #20578A;
-            background-color: #fff;
-            background-size: 170%;
-            background-position: center;
+        .figure1 {
             background-image: url('https://video-images.vice.com/articles/612ce922da372d009443fbce/lede/1630333494301-gettyimages-1316904768.jpeg?crop=1xw:0.8435613682092555xh;center,center&resize=500:');
-            <!-- background-image: url('https://static01.nyt.com/images/2023/05/16/multimedia/03sci-hungry-star-vidcover-vlwz/03sci-hungry-star-vidcover-vlwz-superJumbo.jpg'); -->
+            background-position: center;
+            background-size: 165%;
+            width: 160px;
+            height: 160px;
+            border: 2.5px solid #20578A;
+            border-radius: 50%;
+            margin: 20px auto;
         }
 
          .figure2 {
-            width: 150px;
-            height: 150px;
+            background-image: url('https://aasnova.org/wp-content/uploads/2019/08/222_corot_ill.jpg');
+            background-position: left;
+            background-size: 120%;
+            width: 160px;
+            height: 160px;
             border: 2.5px solid #20578A;
-            background-size: 150%;
-            background-color: #eee;
-            background-position: right;
-            background-image: url('https://aasnova.org/wp-content/uploads/2019/08/222_corot_ill.jpg'); 
+            border-radius: 50%;
+            margin: 20px auto;
         }
 
          .figure3 {
-            border: 2.5px solid #20578A;
-            width: 150px;
-            height: 150px;
-            background-color: #eee;
-            background-size: 100%;
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/800px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg'); 
+            background-position: center;
+            background-size: 100%;
+            width: 160px;
+            height: 160px;
+            border: 2.5px solid #20578A;
+            border-radius: 50%;
+            margin: 20px auto;
         }
 
 
          .figure4 {
-            width: 150px;
-            border: 2.5px solid #20578A;
-            height: 150px;
-            background-color: #eee;
-            background-size: 150%;
             background-image: url('https://scx1.b-cdn.net/csz/news/800a/2017/2-astronomersr.jpg'); 
+            background-position: center;
+            background-size: 100%;
+            width: 160px;
+            height: 160px;
+            border: 2.5px solid #20578A;
+            border-radius: 50%;
+            margin: 20px auto;
+
         }
 
          .figure5 {
-            width: 150px;
-            border: 2.5px solid #20578A;
-            height: 150px;
-            background-color: #eee;
-            background-size: 150%;
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Ursa_Major_%C5%81azy.jpg/2560px-Ursa_Major_%C5%81azy.jpg'); 
-        }
+            background-position: center;
+            background-size: 170%;
+            width: 160px;
+            height: 160px;
+            border: 2.5px solid #20578A;
+            border-radius: 50%;
+            margin: 20px auto;
+       }
+
+         .dotted-line {
+            border-top: 1px dotted #20578A;
+            border-bottom: 0;
+            width: 100%;
+            height: 0;
+            color: transparent;
+            background-color: transparent;
+          }
 
 
      .description {
@@ -204,10 +206,8 @@
 
     <p>Below, I list some of the ongoing research projects that my team is working on. 
     Click <a href="#collab">here</a> to learn more about the team members contributing to these wide-ranging efforts. </p>
-    <!-- Gallery -->
-    <div class="gallery">
-        <div class="figure-container">
-            <div class="figure"></div>
+
+            <div class="figure1"></div>
             <p class="description"><b> <font color="#20578A"><font size="+0.1">Planetary Engulfment Events</font></b></font>
              <br> 
             The final fate of a non-negligible fraction of planets is to be engulfed by their host stars. 
@@ -218,9 +218,10 @@
             <a href="https://ui.adsabs.harvard.edu/abs/2018ApJ...853L...1M/abstract" target="_blank" rel="noopener noreferrer" class='highlighted' >[b], </a>   
             <a href="https://ui.adsabs.harvard.edu/abs/2022ApJ...940...23T/abstract" target="_blank" rel="noopener noreferrer" class='highlighted'>[c],
             <a href="https://ui.adsabs.harvard.edu/abs/2023ApJ...954..176Y/abstract" target="_blank" rel="noopener noreferrer" class='highlighted'>[d]</a></p>
+            <hr class="dotted-line">
+
 
         </div>
-        <div class="figure-container">
             <div class="figure2"></div>
            <p class="description"><b> <font color="#20578A"><font size="+0.1">The Detection and Characterization of Young Exoplanets</font></b></font>
            <br> Despite the discovery of over 5,000 exoplanets, the census of young Earth-sized worlds remains scarce. 
@@ -230,8 +231,8 @@
             Notably, the host star is a member of a 400 Myr stellar association (10x younger than our own planet). 
             Future Science: Given the fact that the planet transits its host star, there is a valuable opportunity to further characterize this system via follow-up observational investigations. 
             Our team is working to better understand the physical/atmospheric properties of this young world. We are also working to detect more young Earth-sized planets in nearby stellar associations.</p>
-        </div>
-        <div class="figure-container">
+             <hr class="dotted-line">
+       </div>
             <div class="figure3"></div>
             <p class="description"><b> <font color="#20578A"><font size="+0.1">The Search for Young Exomoons</font></b></font>
             <br> Leveraging the infrared capabilities of the Nancy Grace Roman Space Telescope, it is possible to probe for transiting exosatellites in young star-forming regions.
@@ -242,8 +243,10 @@
             Links to selected papers:
             <a href="https://arxiv.org/abs/2209.12916" class='highlighted' >[a] </a> </p>
         </div>
-        <div class="figure-container">
+            <hr class="dotted-line">
+
             <div class="figure4"></div>
+
             <p class="description"><b> <font color="#20578A"><font size="+0.1">Open Cluster Variable Star Investigations</font></b></font>
             <br>  
             The analysis of variable stars in stellar clusters provides a critical opportunity probe a number of astrophysical phenomena. 
@@ -257,12 +260,14 @@
             Links to selected papers: <a href="https://ui.adsabs.harvard.edu/abs/2017PASP..129d4501S/abstract" class='highlighted' >[a] </a>,
             <a href="https://ui.adsabs.harvard.edu/abs/2020ApJS..246...15S/abstract" class='highlighted' >[b] </a>
  </p>
+            <hr class="dotted-line">
+
         </div>
-        <div class="figure-container">
             <div class="figure5"></div>
             <p class="description"><b> <font color="#20578A"><font size="+0.1">The Ursa Major Co-Moving Group: <em>Planet Searches, Age-Dating, and Spectroscopy</em></font></b></font>
             <br> Description for the fifth image goes here. I am just adding a lot more text to see how this impacts the layout and look of what I have in this section. I'm curious if each project should make up an independent row rather than having two projects share a given row.  
             </p>
+
         </div>
 
     </div>
