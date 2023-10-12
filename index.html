@@ -57,7 +57,6 @@
             height: 24px;
             border: 1px solid #20578A;
             border-radius: 50%;
-
         }
 
         .header {            
@@ -126,7 +125,6 @@
             margin: 20px auto;
         }
 
-
          .figure4 {
             background-image: url('https://scx1.b-cdn.net/csz/news/800a/2017/2-astronomersr.jpg'); 
             background-position: center;
@@ -142,7 +140,7 @@
          .figure5 {
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Ursa_Major_%C5%81azy.jpg/2560px-Ursa_Major_%C5%81azy.jpg'); 
             background-position: center;
-            background-size: 170%;
+            background-size: 150%;
             width: 160px;
             height: 160px;
             border: 2.5px solid #20578A;
@@ -150,6 +148,25 @@
             margin: 20px auto;
        }
 
+ .figure1::before,
+.figure2::before,
+.figure3::before,
+.figure4::before,
+.figure5::before {
+    content: "";
+    display: block;
+    position: relative;
+    z-index: -1;  /* place it behind the image */
+    width: calc(100% + 700px);  /* increased width by another 100px */
+    height: 60px;  /* decreased height to make it thinner */
+    margin-top: 50px;  /* adjust it to be centered behind the image */
+    background-image: url('https://images.unsplash.com/photo-1520034475321-cbe63696469a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80');  /* path to your space image */
+    background-size: 100%;
+    background-blend-mode: overlay; /* this will blend your space image with the color specified next */
+    background-position: center;
+    border: 2.5px solid #20578A; /* adding border to the rectangle */
+    margin-left: -350px;  /* offset to start from the left edge, adjusted for the new width */
+}
          .dotted-line {
             border-top: 1px dotted #20578A;
             border-bottom: 0;
