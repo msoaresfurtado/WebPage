@@ -166,14 +166,15 @@
     content: "";
     left: 50%;
     transform: translateX(-50%);
-    display: block;
+    display: flex;
     position: relative;
     z-index: -1;  /* place it behind the image */
-    width: calc(200%);  /* increased width by another 100px */
+    width: 100vw;  /* setting width to be equal to the viewport width */
+    transform: translateX(-50%);  /* centering the background */
     height: 60px;  /* decreased height to make it thinner */
     margin-top: 50px;  /* adjust it to be centered behind the image */
     background-image: url('https://www.chromethemer.com/wallpapers/chromebook-wallpapers/images/960/blue-space-chromebook-wallpaper.jpg');  /* path to your space image */
-    background-size: 100%;
+    background-size: cover;  /* make sure the image covers the space */
     background-position: center;
     border: 2.5px solid #20578A; /* adding border to the rectangle */
     box-shadow: 0 0 0 2px black;
