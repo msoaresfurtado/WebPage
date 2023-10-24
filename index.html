@@ -44,7 +44,8 @@
             margin: 20px auto;
             background-image: url('https://static.wixstatic.com/media/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg/v1/fill/w_914,h_1742,al_tl,q_85,usm_0.66_1.00_0.01,enc_auto/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg');
             background-size: 150%;
-            background-position: 50% 38%;            box-shadow: 0 0 0 2px black;
+            background-position: 50% 38%;            
+            box-shadow: 0 0 0 2px black;
 
         }
 
@@ -169,10 +170,11 @@
     display: flex;
     position: relative;
     z-index: -1;  /* place it behind the image */
-    width: 100vw;  /* setting width to be equal to the viewport width */
+    max-width: 80vw;  /* setting width to be equal to the viewport width */
+    width: 900px;
     transform: translateX(-50%);  /* centering the background */
-    height: 60px;  /* decreased height to make it thinner */
-    margin-top: 50px;  /* adjust it to be centered behind the image */
+    height: 30px;  /* decreased height to make it thinner */
+    margin-top: 65px;  /* adjust it to be centered behind the image */
     background-image: url('https://www.chromethemer.com/wallpapers/chromebook-wallpapers/images/960/blue-space-chromebook-wallpaper.jpg');  /* path to your space image */
     background-size: cover;  /* make sure the image covers the space */
     background-position: center;
