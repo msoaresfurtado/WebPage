@@ -33,52 +33,8 @@
         .highlighted {
             color: #9b0000;
         }
-        .image-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-            overflow: auto;
-        }
 
-        .image-container .image {
-            max-height: 150px; /* This restricts the maximum height to maintain design */
-            max-width: 150px; /* This restricts the maximum height to maintain design */
-            background-size: cover; /* This ensures the background covers the entire element */
-            background-position: center; /* This centers the background image */
-            height: 150px;            
-            width: 150px;             
-            background-size: 225%;    /* 150% of the original size */
-            margin: 0 10px;           
-            border: 1.5px solid #20578A;
-        }
-
-        .image-container .image:first-child {
-            background-size: 150%; 
-            background-position: 60% 8%; 
-}        
-        .image-container .image:nth-child(2) {
-            background-size: 240%;   
-            background-position: 37% 90%; 
-}        
-         .image-container .image:nth-child(3) {
-            background-size: 115%;   
-            background-position: 0% 35%; 
-
-}
-       .family {
-            background-image: url('https://msoaresfurtado.github.io/WebPage/IMG_20200912_153841.jpg');background-repeat: no-repeat;
-        }
-
-        .dome {
-            background-image: url('https://msoaresfurtado.github.io/WebPage/refractor-2.jpg');background-repeat: no-repeat;
-        }
-
-        .dogs {
-            background-image: url('https://msoaresfurtado.github.io/WebPage/PXL_20220725_215912636.MP.jpg');background-repeat: no-repeat;
-        }
-
-        .header {            
+    .header {            
             display: flex;
             justify-content: space-between;
             border-bottom: 1.0px solid #20578A;
@@ -97,6 +53,18 @@
             padding-top: 2.5px;
             font-size: 14px;}
 
+.single-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.single-image-container img {
+  max-width: 100%;
+  height: auto;
+}
+
     </style>
 </head>
     <div class="header">
@@ -108,12 +76,10 @@
     </div>
 
 <body>
-    <!-- Image Container -->
-    <div class="image-container">
-        <div class="image family"></div>
-        <div class="image dome"></div>
-        <div class="image dogs"></div>
-    </div>
+<div class="single-image-container">
+  <img src="https://msoaresfurtado.github.io/WebPage/aboutbanner.png" alt="Family Banner">
+</div>
+
 
 <body>
 
