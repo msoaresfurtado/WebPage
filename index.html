@@ -84,8 +84,22 @@
     footer {
         height: 50px;
         padding: 10px;
+    }}
+
+    .large{
+        font-size: 1.35em;
+        margin: 20px 0px;
+        display: flex;
+        justify-content: left;
+        gap: 1.0px;
     }
-}
+
+
+    .header a.current {
+        font-weight: bold;           /* Make the text bold */
+        color: #9b0000;              /* Change the text color */
+        text-decoration: underline;  /* Add an underline */
+    }
         .update-date {
             display: inline-block;
             margin: 5px;
@@ -203,7 +217,7 @@
 
 <body>
     <div class="header">
-        <a href="https://msoaresfurtado.github.io/WebPage">Home</a> |
+        <a href="https://msoaresfurtado.github.io/WebPage"class="current ">Home</a> |
         <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a> |
         <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a> |
         <a href="https://msoaresfurtado.github.io/WebPage/CV_2023.pdf" target="_blank" rel="noopener noreferrer">CV</a>|
@@ -221,7 +235,7 @@
     <p>I will begin a tenure-track faculty appointment in the Department of Physics and the Department of Astronomy at the University of Wisconsin-Madison in Fall 2024. <em><a href="https://badgerband.wisc.edu/music/on-wisconsin-2/" class="highlighted">On, Wisconsin!</a></em></p>
     <hr>
 
-    <div class="research">
+    <div class="large">
     Scientific Research
     </div>
 
