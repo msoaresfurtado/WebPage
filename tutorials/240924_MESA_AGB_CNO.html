@@ -14046,7 +14046,7 @@ Reading in: MIST_eep_66f385bcce935/0020000M.track.eep
 <p>Some notes:
 The tar.gz archive files labeled with a string of the form "AGB_to_end_M1.XX_y-fixed.tar.gz" include all models having a mass beginning with 1 (1.00, 1.10, 1.20, etc) and adopting the fixed helium assumption.</p>
 <p>Anything that starts with "history" and ends with ".data" is an evolutionary track. Tracks that have "_p3" are the third phase: AGB to end (or failure of the model) and these files are large.</p>
-<p>In the file name, the two-decimal number after m, four-decimal number after z and 3-decimal number after y encode the evolutionary track's initial mass, initial metallicity (Z) and initial helium abundance (Y), respectively. In cases where there is no y value provided, the helium abundance is fixed as described in the paper.</p>
+<p>In the file name, the two-decimal number after m, four-decimal number after z and 3-decimal number after y encode the evolutionary track's initial mass, initial metallicity (Z) and initial helium abundance (Y), respectively. In cases where there is no y value provided, the helium abundance is fixed as described in the paper. I checked both the results with the fixed and the varied Y value and it made negligible difference.</p>
 <p>f2 will be a 2.0 Msun star with z0.0100 (close to [Fe/H]=-0.1) and a Y=0.01.</p>
 
 </div>
@@ -14057,6 +14057,7 @@ The tar.gz archive files labeled with a string of the form "AGB_to_end_M1.XX_y-f
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">f2</span><span class="o">=</span><span class="n">mr</span><span class="o">.</span><span class="n">MesaData</span><span class="p">(</span><span class="s1">&#39;AGB_to_end_M2.XX_y-fixed/history_m2.00_z0.0100_eta0.01_drag-on_seismic_p3.data&#39;</span><span class="p">)</span>  
+<span class="c1">#f2=mr.MesaData(&#39;AGB_to_end_M2.XX_y-varied/history_m2.00_z0.0100_y0.270_eta0.01_yi-on_seismic_p3.data&#39;)  </span>
 </pre></div>
 
      </div>
@@ -14118,7 +14119,7 @@ The tar.gz archive files labeled with a string of the form "AGB_to_end_M1.XX_y-f
 
 
 <div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
-<pre>&lt;matplotlib.legend.Legend at 0x7fbd785c4940&gt;</pre>
+<pre>&lt;matplotlib.legend.Legend at 0x7fda186aa4c0&gt;</pre>
 </div>
 
 </div>
