@@ -9,21 +9,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
 
     <style>
-        /* General Styles */
         body {
-            font-family: Merriweather Sans, serif;
+            font-family: 'Merriweather Sans', serif;
             margin: 40px auto;
             max-width: 900px;
             padding: 20px;
             line-height: 1.5;
             background-color: #ffffff;
             color: #1a1b1c;
-            font-size: 16px;}
+            font-size: 16px;
+        }
 
         a {
             color: #20578A;
             text-decoration: none;
-            transition: background-color 0.2s;}
+            transition: background-color 0.2s;
+        }
 
         a:hover {
             text-decoration: underline;
@@ -33,7 +34,6 @@
             color: #9b0000;
         }
 
-        /* Profile Styles */
         .profile-picture {
             display: block;
             width: 160px;
@@ -61,32 +61,32 @@
             border-radius: 50%;
         }
 
-        .header {            
+        .header {
             display: flex;
             justify-content: space-between;
-            border-bottom: 1.0px solid #20578A;
-            border-top: 1.0px solid #20578A;
-            padding-bottom: 2.5px;
-            padding-top: 2.5px;
-            font-size: 16px;}
+            border-bottom: 1px solid #20578A;
+            border-top: 1px solid #20578A;
+            padding: 2.5px 0;
+            font-size: 16px;
+        }
 
         .footer {
-            align-items: center; /* This will vertically center align items */
+            align-items: center;
             display: flex;
             justify-content: space-between;
-            border-bottom: 1.0px solid #20578A;
-            border-top: 1.0px solid #20578A;
-            padding-bottom: 2.5px;
-            padding-top: 2.5px;
-            font-size: 14px;}
+            border-bottom: 1px solid #20578A;
+            border-top: 1px solid #20578A;
+            padding: 2.5px 0;
+            font-size: 14px;
+        }
 
-       /* Media query for screens with a max width of 768px (typically tablets and mobiles) */
-     @media only screen and (max-width: 768px) {
-    footer {
-        height: 50px;
-        padding: 10px;
-    }
-}
+        @media only screen and (max-width: 768px) {
+            footer {
+                height: 50px;
+                padding: 10px;
+            }
+        }
+
         .update-date {
             display: inline-block;
             margin: 5px;
@@ -94,84 +94,23 @@
             font-size: 0.9em;
         }
 
-        /* Gallery Styles */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(1, 1fr);
-            gap: 20px;}
-
-        .figure-container {
-            display: flex;
-            align-items: center;}
-
-        .figure {
-            width: 150px;
-            height: 150px;
-            border: 2.5px solid #20578A;
-            background-color: #fff;
-            background-size: 170%;
-            background-position: center;
-            background-image: url('https://video-images.vice.com/articles/612ce922da372d009443fbce/lede/1630333494301-gettyimages-1316904768.jpeg?crop=1xw:0.8435613682092555xh;center,center&resize=500:');
-            <!-- background-image: url('https://static01.nyt.com/images/2023/05/16/multimedia/03sci-hungry-star-vidcover-vlwz/03sci-hungry-star-vidcover-vlwz-superJumbo.jpg'); -->
-        }
-
-         .figure2 {
-            width: 150px;
-            height: 150px;
-            border: 2.5px solid #20578A;
-            background-size: 150%;
-            background-color: #eee;
-            background-position: right;
-            background-image: url('https://aasnova.org/wp-content/uploads/2019/08/222_corot_ill.jpg'); 
-        }
-
-         .figure3 {
-            border: 2.5px solid #20578A;
-            width: 150px;
-            height: 150px;
-            background-color: #eee;
-            background-size: 100%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/800px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg'); 
-        }
-
-
-         .figure4 {
-            width: 150px;
-            border: 2.5px solid #20578A;
-            height: 150px;
-            background-color: #eee;
-            background-size: 150%;
-            background-image: url('https://scx1.b-cdn.net/csz/news/800a/2017/2-astronomersr.jpg'); 
-        }
-
-         .figure5 {
-            width: 150px;
-            border: 2.5px solid #20578A;
-            height: 150px;
-            background-color: #eee;
-            background-size: 150%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Ursa_Major_%C5%81azy.jpg/2560px-Ursa_Major_%C5%81azy.jpg'); 
-        }
-
-
-     .description {
-            margin-left: 20px;
-            flex: 1;
-        }
-
-        .research{
+        .research {
             font-size: 1.35em;
-            margin: 20px 0px;
+            margin: 20px 0;
             color: #20578A;
             display: flex;
             justify-content: left;
-            gap: 1.0px;
         }
-.header a.current {
-        font-weight: bold;           /* Make the text bold */
-        color: #9b0000;              /* Change the text color */
-        text-decoration: underline;  /* Add an underline */
-    }
+
+        .header a.current {
+            font-weight: bold;
+            color: #9b0000;
+            text-decoration: underline;
+        }
+
+        h3 {
+            margin-top: 30px;
+        }
     </style>
 </head>
 
@@ -179,56 +118,58 @@
     <div class="header">
         <a href="https://msoaresfurtado.github.io/WebPage">Home</a> |
         <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/Team.html" class=current>Team</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank" rel="noopener noreferrer">CV</a>|
-        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a> 
+        <a href="https://msoaresfurtado.github.io/WebPage/Team.html" class="current">Team</a> |
+        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank" rel="noopener noreferrer">CV</a> |
+        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
     </div>
 
     <section id="collab">
-    <div class="research">
-    Research Collaboration Members
-    </div>
+        <div class="research">Research Collaboration Members</div>
     </section>
-    
-    <font size="+0.1"> Graduate Students </font>
-    <UL>
-    <li> <a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/" target="_blank" rel="noopener noreferrer">Julia K. Sheffler</a> (University of Wisconsin-Madison)
-    <li> <a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ClaireZwicker/index.html" target="_blank" rel="noopener noreferrer">Claire Zwicker</a> (University of Wisconsin-Madison)
-    <li> <a href="https://astro.ufl.edu/directory/ben-capistrant/" target="_blank" rel="noopener noreferrer">Benjamin K. Capistrant<sup>*</sup></a> (University of Florida, former University of Wisconsin-Madison undergraduate student)
-    <li> <a href="https://ryarza.github.io" target="_blank" rel="noopener noreferrer">Ricardo Yarza<sup>*</sup></a> (NASA FINESST Fellow at the University of California, Santa Cruz)
-    </UL>
-    
-    <font size="+0.1"> Undergraduate and Postbacc Students </font>
-    <UL>
-    <li> <a href="https://www.linkedin.com/in/m-clark-b270482a4/" target="_blank" rel="noopener noreferrer">M Clark</a> (University of Wisconsin-Madison, Lamat Fellow) 
-    <li> <a href="https://www.linkedin.com/in/adam-distler-6b2944200/" target="_blank" rel="noopener noreferrer">Adam Distler</a> (University of Wisconsin-Madison) 
-     <li> <a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/" target="_blank" rel="noopener noreferrer">Alyssa Jankowski</a> (University of Wisconsin-Madison)  
-   <li> <a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/" target="_blank" rel="noopener noreferrer">Rianna Kuenzi</a> (Lamat Fellow and University of Wisconsin-Madison)
-    <li> <a href="https://www.linkedin.com/in/nick-marston-9520a5204/" target="_blank" rel="noopener noreferrer">Nicholas Marston</a> (University of Wisconsin-Madison)  
-    <li> <a href="https://www.linkedin.com/in/ritvik-sai-narayan-19281a21a/" target="_blank" rel="noopener noreferrer">Ritvik Sai Narayan</a> (University of Wisconsin-Madison)
-    <li> <a href="https://www.linkedin.com/in/nadja-aldarondo/?originalSubdomain=pr" target="_blank" rel="noopener noreferrer"> Nadja Aldarondo Quiñones </a> (University of Puerto Rico, Río Piedras)
-</UL>
-    
-    <font size="+0.1"> Former Group Members </font>
-    <br> 
-    <UL>    
-     <li> <a href="https://www.linkedin.com/in/brooke-kotten-23b359242/" target="_blank" rel="noopener noreferrer">Brooke Kotten</a> (University of Wisconsin-Madison, William F. Vilas Scholar, Lamat Fellow) 
-     <UL><LI>Current position: NSF GRFP Fellow at the University of Michigan</UL>  
-  <LI> <a href="https://www.linkedin.com/in/sarah-kubiak-520898205" target="_blank" rel="noopener noreferrer">Sarah Kubiak</a> (2022-2023, University of Wisconsin-Madison undergraduate student) 
-    <UL><LI>Updated position: HDRI Educator for UW Extensions </UL>  
-    <LI> <a href="https://www.astrachel.me/" target="_blank" rel="noopener noreferrer">Rachel McClure<sup>*</sup></a> (2019-2021, NSF GRFP Fellow, University of Wisconsin-Madison graduate student) 
-    <LI> <a href="https://cse.umn.edu/mifa/tyler-barna" target="_blank" rel="noopener noreferrer">Tyler Barna</a> (2017-2019, Rutgers University undergraduate student)
-    <UL><LI>Updated position: astronomy graduate student at the Minnesota Institute for Astrophysics</UL>  
-    <LI> <a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/?trk=public_profile_browsemap" target="_blank" rel="noopener noreferrer">Atirath Dhara</a> (2017-2019, West Windsor Plainsboro High School)
-    <UL><LI>Updated position: Regent Scholar at the University of California, Santa Cruz</UL>
-    </UL>
-    <sup>*</sup>  I served as a co-mentor to the graduate student<br>
-    </div>
 
-    <br>
+    <h3>Graduate Students</h3>
+    <ul>
+        <li><a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/" target="_blank">Julia K. Sheffler</a> (UW-Madison)</li>
+        <li><a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ClaireZwicker/index.html" target="_blank">Claire Zwicker</a> (UW-Madison)</li>
+    </ul>
+
+    <h3>Undergraduate and Postbacc Students</h3>
+    <ul>
+        <li><a href="https://www.linkedin.com/in/annelise-alvin-474899305/" target="_blank">Annelise Alvin</a> (UW-Madison)</li>
+        <li><a href="https://www.linkedin.com/in/m-clark-b270482a4/" target="_blank">M Clark</a> (UW-Madison, Lamat Fellow)</li>
+        <li><a href="https://www.linkedin.com/in/adam-distler-6b2944200/" target="_blank">Adam Distler</a> (UW-Madison, recent NSF GRFP recipient)
+            <ul><li><em>Beginning graduate school at Harvard University Fall 2025!</em></li></ul>
+        </li>
+        <li><a href="https://www.linkedin.com/in/jenna-karcheski-49132a16b/" target="_blank">Jenna Karcheski</a> (UW-Madison, recent NSF GRFP recipient)
+            <ul><li><em>Beginning graduate school at UCSC Fall 2025!</em></li></ul>
+        </li>
+        <li><a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/" target="_blank">Rianna Kuenzi</a> (UW-Madison, Lamat Fellow)</li>
+        <li><a href="https://www.linkedin.com/in/nick-marston-9520a5204/" target="_blank">Nicholas Marston</a> (UW-Madison)</li>
+        <li><a href="https://www.linkedin.com/in/ritvik-sai-narayan-19281a21a/" target="_blank">Ritvik Sai Narayan</a> (UW-Madison)</li>
+        <li><a href="https://www.linkedin.com/in/nadja-aldarondo/?originalSubdomain=pr" target="_blank">Nadja Aldarondo Quiñones</a> (University of Puerto Rico, Río Piedras)</li>
+    </ul>
+
+    <h3>Former Group Members</h3>
+    <ul>
+       <li><a href="https://astro.ufl.edu/directory/ben-capistrant/" target="_blank">Benjamin K. Capistrant<sup></sup></a> (UW-Madison postbacc student)</li>
+         <li><a href="https://ryarza.github.io" target="_blank">Ricardo Yarza<sup>*</sup></a> (NASA UCSC graduate student)</li>
+        <li><a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/" target="_blank">Alyssa Jankowski</a> (UW-Madison undergraduate student)</li>
+        <li><a href="https://www.linkedin.com/in/brooke-kotten-23b359242/" target="_blank">Brooke Kotten</a> (UW-Madison, William F. Vilas Scholar, Lamat Fellow, NSF GRFP Recipient)
+        </li>
+        <li><a href="https://www.linkedin.com/in/sarah-kubiak-520898205" target="_blank">Sarah Kubiak</a> (UW-Madison undergraduate student)
+        </li>
+        <li><a href="https://www.astrachel.me/" target="_blank">Rachel McClure<sup>*</sup></a> (NSF GRFP Fellow, UW-Madison graduate student)</li>
+       <li><a href="https://cse.umn.edu/mifa/tyler-barna" target="_blank">Tyler Barna</a> (Rutgers University undergraduate student)
+        </li>
+        <li><a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/" target="_blank">Atirath Dhara</a> (West Windsor Plainsboro High School)
+        </li>
+    </ul>
+
+    <p><sup>*</sup> I served as a co-mentor to the graduate student</p>
+
     <div class="footer">
-        <span class="contact">&#9993; mmsoares(at)wisc(dot)edu</span>⊕
-        <span class="update-date"> Updated 02/2025</span>
+        <span class="contact">&#9993; mmsoares(at)wisc(dot)edu</span> ⊕
+        <span class="update-date">Updated 08/2025</span>
     </div>
 </body>
 
