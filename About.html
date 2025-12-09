@@ -5,115 +5,203 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
+    <title>About Me — Professor Melinda Soares-Furtado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
-        /* General Styles */
+        :root {
+            --accent-color: #20578A;
+            --highlight-color: #9b0000;
+            --text-color: #1a1b1c;
+            --text-muted: #555;
+            --bg-color: #ffffff;
+            --bg-subtle: #f8f9fa;
+            --border-light: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Merriweather Sans, serif;
-            margin: 40px auto;
-            max-width: 900px;
-            padding: 20px;
-            line-height: 1.5;
-            background-color: #ffffff;
-            color: #1a1b1c;
+            font-family: 'Source Sans 3', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.65;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             font-size: 16px;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 30px;
         }
 
         a {
-            color: #20578A;
+            color: var(--accent-color);
             text-decoration: none;
-            transition: background-color 0.2s;
+            transition: color 0.2s ease;
         }
 
         a:hover {
+            color: var(--highlight-color);
             text-decoration: underline;
         }
 
         .highlighted {
-            color: #9b0000;
+            color: var(--highlight-color);
+            font-weight: 600;
         }
 
-    .header {            
+        /* Navigation */
+        .header {
             display: flex;
-            justify-content: space-between;
-            border-bottom: 1.0px solid #20578A;
-            border-top: 1.0px solid #20578A;
-            padding-bottom: 2.5px;
-            padding-top: 2.5px;
-            font-size: 16px;}
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 0;
+            border-bottom: 2px solid var(--accent-color);
+            border-top: 2px solid var(--accent-color);
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
 
+        .header a {
+            padding: 4px 10px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+
+        .header a:hover {
+            background-color: var(--bg-subtle);
+            text-decoration: none;
+        }
+
+        .header a.current {
+            font-weight: 600;
+            color: var(--highlight-color);
+            background-color: var(--bg-subtle);
+        }
+
+        .nav-sep {
+            color: var(--border-light);
+        }
+
+        /* Banner */
+        .banner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 25px 0 30px 0;
+            width: 100%;
+        }
+
+        .banner img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Content */
+        .content {
+            font-size: 1em;
+            line-height: 1.75;
+        }
+
+        .content p {
+            margin: 0 0 18px 0;
+        }
+
+        /* Footer */
         .footer {
-            align-items: center; /* This will vertically center align items */
             display: flex;
-            justify-content: space-between;
-            border-bottom: 1.0px solid #20578A;
-            border-top: 1.0px solid #20578A;
-            padding-bottom: 2.5px;
-            padding-top: 2.5px;
-            font-size: 14px;}
-        
-        .banner{
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              margin-top: 17.5px;
-              width: 100%;
-              height: auto;}
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 40px;
+            padding: 14px 0;
+            border-top: 2px solid var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
 
-.single-image-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 18.0px;}
+        .footer a {
+            color: var(--accent-color);
+        }
 
-.single-image-container img {
-margin=25px;
-  max-width: 100%;
-  height: auto;}
-        
-    .header a.current {
-        font-weight: bold;           /* Make the text bold */
-        color: #9b0000;              /* Change the text color */
-        text-decoration: underline;  /* Add an underline */
-    }
+        /* Responsive */
+        @media only screen and (max-width: 768px) {
+            .header {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
 
+            .nav-sep {
+                display: none;
+            }
+        }
     </style>
 </head>
-    <div class="header">
-        <a href="https://msoaresfurtado.github.io/WebPage">Home</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/About.html" class="current">About</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank" rel="noopener noreferrer">CV</a>|
-        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a> 
-    </div>
 
 <body>
-  <img src="https://msoaresfurtado.github.io/WebPage/photos/bannerabout.png" alt="bannerabout" class="banner">
-</body>
-    
+    <div class="container">
+        <!-- Header loaded from external file -->
+        <div id="header-container"></div>
 
-<title>About Me</title>
-<p>
-  I received my Bachelor's degree in physics from the <a href="https://www.physics.ucsc.edu/" target="_blank" rel="noopener noreferrer">University of California, Santa Cruz</a> and my Ph.D. in astrophysical sciences from <a href="https://web.astro.princeton.edu/" target="_blank" rel="noopener noreferrer">Princeton University</a>. 
-  I then moved to University of Wisconsin-Madison where I was a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a>.
-  In Fall 2024, I began a joint tenure-track faculty appointment in the Departments of Physics and Astronomy at the University of Wisconsin-Madison.
-  I also have a joint affiliation with the <a href="https://space.mit.edu/" target="_blank" rel="noopener noreferrer">MIT Kavli Institute for Astrophysics and Space Research</a>, where I work closely with <a href="https://avanderburg.github.io/page5.html" target="_blank" rel="noopener noreferrer">Andrew Vanderburg's exoplanet research team</a>. 
+        <div class="banner">
+            <img src="https://msoaresfurtado.github.io/WebPage/photos/bannerabout.png" alt="About banner">
+        </div>
 
-  You can learn more about my science research <a href="https://msoaresfurtado.github.io/WebPage" >here</a>. 
-  </p>
-  <p>
-  My personal background is rooted in a first-generation college experience. My family migrated from the <a href="https://vimeo.com/317880007" target="_blank" rel="noopener noreferrer">Povoação and Nordeste municipalities</a> of <a href="https://vimeo.com/304666918" target="_blank"rel="noopener noreferrer">São Miguel, Azores</a>. 
-  A closer look at the history of the Azores, now an autonomous, self-governing region of Portugal, can be explored <a href="https://www.worldhistory.org/article/1758/the-portuguese-colonization-of-the-azores/" target="_blank" rel="noopener noreferrer">here</a>.
-  For those interested, a study detailing the genetic makeup of the Azorean population in comparison to mainland Portugal is available  <a href="https://cdn.intechopen.com/pdfs/21207/InTech-The_genetic_makeup_of_azoreans_versus_mainland_portugal_population.pdf" target="_blank" rel="noopener noreferrer">here</a>.
-  </p>
-  <p>
-  My hobbies include photography, gardening, and amassing an ever-growing collection of books. 
-  I am also particularly fond of hiking with my two energetic golden retrievers, Murphy the Noble and Lily Belle.
-  <br>
-  </p>
-    <div class="footer">
-        <span class="contact">&#9993; mmsoares(at)wisc(dot)edu</span>⊕
-        <span class="update-date"> Updated 08/2025</span>
+        <div class="content">
+            <p>
+                I received my Bachelor's degree in physics from the <a href="https://www.physics.ucsc.edu/" target="_blank" rel="noopener noreferrer">University of California, Santa Cruz</a> and my Ph.D. in astrophysical sciences from <a href="https://web.astro.princeton.edu/" target="_blank" rel="noopener noreferrer">Princeton University</a>. I then moved to University of Wisconsin-Madison where I was a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a>. In Fall 2024, I began a joint tenure-track faculty appointment in the Departments of Physics and Astronomy at the University of Wisconsin-Madison. I also have a joint affiliation with the <a href="https://space.mit.edu/" target="_blank" rel="noopener noreferrer">MIT Kavli Institute for Astrophysics and Space Research</a>, where I work closely with <a href="https://avanderburg.github.io/page5.html" target="_blank" rel="noopener noreferrer">Andrew Vanderburg's exoplanet research team</a>. You can learn more about my science research <a href="https://msoaresfurtado.github.io/WebPage">here</a>.
+            </p>
+            <p>
+                My personal background is rooted in a first-generation college experience. My family migrated from the <a href="https://vimeo.com/317880007" target="_blank" rel="noopener noreferrer">Povoação and Nordeste municipalities</a> of <a href="https://vimeo.com/304666918" target="_blank" rel="noopener noreferrer">São Miguel, Azores</a>. A closer look at the history of the Azores, now an autonomous, self-governing region of Portugal, can be explored <a href="https://www.worldhistory.org/article/1758/the-portuguese-colonization-of-the-azores/" target="_blank" rel="noopener noreferrer">here</a>.
+            </p>
+            <p>
+                My hobbies include photography, gardening, weight lifting, and amassing an ever-growing collection of books. I am also particularly fond of hiking with my two energetic golden retrievers, Murphy the Noble and Lily Belle.
+            </p>
+        </div>
+
+        <div class="footer">
+            <span>✉ <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a></span>
+            <span>⊕</span>
+            <span>Updated 12/2025</span>
+        </div>
     </div>
+
+    <script>
+        // Load the header component
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+                // Set current page indicator
+                const currentNav = document.getElementById('nav-about');
+                if (currentNav) currentNav.classList.add('current');
+            })
+            .catch(error => {
+                // Fallback header if fetch fails
+                document.getElementById('header-container').innerHTML = `
+                    <nav class="header">
+                        <a href="https://msoaresfurtado.github.io/WebPage">Home</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/About.html" class="current">About</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank">CV</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
+                    </nav>
+                `;
+            });
+    </script>
+</body>
+
 </html>
