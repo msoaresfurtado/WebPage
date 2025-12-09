@@ -1,189 +1,290 @@
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dr. Melinda Soares-Furtado - Astrophysicist</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
+    <title>Research Team — Professor Melinda Soares-Furtado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --accent-color: #20578A;
+            --highlight-color: #9b0000;
+            --text-color: #1a1b1c;
+            --text-muted: #555;
+            --bg-color: #ffffff;
+            --bg-subtle: #f8f9fa;
+            --border-light: #e0e0e0;
+            --uw-red: #c5050c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Merriweather Sans', serif;
-            margin: 40px auto;
-            max-width: 900px;
-            padding: 20px;
-            line-height: 1.5;
-            background-color: #ffffff;
-            color: #1a1b1c;
+            font-family: 'Source Sans 3', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.65;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             font-size: 16px;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 30px;
         }
 
         a {
-            color: #20578A;
+            color: var(--accent-color);
             text-decoration: none;
-            transition: background-color 0.2s;
+            transition: color 0.2s ease;
         }
 
         a:hover {
+            color: var(--highlight-color);
             text-decoration: underline;
         }
 
         .highlighted {
-            color: #9b0000;
+            color: var(--highlight-color);
+            font-weight: 600;
         }
 
-        .profile-picture {
-            display: block;
-            width: 160px;
-            height: 160px;
-            border: 2.5px solid #20578A;
-            border-radius: 50%;
-            margin: 20px auto;
-            background-image: url('https://static.wixstatic.com/media/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg/v1/fill/w_914,h_1742,al_tl,q_85,usm_0.66_1.00_0.01,enc_auto/9ad5e6_718c33fc5dc6486ab2750ab28781e72b~mv2_d_1971_2661_s_2.jpg');
-            background-size: 130%;
-            background-position: 50% 38%;
-        }
-
-        .profile-name {
-            font-size: 1.5em;
-            margin: 20px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5.0px;
-        }
-
-        .orcid-logo {
-            height: 24px;
-            border: 1px solid #20578A;
-            border-radius: 50%;
-        }
-
+        /* Navigation */
         .header {
             display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #20578A;
-            border-top: 1px solid #20578A;
-            padding: 2.5px 0;
-            font-size: 16px;
-        }
-
-        .footer {
-            align-items: center;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #20578A;
-            border-top: 1px solid #20578A;
-            padding: 2.5px 0;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 0;
+            border-bottom: 2px solid var(--accent-color);
+            border-top: 2px solid var(--accent-color);
             font-size: 14px;
+            letter-spacing: 0.5px;
         }
 
-        @media only screen and (max-width: 768px) {
-            footer {
-                height: 50px;
-                padding: 10px;
-            }
+        .header a {
+            padding: 4px 10px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
         }
 
-        .update-date {
-            display: inline-block;
-            margin: 5px;
-            text-align: center;
-            font-size: 0.9em;
-        }
-
-        .research {
-            font-size: 1.35em;
-            margin: 20px 0;
-            color: #20578A;
-            display: flex;
-            justify-content: left;
+        .header a:hover {
+            background-color: var(--bg-subtle);
+            text-decoration: none;
         }
 
         .header a.current {
-            font-weight: bold;
-            color: #9b0000;
-            text-decoration: underline;
+            font-weight: 600;
+            color: var(--highlight-color);
+            background-color: var(--bg-subtle);
         }
 
+        .nav-sep {
+            color: var(--border-light);
+        }
+
+        /* Page Title */
+        .page-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.6em;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin: 30px 0 20px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        /* Section Headers */
         h3 {
-            margin-top: 30px;
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 28px 0 12px 0;
+        }
+
+        /* Lists */
+        ul {
+            margin: 0 0 10px 0;
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        li ul {
+            margin-top: 4px;
+            margin-bottom: 8px;
+        }
+
+        li ul li {
+            font-size: 0.92em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            margin: 20px 0;
+            padding: 16px 18px;
+            border-left: 4px solid var(--uw-red);
+            background-color: var(--bg-subtle);
+            border-radius: 0 6px 6px 0;
+        }
+
+        .callout p {
+            margin: 0 0 10px 0;
+            font-size: 0.95em;
+        }
+
+        .callout p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Footnote */
+        .footnote {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            margin: 20px 0;
+        }
+
+        /* Footer */
+        .footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 40px;
+            padding: 14px 0;
+            border-top: 2px solid var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--accent-color);
+        }
+
+        /* Responsive */
+        @media only screen and (max-width: 768px) {
+            .header {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .nav-sep {
+                display: none;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="header">
-        <a href="https://msoaresfurtado.github.io/WebPage">Home</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/Team.html" class="current">Team</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank" rel="noopener noreferrer">CV</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
+    <div class="container">
+        <!-- Header loaded from external file -->
+        <div id="header-container"></div>
+
+        <div class="page-title">Research Collaboration Members</div>
+
+        <h3>Graduate Students</h3>
+        <ul>
+            <li>Maggie Ju (UW-Madison)</li>
+            <li><a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/" target="_blank">Julia K. Sheffler</a> (UW-Madison)</li>
+            <li><a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ClaireZwicker/index.html" target="_blank">Claire Zwicker</a> (UW-Madison)</li>
+        </ul>
+
+        <h3>Undergraduate and Postbacc Students</h3>
+        <ul>
+            <li>Ashley Lui (UW-Madison)</li>
+            <li>Sarah Parker (UW-Madison, postbacc)</li>
+            <li>Amaya Pereira (UW-Madison)</li>
+            <li><a href="https://www.linkedin.com/in/annelise-alvin-474899305/" target="_blank">Annelise Alvin*</a> (UW-Madison)</li>
+            <li><a href="https://www.linkedin.com/in/nick-marston-9520a5204/" target="_blank">Nicholas Marston</a> (UW-Madison)</li>
+            <li><a href="https://www.linkedin.com/in/ritvik-sai-narayan-19281a21a/" target="_blank">Ritvik Sai Narayan</a> (UW-Madison, Peter Livingston Scholar)</li>
+            <li><a href="https://www.linkedin.com/in/m-clark-b270482a4/" target="_blank">Max Clark</a> (UW-Madison, Lamat Fellow)
+                <ul><li><em>Beginning graduate school at the University of Michigan in Fall 2025!</em></li></ul>
+            </li>
+            <li><a href="https://www.linkedin.com/in/adam-distler-6b2944200/" target="_blank">Adam Distler</a> (UW-Madison, Peter Livingston Scholar, NSF GRFP)
+                <ul><li><em>Beginning graduate school at Harvard University in Fall 2025!</em></li></ul>
+            </li>
+            <li><a href="https://www.linkedin.com/in/jenna-karcheski-49132a16b/" target="_blank">Jenna Karcheski</a> (UW-Madison, NSF GRFP)
+                <ul><li><em>Beginning graduate school at UCSC in Fall 2025!</em></li></ul>
+            </li>
+            <li><a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/" target="_blank">Rianna Kuenzi</a> (UW-Madison, Lamat Fellow)
+                <ul><li><em>Began graduate school at UW-Madison in Summer 2025!</em></li></ul>
+            </li>
+            <li><a href="https://www.linkedin.com/in/nadja-aldarondo/?originalSubdomain=pr" target="_blank">Nadja Aldarondo Quiñones*</a> (University of Puerto Rico, Río Piedras)
+                <ul><li><em>Beginning graduate school at UW-Madison in Fall 2025!</em></li></ul>
+            </li>
+        </ul>
+
+        <h3>Former Group Members</h3>
+        <ul>
+            <li><a href="https://astro.ufl.edu/directory/ben-capistrant/" target="_blank">Benjamin K. Capistrant</a> (UW-Madison postbacc student)</li>
+            <li><a href="https://ryarza.github.io" target="_blank">Ricardo Yarza*</a> (NASA UCSC graduate student, FINESST)</li>
+            <li><a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/" target="_blank">Alyssa Jankowski</a> (UW-Madison undergraduate student, Peter Livingston Scholar)</li>
+            <li><a href="https://www.linkedin.com/in/brooke-kotten-23b359242/" target="_blank">Brooke Kotten</a> (UW-Madison, William F. Vilas Scholar, Lamat Fellow, NSF GRFP)</li>
+            <li><a href="https://www.linkedin.com/in/sarah-kubiak-520898205" target="_blank">Sarah Kubiak</a> (UW-Madison undergraduate student)</li>
+            <li><a href="https://www.astrachel.me/" target="_blank">Rachel McClure*</a> (UW-Madison graduate student, NSF GRFP Fellow)</li>
+            <li><a href="https://cse.umn.edu/mifa/tyler-barna" target="_blank">Tyler Barna</a> (Rutgers University undergraduate student)</li>
+            <li><a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/" target="_blank">Atirath Dhara</a> (West Windsor Plainsboro High School)</li>
+        </ul>
+
+        <p class="footnote">* I served as a co-mentor to the graduate student</p>
+
+        <div class="callout">
+            <p><strong>Honors students:</strong> Interested in summer research? The <a href="https://honors.ls.wisc.edu/" target="_blank">L&S Honors Program</a> offers opportunities to gain funded, hands-on summer experience through the Honors Summer Research Apprenticeship program.</p>
+            <p>I've thoroughly enjoyed mentoring students through this program in the past—feel free to reach out if you'd like to brainstorm a summer project together.</p>
+        </div>
+
+        <div class="callout">
+            <p><strong>Applying for the <a href="https://www.stsci.edu/stsci-research/fellowships/nasa-hubble-fellowship-program/" target="_blank">NASA Hubble Fellowship Program</a> or the <a href="https://www.hsfoundation.org/programs/science/51-pegasi-b-fellowship/" target="_blank">51 Peg b Fellowship</a>?</strong> UW–Madison is a fantastic place to bring these prestigious awards. UW–Madison, in partnership with the interdisciplinary <a href="https://wicor.wisc.edu/" target="_blank">WiCOR</a> initiative, offers an exceptional environment to advance the pioneering research supported by these prestigious fellowships.</p>
+            <p>If you're considering applying, feel free to reach out to discuss potential synergies or hosting opportunities.</p>
+        </div>
+
+        <div class="footer">
+            <span>✉ <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a></span>
+            <span>⊕</span>
+            <span>Updated 12/2025</span>
+        </div>
     </div>
 
-    <section id="collab">
-        <div class="research">Research Collaboration Members</div>
-    </section>
-
-    <h3>Graduate Students</h3>
-    <ul>
-        <li><a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/" target="_blank">Julia K. Sheffler</a> (UW-Madison)</li>
-        <li><a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ClaireZwicker/index.html" target="_blank">Claire Zwicker</a> (UW-Madison)</li>
-    </ul>
-
-    <h3>Undergraduate and Postbacc Students</h3>
-    <ul>
-        <li><a href="https://www.linkedin.com/in/annelise-alvin-474899305/" target="_blank">Annelise Alvin*</a> (UW-Madison)</li>
-         <li><a href="https://www.linkedin.com/in/nick-marston-9520a5204/" target="_blank">Nicholas Marston</a> (UW-Madison)</li>
-        <li><a href="https://www.linkedin.com/in/ritvik-sai-narayan-19281a21a/" target="_blank">Ritvik Sai Narayan</a> (UW-Madison)</li>
-       <li><a href="https://www.linkedin.com/in/m-clark-b270482a4/" target="_blank">Max Clark</a> (UW-Madison, Lamat Fellow)</li>
-            <ul><li><em>Beginning graduate school at the University of Michigan in Fall 2025!</em></li></ul>
-        <li><a href="https://www.linkedin.com/in/adam-distler-6b2944200/" target="_blank">Adam Distler</a> (UW-Madison, recent NSF GRFP recipient)
-            <ul><li><em>Beginning graduate school at Harvard University in Fall 2025!</em></li></ul>
-        </li>
-        <li><a href="https://www.linkedin.com/in/jenna-karcheski-49132a16b/" target="_blank">Jenna Karcheski</a> (UW-Madison, recent NSF GRFP recipient)
-            <ul><li><em>Beginning graduate school at UCSC in Fall 2025!</em></li></ul>
-        </li>
-        <li><a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/" target="_blank">Rianna Kuenzi</a> (UW-Madison, Lamat Fellow)</li>
-             <ul><li><em>Began graduate school at UW-Madison in Summer 2025!</em></li></ul>
-        <li><a href="https://www.linkedin.com/in/nadja-aldarondo/?originalSubdomain=pr" target="_blank">Nadja Aldarondo Quiñones*</a> (University of Puerto Rico, Río Piedras)</li>
-             <ul><li><em>Beginning graduate school at UW-Madison in Fall 2025!</em></li></ul>
-   </ul>
-
-    <h3>Former Group Members</h3>
-    <ul>
-       <li><a href="https://astro.ufl.edu/directory/ben-capistrant/" target="_blank">Benjamin K. Capistrant<sup></sup></a> (UW-Madison postbacc student)</li>
-         <li><a href="https://ryarza.github.io" target="_blank">Ricardo Yarza<sup>*</sup></a> (NASA UCSC graduate student)</li>
-        <li><a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/" target="_blank">Alyssa Jankowski</a> (UW-Madison undergraduate student)</li>
-        <li><a href="https://www.linkedin.com/in/brooke-kotten-23b359242/" target="_blank">Brooke Kotten</a> (UW-Madison, William F. Vilas Scholar, Lamat Fellow, NSF GRFP Recipient)
-        </li>
-        <li><a href="https://www.linkedin.com/in/sarah-kubiak-520898205" target="_blank">Sarah Kubiak</a> (UW-Madison undergraduate student)
-        </li>
-        <li><a href="https://www.astrachel.me/" target="_blank">Rachel McClure<sup>*</sup></a> (NSF GRFP Fellow, UW-Madison graduate student)</li>
-       <li><a href="https://cse.umn.edu/mifa/tyler-barna" target="_blank">Tyler Barna</a> (Rutgers University undergraduate student)
-        </li>
-        <li><a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/" target="_blank">Atirath Dhara</a> (West Windsor Plainsboro High School)
-        </li>
-    </ul>
-
-    <p><sup>*</sup> I served as a co-mentor to the graduate student</p>
-
-     <div style="margin: 1em 0; padding: 1em; border-left: 4px solid #c5050c; background-color: #f9f9f9;">
-      <p><strong>Honors students:</strong> Interested in summer research? The <a href="https://honors.ls.wisc.edu/" target="_blank">L&S Honors Program</a> offers opportunities to gain funded, hands-on summer experience through the Honors Summer Research Apprenticeship program.</p>
-      <p>I’ve thoroughly enjoyed mentoring students through this program in the past—feel free to reach out if you’d like to brainstorm a summer project together.</p>
-    </div>
-
-<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #c5050c; background-color: #f4f4f4;">
-  <p><strong>Applying for the <a href="https://www.stsci.edu/stsci-research/fellowships/nasa-hubble-fellowship-program/" target="_blank">NASA Hubble Fellowship Program</a> or the <a href="https://www.hsfoundation.org/programs/science/51-pegasi-b-fellowship/" target="_blank">51 Peg b Fellowship</a>?</strong> UW–Madison is a fantastic place to bring these prestigious awards. UW–Madison, in partnership with the interdisciplinary <a href="https://wicor.wisc.edu/" target="_blank">WiCOR</a> initiative, offers an exceptional environment to advance the pioneering research supported by these prestigious fellowships.</p>
-  <p>If you're considering applying, feel free to reach out</a> to discuss potential synergies or hosting opportunities.</p>
-</div>
-
-
-   <div class="footer">
-        <span class="contact">&#9993; mmsoares(at)wisc(dot)edu</span> ⊕
-        <span class="update-date">Updated 08/2025</span>
-    </div>
+    <script>
+        // Load the header component
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+                // Set current page indicator
+                const currentNav = document.getElementById('nav-team');
+                if (currentNav) currentNav.classList.add('current');
+            })
+            .catch(error => {
+                // Fallback header if fetch fails
+                document.getElementById('header-container').innerHTML = `
+                    <nav class="header">
+                        <a href="https://msoaresfurtado.github.io/WebPage">Home</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html" class="current">Team</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank">CV</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
+                    </nav>
+                `;
+            });
+    </script>
 </body>
 
 </html>
