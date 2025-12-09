@@ -101,6 +101,21 @@
             border-bottom: 1px solid var(--border-light);
         }
 
+        /* Team Image */
+        .team-image {
+            float: right;
+            width: 280px;
+            margin: 0 0 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
         /* Section Headers */
         h3 {
             font-family: 'Crimson Pro', serif;
@@ -108,6 +123,10 @@
             font-weight: 600;
             color: var(--text-color);
             margin: 28px 0 12px 0;
+        }
+
+        h3:first-of-type {
+            margin-top: 0;
         }
 
         /* Lists */
@@ -118,17 +137,6 @@
 
         li {
             margin-bottom: 6px;
-        }
-
-        li ul {
-            margin-top: 4px;
-            margin-bottom: 8px;
-        }
-
-        li ul li {
-            font-size: 0.92em;
-            color: var(--text-muted);
-            margin-bottom: 2px;
         }
 
         /* Callout Boxes */
@@ -184,6 +192,14 @@
             .nav-sep {
                 display: none;
             }
+
+            .team-image {
+                float: none;
+                display: block;
+                width: 100%;
+                max-width: 350px;
+                margin: 0 auto 20px auto;
+            }
         }
     </style>
 </head>
@@ -195,51 +211,45 @@
 
         <div class="page-title">Research Collaboration Members</div>
 
-        <h3>Graduate Students</h3>
-        <ul>
-            <li>Maggie Ju (UW-Madison)</li>
-            <li><a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/" target="_blank">Julia K. Sheffler</a> (UW-Madison)</li>
-            <li><a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ClaireZwicker/index.html" target="_blank">Claire Zwicker</a> (UW-Madison)</li>
-        </ul>
+        <div class="clearfix">
+            <img src="https://msoaresfurtado.github.io/WebPage/photos/team.png" alt="Research Team" class="team-image">
 
-        <h3>Undergraduate and Postbacc Students</h3>
-        <ul>
-            <li>Ashley Lui (UW-Madison)</li>
-            <li>Sarah Parker (UW-Madison, postbacc)</li>
-            <li>Amaya Pereira (UW-Madison)</li>
-            <li><a href="https://www.linkedin.com/in/annelise-alvin-474899305/" target="_blank">Annelise Alvin*</a> (UW-Madison)</li>
-            <li><a href="https://www.linkedin.com/in/nick-marston-9520a5204/" target="_blank">Nicholas Marston</a> (UW-Madison)</li>
-            <li><a href="https://www.linkedin.com/in/ritvik-sai-narayan-19281a21a/" target="_blank">Ritvik Sai Narayan</a> (UW-Madison, Peter Livingston Scholar)</li>
-            <li><a href="https://www.linkedin.com/in/m-clark-b270482a4/" target="_blank">Max Clark</a> (UW-Madison, Lamat Fellow)
-                <ul><li><em>Began graduate school at the University of Michigan in Fall 2025!</em></li></ul>
-            </li>
-            <li><a href="https://www.linkedin.com/in/adam-distler-6b2944200/" target="_blank">Adam Distler</a> (UW-Madison, Peter Livingston Scholar, NSF GRFP)
-                <ul><li><em>Began graduate school at Harvard University in Fall 2025!</em></li></ul>
-            </li>
-            <li><a href="https://www.linkedin.com/in/jenna-karcheski-49132a16b/" target="_blank">Jenna Karcheski</a> (UW-Madison, NSF GRFP)
-                <ul><li><em>Began graduate school at UCSC in Fall 2025!</em></li></ul>
-            </li>
-            <li><a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/" target="_blank">Rianna Kuenzi</a> (UW-Madison, Lamat Fellow)
-                <ul><li><em>Began graduate school at UW-Madison in Summer 2025!</em></li></ul>
-            </li>
-            <li><a href="https://www.linkedin.com/in/nadja-aldarondo/?originalSubdomain=pr" target="_blank">Nadja Aldarondo Quiñones*</a> (University of Puerto Rico, Río Piedras)
-                <ul><li><em>Began graduate school at UW-Madison in Fall 2025!</em></li></ul>
-            </li>
-        </ul>
+            <h3>Graduate Students</h3>
+            <ul>
+                <li>Maggie Ju (UW-Madison)</li>
+                <li><a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/" target="_blank">Julia K. Sheffler</a> (UW-Madison)</li>
+                <li><a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ClaireZwicker/index.html" target="_blank">Claire Zwicker</a> (UW-Madison)</li>
+            </ul>
 
-        <h3>Former Group Members</h3>
-        <ul>
-            <li><a href="https://astro.ufl.edu/directory/ben-capistrant/" target="_blank">Benjamin K. Capistrant</a> (UW-Madison postbacc student)</li>
-            <li><a href="https://ryarza.github.io" target="_blank">Ricardo Yarza*</a> (NASA UCSC graduate student, FINESST)</li>
-            <li><a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/" target="_blank">Alyssa Jankowski</a> (UW-Madison undergraduate student, Peter Livingston Scholar)</li>
-            <li><a href="https://www.linkedin.com/in/brooke-kotten-23b359242/" target="_blank">Brooke Kotten</a> (UW-Madison, William F. Vilas Scholar, Lamat Fellow, NSF GRFP)</li>
-            <li><a href="https://www.linkedin.com/in/sarah-kubiak-520898205" target="_blank">Sarah Kubiak</a> (UW-Madison undergraduate student)</li>
-            <li><a href="https://www.astrachel.me/" target="_blank">Rachel McClure*</a> (UW-Madison graduate student, NSF GRFP Fellow)</li>
-            <li><a href="https://cse.umn.edu/mifa/tyler-barna" target="_blank">Tyler Barna</a> (Rutgers University undergraduate student)</li>
-            <li><a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/" target="_blank">Atirath Dhara</a> (West Windsor Plainsboro High School)</li>
-        </ul>
+            <h3>Undergraduate and Postbacc Students</h3>
+            <ul>
+                <li>Ashley Lui (UW-Madison)</li>
+                <li>Sarah Parker (UW-Madison, postbacc)</li>
+                <li>Amaya Pereira (UW-Madison)</li>
+                <li><a href="https://www.linkedin.com/in/annelise-alvin-474899305/" target="_blank">Annelise Alvin*</a> (UW-Madison, L&S Honors)</li>
+                <li><a href="https://www.linkedin.com/in/nick-marston-9520a5204/" target="_blank">Nicholas Marston</a> (UW-Madison)</li>
+                <li><a href="https://www.linkedin.com/in/ritvik-sai-narayan-19281a21a/" target="_blank">Ritvik Sai Narayan</a> (UW-Madison, Peter Livingston Scholar)</li>
+            </ul>
 
-        <p class="footnote">* I served as a co-mentor to the graduate student</p>
+            <h3>Former Group Members</h3>
+            <ul>
+                <li><a href="https://www.linkedin.com/in/nadja-aldarondo/?originalSubdomain=pr" target="_blank">Nadja Aldarondo Quiñones*</a> (University of Puerto Rico Río Piedras) — <em>now at UW-Madison (grad)</em></li>
+                <li><a href="https://cse.umn.edu/mifa/tyler-barna" target="_blank">Tyler Barna</a> (Rutgers University) — <em>now at University of Minnesota (grad)</em></li>
+                <li><a href="https://astro.ufl.edu/directory/ben-capistrant/" target="_blank">Benjamin K. Capistrant</a> (UW-Madison, postbacc) — <em>now at University of Florida (grad)</em></li>
+                <li><a href="https://www.linkedin.com/in/m-clark-b270482a4/" target="_blank">Max Clark</a> (UW-Madison, Lamat Fellow) — <em>now at University of Michigan (grad)</em></li>
+                <li><a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/" target="_blank">Atirath Dhara</a> (West Windsor Plainsboro High School) — <em>now at UC Santa Cruz (undergrad)</em></li>
+                <li><a href="https://www.linkedin.com/in/adam-distler-6b2944200/" target="_blank">Adam Distler</a> (UW-Madison, Peter Livingston Scholar, NSF GRFP) — <em>now at Harvard (grad)</em></li>
+                <li><a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/" target="_blank">Alyssa Jankowski</a> (UW-Madison, Peter Livingston Scholar)</li>
+                <li><a href="https://www.linkedin.com/in/jenna-karcheski-49132a16b/" target="_blank">Jenna Karcheski</a> (UW-Madison, NSF GRFP) — <em>now at UC Santa Cruz (grad)</em></li>
+                <li><a href="https://www.linkedin.com/in/brooke-kotten-23b359242/" target="_blank">Brooke Kotten</a> (UW-Madison, Vilas Scholar, Lamat Fellow, NSF GRFP) — <em>now at University of Michigan (grad)</em></li>
+                <li><a href="https://www.linkedin.com/in/sarah-kubiak-520898205" target="_blank">Sarah Kubiak</a> (UW-Madison) — <em>MS from CU Boulder</em></li>
+                <li><a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/" target="_blank">Rianna Kuenzi</a> (UW-Madison, Lamat Fellow) — <em>now at UW-Madison (grad)</em></li>
+                <li><a href="https://www.astrachel.me/" target="_blank">Rachel McClure*</a> (UW-Madison, NSF GRFP) — <em>now faculty at Weber State University</em></li>
+                <li><a href="https://ryarza.github.io" target="_blank">Ricardo Yarza*</a> (UC Santa Cruz, NASA FINESST)</li>
+            </ul>
+
+            <p class="footnote">* Co-mentored</p>
+        </div>
 
         <div class="callout">
             <p><strong>Honors students:</strong> Interested in summer research? The <a href="https://honors.ls.wisc.edu/" target="_blank">L&S Honors Program</a> offers opportunities to gain funded, hands-on summer experience through the Honors Summer Research Apprenticeship program.</p>
