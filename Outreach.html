@@ -5,159 +5,244 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dr. Melinda Soares-Furtado - Astrophysicist</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
+    <title>Outreach — Professor Melinda Soares-Furtado</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
-        /* General Styles */
+        :root {
+            --accent-color: #20578A;
+            --highlight-color: #9b0000;
+            --text-color: #1a1b1c;
+            --text-muted: #555;
+            --bg-color: #ffffff;
+            --bg-subtle: #f8f9fa;
+            --border-light: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Merriweather Sans, serif;
-            margin: 40px auto;
-            max-width: 900px;
-            padding: 20px;
-            line-height: 1.5;
-            background-color: #ffffff;
-            color: #1a1b1c;
+            font-family: 'Source Sans 3', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.65;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             font-size: 16px;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px 30px;
         }
 
         a {
-            color: #20578A;
+            color: var(--accent-color);
             text-decoration: none;
-            transition: background-color 0.2s;
+            transition: color 0.2s ease;
         }
 
         a:hover {
+            color: var(--highlight-color);
             text-decoration: underline;
         }
 
-        .highlighted {
-            color: #9b0000;
+        /* Navigation */
+        .header {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 0;
+            border-bottom: 2px solid var(--accent-color);
+            border-top: 2px solid var(--accent-color);
+            font-size: 14px;
+            letter-spacing: 0.5px;
         }
 
-        .header {            
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1.0px solid #20578A;
-            border-top: 1.0px solid #20578A;
-            padding-bottom: 2.5px;
-            padding-top: 2.5px;
-            font-size: 16px;}
-
-        .footer {
-            align-items: center; /* This will vertically center align items */
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1.0px solid #20578A;
-            border-top: 1.0px solid #20578A;
-            padding-bottom: 2.5px;
-            padding-top: 2.5px;
-            font-size: 14px;}
-
-       /* Media query for screens with a max width of 768px (typically tablets and mobiles) */
-     @media only screen and (max-width: 768px) {
-    footer {
-        height: 50px;
-        padding: 10px;
-    }
-}
-        .update-date {
-            display: inline-block;
-            margin: 5px;
-            text-align: center;
-            font-size: 0.9em;
+        .header a {
+            padding: 4px 10px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
         }
 
-
-        .large{
-            font-size: 1.35em;
-            margin: 20px 0px;
-            display: flex;
-            justify-content: left;
-            gap: 1.0px;
+        .header a:hover {
+            background-color: var(--bg-subtle);
+            text-decoration: none;
         }
-
-        .banner{
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              margin-top: 17.5px;
-              width: 100%;
-              height: auto;
-       }
 
         .header a.current {
-            font-weight: bold;           /* Make the text bold */
-            color: #9b0000;              /* Change the text color */
-            text-decoration: underline;  /* Add an underline */
+            font-weight: 600;
+            color: var(--highlight-color);
+            background-color: var(--bg-subtle);
         }
-        
+
+        .nav-sep {
+            color: var(--border-light);
+        }
+
+        /* Banner */
+        .banner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 25px 0 30px 0;
+            width: 100%;
+        }
+
+        .banner img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Section Headers */
+        .section-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.25em;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin: 28px 0 12px 0;
+        }
+
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        /* Content */
+        .content {
+            font-size: 1em;
+            line-height: 1.75;
+        }
+
+        .content p {
+            margin: 0 0 18px 0;
+        }
+
+        /* Bottom Image */
+        .bottom-image {
+            width: 100%;
+            height: auto;
+            margin: 25px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Footer */
+        .footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 40px;
+            padding: 14px 0;
+            border-top: 2px solid var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--accent-color);
+        }
+
+        /* Responsive */
+        @media only screen and (max-width: 768px) {
+            .header {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .nav-sep {
+                display: none;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <div class="header">
-        <a href="https://msoaresfurtado.github.io/WebPage">Home</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a> |
-        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank" rel="noopener noreferrer">CV</a>|
-        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html" class="current">Outreach</a> 
+    <div class="container">
+        <!-- Header loaded from external file -->
+        <div id="header-container"></div>
+
+        <div class="banner">
+            <img src="https://msoaresfurtado.github.io/WebPage/photos/banneroutreach.png" alt="Outreach banner">
+        </div>
+
+        <div class="content">
+            <div class="section-title">Mentoring Early Career Scientists</div>
+            <p>
+                Mentoring is pivotal to student success and well-being. Throughout my academic journey, I have had the privilege to work with <a href="https://msoaresfurtado.github.io/WebPage/Team.html">a number of talented high school, undergraduate, and graduate students</a>. I have found that mentoring strengthens my science communication, leads to greater innovation and scientific insight, and continually renews my passion for academic work. In 2023, I was awarded the <a href="https://uwpa.wisc.edu/events-overview/postdoc-excellence-awards/" target="_blank" rel="noopener noreferrer">Postdoc Excellence Award in Mentoring</a> by the University of Wisconsin-Madison Postdoctoral Association.
+            </p>
+            <p>
+                The <a href="https://www.astro.wisc.edu/undergraduate-program/radial/" target="_blank" rel="noopener noreferrer">RADIAL program</a> brings together a dedicated team of mentors and talented summer students to collaborate on advanced research projects in astronomy. As Site Director, I help to define the strategic vision, secure funding to sustain and expand local initiatives, and recruit mentors who bring expertise and innovation to the program. I focus on connecting these mentors with promising students, ensuring they gain meaningful research experience while developing the technical and professional skills required to meet real-world challenges and contribute to the advancement of STEM.
+            </p>
+            <p>
+                I also lead the newly launched <strong>Peter Livingston Scholars Program</strong>, which provides UW-Madison undergraduates with the opportunity to engage in astrophysical research under the guidance of mentors in the Department of Astronomy. This program is designed to reduce financial barriers for high-achieving students who might otherwise be unable to participate in research, offering them a supported, semester-long experience. This program helps students develop technical expertise, research skills, and scientific leadership, while preparing them for graduate education or careers in STEM-related fields. My role involves shaping the program's vision, overseeing its operations, and securing funding to ensure its sustainability and long-term impact. Together with the RADIAL program, these initiatives equip the next generation of scientists with the professional mentorship, technical skills, and hands-on training required to address the complex challenges of a rapidly advancing STEM landscape.
+            </p>
+
+            <div class="section-title">Community Partnerships</div>
+            <p>
+                Partnering with the <a href="https://www.mpm.edu/" target="_blank" rel="noopener noreferrer">Milwaukee Public Museum</a> (MPM) has provided a meaningful opportunity to share my scientific work with the broader public. In alignment with the principles of the <a href="https://www.wisc.edu/wisconsin-idea/" target="_blank" rel="noopener noreferrer">Wisconsin Idea</a>, this mutually beneficial partnership leverages university resources and expertise to create educational programs that are accessible to all members of the community. I recently had the opportunity to film a planetarium show that was written and directed by Bob Bonadurer, the MPM Planetarium Director. Titled <a href="https://youtu.be/2EthSfXzu1w?si=i-ieVHN11dW_mpR5" target="_blank" rel="noopener noreferrer">"Lights Out! Eclipses: Whys, Wonders, and Wows"</a>, the show delves deep into the fascinating science of eclipses, unraveling the mysteries behind these spectacular celestial events.
+            </p>
+            <p>
+                I have also teamed up with MPM to host other signature events, including their recurring <a href="https://www.mpm.edu/science-on-tap" target="_blank" rel="noopener noreferrer">Science on Tap</a> speaker series. These free public lectures are designed to make science accessible and engaging. Additionally, participating in the <a href="https://www.mpm.edu/outreach" target="_blank" rel="noopener noreferrer">Learn With An Expert</a> series provided me with an opportunity to interact with hundreds of 1st to 4th grade students throughout Wisconsin, sharing insights about my journey and career as an astronomer. Through these initiatives, MPM is fostering a community of curiosity, encouraging lifelong learning and a deep appreciation for the wonders of science.
+            </p>
+            <p>
+                Before coming to Madison, I worked with a talented group of astronomers to cocreate the <a href="https://astronomyontap.org/locations/trenton-nj/" target="_blank" rel="noopener noreferrer">Astronomy on Tap chapter in Trenton, New Jersey</a>. I am currently an active participant in the <a href="https://astronomyontap.org/locations/madison-wi/" target="_blank" rel="noopener noreferrer">Astronomy on Tap chapter in Madison, Wisconsin</a>. I have also had the opportunity to team up with the Astronomy on Tap chapters in Pennsylvania and Las Vegas.
+            </p>
+
+            <div class="section-title">University Partnerships</div>
+            <p>
+                I've been privileged to work closely with a community of skilled academics who are deeply committed to meaningful science outreach. These exceptional leaders have not only inspired me, but they have also taught me the skills required to cultivate inclusive communities. More specifically, I have worked closely with the <a href="https://lamat.science.ucsc.edu/" target="_blank" rel="noopener noreferrer">Lamat Institute</a> for almost a decade. Today, I serve as an Advisory Board member, summer instructor, and student mentor for the program. As a student at UCSC, I worked with the <a href="https://ace.science.ucsc.edu/" target="_blank" rel="noopener noreferrer">Academic Excellence Program</a> (ACE). As an ACE Peer Mentor, I played a crucial role in facilitating small group discussions and activities, aiming to deepen the students' understanding of physics concepts.
+            </p>
+
+            <div class="section-title">Conference Organization</div>
+            <p>
+                I have co-organized several major physics and astronomy conferences, including the <a href="https://www.aps.org/programs/women/cuwip/" target="_blank" rel="noopener noreferrer">APS Conferences for Undergraduate Women in Physics (CUWiP)</a> and the <a href="https://www.pppl.gov/YWC" target="_blank" rel="noopener noreferrer">Young Women's Conference in STEM</a>. More recently, I organized an inclusive topical conference entitled <a href="https://sites.google.com/view/late-stage-exoplanets-2023/home" target="_blank" rel="noopener noreferrer">"Exoplanet Systems and Stellar Life Cycles: Late-Stage and Post-MS Systems"</a> at the <a href="https://www.aspenphys.org/" target="_blank" rel="noopener noreferrer">Aspen Center for Physics</a>, where I secured NASA funding to support travel for early-career scientists. In Fall 2025, I helped to co-organize the <a href="https://gleam.astro.wisc.edu/" target="_blank" rel="noopener noreferrer">Great Lakes Exoplanet Area Meeting</a> at UW-Madison, again securing NASA travel support to ensure broad participation among early-career scholars.
+            </p>
+
+            <img src="https://msoaresfurtado.github.io/WebPage/photos/outreach.png" alt="Outreach activities" class="bottom-image">
+        </div>
+
+        <div class="footer">
+            <span>✉ <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a></span>
+            <span>⊕</span>
+            <span>Updated 12/2025</span>
+        </div>
     </div>
-<body>
-  <img src="https://msoaresfurtado.github.io/WebPage/photos/banneroutreach.png" alt="banneroutreach" class="banner">
+
+    <script>
+        // Load the header component
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+                // Set current page indicator
+                const currentNav = document.getElementById('nav-outreach');
+                if (currentNav) currentNav.classList.add('current');
+            })
+            .catch(error => {
+                // Fallback header if fetch fails
+                document.getElementById('header-container').innerHTML = `
+                    <nav class="header">
+                        <a href="https://msoaresfurtado.github.io/WebPage">Home</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank">CV</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html" class="current">Outreach</a>
+                    </nav>
+                `;
+            });
+    </script>
 </body>
-<p><b> <font color="#20578A"><font size="+0.1">Mentoring Early Career Scientists</font></b></font><br>
-Mentoring is pivotal to student success and well-being. 
-Throughout my academic journey, I have had the privilege to work with <a href="https://msoaresfurtado.github.io/WebPage/Team.html">a number of talented high school, undergraduate, and graduate students</a>.
-    I have found that mentoring strengthens my science communication, leads to greater innovation and scientific insight, and continually renews my passion for academic work.
-    In 2023, I was awarded the <a href="https://uwpa.wisc.edu/events-overview/postdoc-excellence-awards/" target="_blank" rel="noopener noreferrer">Postdoc Excellence Award in Mentoring</a> by the University of Wisconsin-Madison Postdoctoral Association. 
-
-<br><br>The <a href="https://www.astro.wisc.edu/undergraduate-program/radial/" target="_blank" rel="noopener noreferrer">RADIAL program</a> brings together a dedicated team of mentors and talented summer students to collaborate on advanced research projects in astronomy. 
-As Site Director, I help to define the strategic vision, secure funding to sustain and expand local initiatives, and recruit mentors who bring expertise and innovation to the program. I focus on connecting these mentors with promising students, ensuring they gain meaningful research experience while developing the technical and professional skills required to meet real-world challenges and contribute to the advancement of STEM.
-
-<br><br>I also lead the newly launched <b>Peter Livingston Scholars Program</b>, which provides UW-Madison undergraduates with the opportunity to engage in astrophysical research under the guidance of mentors in the Department of Astronomy. This program is designed to reduce financial barriers for high-achiveing students who might otherwise be unable to participate in research, offering them a supported, semester-long experience. This program helps students develop technical expertise, research skills, and scientific leadership, while preparing them for graduate education or careers in STEM-related fields. My role involves shaping the program’s vision, overseeing its operations, and securing funding to ensure its sustainability and long-term impact. 
-Together with the RADIAL program, these initiatives equip the next generation of scientists with the professional mentorship, technical skills, and hands-on training required to address the complex challenges of a rapidly advancing STEM landscape.
-
-<p><b> <font color="#20578A"><font size="+0.1">Community Partnerships</font></b></font><br> 
-Partnering with the <a href="https://www.mpm.edu/" target="_blank" rel="noopener noreferrer">Milwaukee Public Museum</a> (MPM) has provided a meaningful opportunity to share my scientific work with the broader public. 
-In alignment with the principles of the <a href="https://www.wisc.edu/wisconsin-idea/" target="_blank" rel="noopener noreferrer"> Wisconsin Idea</a>, this mutually beneficial partnership leverages university resources and expertise to create educational programs that are accessible to all members of the community. 
-I recently had the opportunity to film a planetarium show that was written and directed by Bob Bonadurer, the MPM Planetarium Director. Titled <a href="https://youtu.be/2EthSfXzu1w?si=i-ieVHN11dW_mpR5" target="_blank" rel="noopener noreferrer"> "Lights Out! Eclipses: Whys, Wonders, and Wows"</a>, the show delves deep into the fascinating science of eclipses, unraveling the mysteries behind these spectacular celestial events. This film will be showcased at the Milwaukee Public Museum until April 2024, providing an opportunity for museum visitors to enjoy this educational presentation.
-<br><br>
-
-I have also teamed up MPM to host other signature events, including their recurring <a href="https://www.mpm.edu/science-on-tap" target="_blank" rel="noopener noreferrer">Science on Tap </a> speaker series. 
-These free public lectures are designed to make science accessible and engaging. 
-Additionally, participating in the <a href="https://www.mpm.edu/outreach" target="_blank" rel="noopener noreferrer">Learn With An Expert </a> series provided me with an opportunity to interact with hundreds of 1st to 4th grade students throughout Wisconsin, sharing insights about my journey and career as an astronomer. Through these initiatives, MPM is fostering a community of curiosity, encouraging lifelong learning and a deep appreciation for the wonders of science.
-</p>
-<p>Before coming to Madison, I worked with a talented group of astronomers to cocreate the <a href="https://astronomyontap.org/locations/trenton-nj/#:~:text=Astronomy%20on%20Tap%20Trenton%20was,followed%20by%20questions%20and%20comments.">Astronomy on Tap chapter in Trenton, New Jersey</a>. 
-I am currently an active participant in the <a href="https://astronomyontap.org/locations/madison-wi/">Astronomy on Tap chapter in Madison, Wisconsin</a>. 
-I have also had the opportunity to team up with the Astronomy on Tap chapters in Pennsylvania and Las Vegas. Just this past October, I presented a talk on variable star astronomy with astrophysicists at UNLV.</p>
-    
-<p><b> <font color="#20578A"><font size="+0.1">University Partnerships</font></b></font><br> 
-I've been privileged to work closely with a community of skilled academics who are deeply committed to meaningful science outreach. These exceptional leaders have not only inspired me, but they have also taught me the skills required to cultivate inclusive communities.
-More specifically, I have worked closely with the  <a href="https://lamat.science.ucsc.edu/" target="_blank" rel="noopener noreferrer">Lamat Institue</a> for almost a decade. Today, I serve as an Advisory Board member, summer instructor, and student mentor for the program. As a student at UCSC, I worked with the <a href="https://ace.science.ucsc.edu/" target="_blank" rel="noopener noreferrer"> Academic Excellence Program</a> (ACE). As an ACE Peer Mentor, I played a crucial role in facilitating small group discussions and activities, aiming to deepen the students' understanding of physics concepts. 
-
-<p><b> <font color="#20578A"><font size="+0.1">Conference Organization</font></b></font><br>
-I have co-organized several major physics and astronomy conferences, including the <a href="https://www.aps.org/programs/women/cuwip/" target="_blank" rel="noopener noreferrer">APS Conferences for Undergraduate Women in Physics (CUWiP)</a> and the <a href="https://www.pppl.gov/YWC" target="_blank" rel="noopener noreferrer">Young Women's Conference in STEM</a>. 
-    More recently, I organized an inclusive topical conference entitled <a href="https://sites.google.com/view/late-stage-exoplanets-2023/home" target="_blank" rel="noopener noreferrer">"Exoplanet Systems and Stellar Life Cycles: 
-Late-Stage and Post-MS Systems"</a> at the <a href="https://www.aspenphys.org/" target="_blank" rel="noopener noreferrer"> Aspen Center for Physics</a>. In Fall 2025, I helped to co-organize the <a href="https://gleam.astro.wisc.edu/" target="_blank" rel="noopener noreferrer"> Great Lakes Exoplanet Area Meeting</a> at UW-Madison. To ensure participation among early-career scholars, I have led two successful NASA TWSC proposals that significantly reduced travel costs for all eligible US-based participants.<br> <br>
-
- <style>
-    .banner-image {
-      width: 100%;
-      height: auto;
-   }
-  </style>
-</head>
-<body>
-  <img src="https://msoaresfurtado.github.io/WebPage/photos/outreach.png" alt="Banner Image" class="banner-image">
-</body>
-
-    <br>
-    <div class="footer">
-        <span class="contact">&#9993; mmsoares(at)wisc(dot)edu</span>⊕
-        <span class="update-date"> Updated 08/2025</span>
-    </div>
-</body>
-
 
 </html>
