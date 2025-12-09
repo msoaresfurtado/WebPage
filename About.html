@@ -89,30 +89,29 @@
             color: var(--border-light);
         }
 
-        /* Banner */
-        .banner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 25px 0 30px 0;
-            width: 100%;
-        }
-
-        .banner img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        /* Content */
+        /* Content with image on right */
         .content {
             font-size: 1em;
             line-height: 1.75;
+            margin-top: 30px;
         }
 
         .content p {
             margin: 0 0 18px 0;
+        }
+
+        .content-image {
+            float: right;
+            width: 320px;
+            margin: 0 0 20px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
         }
 
         /* Footer */
@@ -143,6 +142,14 @@
             .nav-sep {
                 display: none;
             }
+
+            .content-image {
+                float: none;
+                display: block;
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto 20px auto;
+            }
         }
     </style>
 </head>
@@ -152,11 +159,9 @@
         <!-- Header loaded from external file -->
         <div id="header-container"></div>
 
-        <div class="banner">
-            <img src="https://msoaresfurtado.github.io/WebPage/photos/bannerabout.png" alt="About banner">
-        </div>
+        <div class="content clearfix">
+            <img src="https://imageio.forbes.com/specials-images/imageserve/60c72ba42c6e037938b4012e/0x0.jpg?format=jpg&height=600&width=1200&fit=bounds" alt="About" class="content-image">
 
-        <div class="content">
             <p>
                 I received my Bachelor's degree in physics from the <a href="https://www.physics.ucsc.edu/" target="_blank" rel="noopener noreferrer">University of California, Santa Cruz</a> and my Ph.D. in astrophysical sciences from <a href="https://web.astro.princeton.edu/" target="_blank" rel="noopener noreferrer">Princeton University</a>. I then moved to University of Wisconsin-Madison where I was a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a>. In Fall 2024, I began a joint tenure-track faculty appointment in the Departments of Physics and Astronomy at the University of Wisconsin-Madison. I also have a joint affiliation with the <a href="https://space.mit.edu/" target="_blank" rel="noopener noreferrer">MIT Kavli Institute for Astrophysics and Space Research</a>, where I work closely with <a href="https://avanderburg.github.io/page5.html" target="_blank" rel="noopener noreferrer">Andrew Vanderburg's exoplanet research team</a>. You can learn more about my science research <a href="https://msoaresfurtado.github.io/WebPage">here</a>.
             </p>
