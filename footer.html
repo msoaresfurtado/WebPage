@@ -1,0 +1,106 @@
+<footer id="site-footer">
+    <div class="footer-content">
+        <div class="footer-contact">
+            <span class="email-icon">✉</span>
+            <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a>
+        </div>
+        <div class="footer-divider">⊕</div>
+        <div class="footer-links">
+            <a href="https://github.com/msoaresfurtado" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <span class="link-sep">•</span>
+            <a href="https://ui.adsabs.harvard.edu/search/q=orcid%3A0000-0001-7493-7419" target="_blank" rel="noopener noreferrer">ADS</a>
+            <span class="link-sep">•</span>
+            <a href="https://orcid.org/0000-0001-7493-7419" target="_blank" rel="noopener noreferrer">ORCID</a>
+        </div>
+        <div class="footer-divider">⊕</div>
+        <div class="footer-update">
+            Updated <span id="footer-date">12/2025</span>
+        </div>
+    </div>
+    <div class="footer-affiliation">
+        University of Wisconsin-Madison · Departments of Astronomy & Physics
+    </div>
+</footer>
+
+<style>
+#site-footer {
+    margin-top: 60px;
+    padding: 20px 0 15px 0;
+    border-top: 2px solid var(--accent-color, #20578A);
+    font-size: 14px;
+    color: var(--text-muted, #555);
+}
+
+.footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.footer-contact a {
+    color: var(--accent-color, #20578A);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-contact a:hover {
+    color: var(--highlight-color, #9b0000);
+    text-decoration: underline;
+}
+
+.email-icon {
+    margin-right: 6px;
+}
+
+.footer-divider {
+    color: var(--accent-color, #20578A);
+    opacity: 0.6;
+}
+
+.footer-links {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.footer-links a {
+    color: var(--accent-color, #20578A);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: var(--highlight-color, #9b0000);
+}
+
+.link-sep {
+    color: var(--text-muted, #555);
+    opacity: 0.5;
+}
+
+.footer-update {
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.footer-affiliation {
+    text-align: center;
+    margin-top: 12px;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+@media only screen and (max-width: 600px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .footer-divider {
+        display: none;
+    }
+}
+</style>
