@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Research Team — Professor Melinda Soares-Furtado</title>
+    <title>About Me — Professor Melinda Soares-Furtado</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
 
     <style>
@@ -17,7 +17,6 @@
             --bg-color: #ffffff;
             --bg-subtle: #f8f9fa;
             --border-light: #e0e0e0;
-            --uw-red: #c5050c;
         }
 
         * {
@@ -90,59 +89,29 @@
             color: var(--border-light);
         }
 
-        /* Page Title */
-        .page-title {
-            font-family: 'Crimson Pro', serif;
-            font-size: 1.6em;
-            font-weight: 600;
-            color: var(--accent-color);
-            margin: 30px 0 20px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-light);
+        /* Content with image on right */
+        .content {
+            font-size: 1em;
+            line-height: 1.75;
+            margin-top: 30px;
         }
 
-        /* Section Headers */
-        h3 {
-            font-family: 'Crimson Pro', serif;
-            font-size: 1.2em;
-            font-weight: 600;
-            color: var(--text-color);
-            margin: 28px 0 12px 0;
+        .content p {
+            margin: 0 0 18px 0;
         }
 
-        /* Lists */
-        ul {
-            margin: 0 0 10px 0;
-            padding-left: 22px;
+        .content-image {
+            float: right;
+            width: 320px;
+            margin: 0 0 20px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        li {
-            margin-bottom: 6px;
-        }
-
-        /* Callout Boxes */
-        .callout {
-            margin: 20px 0;
-            padding: 16px 18px;
-            border-left: 4px solid var(--uw-red);
-            background-color: var(--bg-subtle);
-            border-radius: 0 6px 6px 0;
-        }
-
-        .callout p {
-            margin: 0 0 10px 0;
-            font-size: 0.95em;
-        }
-
-        .callout p:last-child {
-            margin-bottom: 0;
-        }
-
-        /* Footnote */
-        .footnote {
-            font-size: 0.9em;
-            color: var(--text-muted);
-            margin: 20px 0;
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
         }
 
         /* Footer */
@@ -173,6 +142,14 @@
             .nav-sep {
                 display: none;
             }
+
+            .content-image {
+                float: none;
+                display: block;
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto 20px auto;
+            }
         }
     </style>
 </head>
@@ -182,52 +159,18 @@
         <!-- Header loaded from external file -->
         <div id="header-container"></div>
 
-        <div class="page-title">Research Collaboration Members</div>
+        <div class="content clearfix">
+            <img src="https://imageio.forbes.com/specials-images/imageserve/60c72ba42c6e037938b4012e/0x0.jpg?format=jpg&height=600&width=1200&fit=bounds" alt="About" class="content-image">
 
-        <h3>Graduate Students</h3>
-        <ul>
-            <li>Maggie Ju (UW-Madison)</li>
-            <li><a href="https://www.physics.wisc.edu/directory/sheffler-julia-k/" target="_blank">Julia K. Sheffler</a> (UW-Madison)</li>
-            <li><a href="https://cierareu.northwestern.edu/2022CIERA_REU_websites/ClaireZwicker/index.html" target="_blank">Claire Zwicker</a> (UW-Madison)</li>
-        </ul>
-
-        <h3>Undergraduate and Postbacc Students</h3>
-        <ul>
-            <li>Ashley Lui (UW-Madison)</li>
-            <li>Sarah Parker (UW-Madison, postbacc)</li>
-            <li>Amaya Pereira (UW-Madison)</li>
-            <li><a href="https://www.linkedin.com/in/annelise-alvin-474899305/" target="_blank">Annelise Alvin*</a> (UW-Madison)</li>
-            <li><a href="https://www.linkedin.com/in/nick-marston-9520a5204/" target="_blank">Nicholas Marston</a> (UW-Madison)</li>
-            <li><a href="https://www.linkedin.com/in/ritvik-sai-narayan-19281a21a/" target="_blank">Ritvik Sai Narayan</a> (UW-Madison, Peter Livingston Scholar)</li>
-        </ul>
-
-        <h3>Former Group Members</h3>
-        <ul>
-            <li><a href="https://www.linkedin.com/in/nadja-aldarondo/?originalSubdomain=pr" target="_blank">Nadja Aldarondo Quiñones*</a> (University of Puerto Rico Río Piedras) — <em>now at UW-Madison (grad)</em></li>
-            <li><a href="https://cse.umn.edu/mifa/tyler-barna" target="_blank">Tyler Barna</a> (Rutgers University) — <em>now at University of Minnesota (grad)</em></li></li>
-            <li><a href="https://astro.ufl.edu/directory/ben-capistrant/" target="_blank">Benjamin K. Capistrant</a> (UW-Madison, postbacc) — <em>now at University of Florida (grad)</em></li>
-            <li><a href="https://www.linkedin.com/in/m-clark-b270482a4/" target="_blank">Max Clark</a> (UW-Madison, Lamat Fellow) — <em>now at University of Michigan (grad)</em></li>
-            <li><a href="https://www.linkedin.com/in/atirath-dhara-99a71b158/" target="_blank">Atirath Dhara</a> (West Windsor Plainsboro High School)</li>
-            <li><a href="https://www.linkedin.com/in/adam-distler-6b2944200/" target="_blank">Adam Distler</a> (UW-Madison, Peter Livingston Scholar, NSF GRFP) — <em>now at Harvard (grad)</em></li>
-            <li><a href="https://www.linkedin.com/in/alyssa-jankowski-64b586225/" target="_blank">Alyssa Jankowski</a> (UW-Madison, Peter Livingston Scholar)</li>
-            <li><a href="https://www.linkedin.com/in/jenna-karcheski-49132a16b/" target="_blank">Jenna Karcheski</a> (UW-Madison, NSF GRFP) — <em>now at UC Santa Cruz (grad)</em></li>
-            <li><a href="https://www.linkedin.com/in/brooke-kotten-23b359242/" target="_blank">Brooke Kotten</a> (UW-Madison, Vilas Scholar, Lamat Fellow, NSF GRFP)  — <em>now Unviesity of Michigan (grad) </em></li>
-            <li><a href="https://www.linkedin.com/in/sarah-kubiak-520898205" target="_blank">Sarah Kubiak</a> (UW-Madison)</li></li> </li>
-            <li><a href="https://www.linkedin.com/in/rianna-kuenzi-49132a16b/" target="_blank">Rianna Kuenzi</a> (UW-Madison, Lamat Fellow) — <em>now at UW-Madison (grad)</em></li>
-            <li><a href="https://www.astrachel.me/" target="_blank">Rachel McClure*</a> (UW-Madison, NSF GRFP) — <em>now professor at Weber State University </em></li></li></li> 
-            <li><a href="https://ryarza.github.io" target="_blank">Ricardo Yarza*</a> (UC Santa Cruz, NASA FINESST)</li>
-        </ul>
-
-        <p class="footnote">* Co-mentored</p>
-
-        <div class="callout">
-            <p><strong>Honors students:</strong> Interested in summer research? The <a href="https://honors.ls.wisc.edu/" target="_blank">L&S Honors Program</a> offers opportunities to gain funded, hands-on summer experience through the Honors Summer Research Apprenticeship program.</p>
-            <p>I've thoroughly enjoyed mentoring students through this program in the past—feel free to reach out if you'd like to brainstorm a summer project together.</p>
-        </div>
-
-        <div class="callout">
-            <p><strong>Applying for the <a href="https://www.stsci.edu/stsci-research/fellowships/nasa-hubble-fellowship-program/" target="_blank">NASA Hubble Fellowship Program</a> or the <a href="https://www.hsfoundation.org/programs/science/51-pegasi-b-fellowship/" target="_blank">51 Peg b Fellowship</a>?</strong> UW–Madison is a fantastic place to bring these prestigious awards. UW–Madison, in partnership with the interdisciplinary <a href="https://wicor.wisc.edu/" target="_blank">WiCOR</a> initiative, offers an exceptional environment to advance the pioneering research supported by these prestigious fellowships.</p>
-            <p>If you're considering applying, feel free to reach out to discuss potential synergies or hosting opportunities.</p>
+            <p>
+                I received my Bachelor's degree in physics from the <a href="https://www.physics.ucsc.edu/" target="_blank" rel="noopener noreferrer">University of California, Santa Cruz</a> and my Ph.D. in astrophysical sciences from <a href="https://web.astro.princeton.edu/" target="_blank" rel="noopener noreferrer">Princeton University</a>. I then moved to University of Wisconsin-Madison where I was a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a>. In Fall 2024, I began a joint tenure-track faculty appointment in the Departments of Physics and Astronomy at the University of Wisconsin-Madison. I also have a joint affiliation with the <a href="https://space.mit.edu/" target="_blank" rel="noopener noreferrer">MIT Kavli Institute for Astrophysics and Space Research</a>, where I work closely with <a href="https://avanderburg.github.io/page5.html" target="_blank" rel="noopener noreferrer">Andrew Vanderburg's exoplanet research team</a>. You can learn more about my science research <a href="https://msoaresfurtado.github.io/WebPage">here</a>.
+            </p>
+            <p>
+                My personal background is rooted in a first-generation college experience. My family migrated from the <a href="https://vimeo.com/317880007" target="_blank" rel="noopener noreferrer">Povoação and Nordeste municipalities</a> of <a href="https://vimeo.com/304666918" target="_blank" rel="noopener noreferrer">São Miguel, Azores</a>. A closer look at the history of the Azores, now an autonomous, self-governing region of Portugal, can be explored <a href="https://www.worldhistory.org/article/1758/the-portuguese-colonization-of-the-azores/" target="_blank" rel="noopener noreferrer">here</a>.
+            </p>
+            <p>
+                My hobbies include photography, gardening, weight lifting, and amassing an ever-growing collection of books. I am also particularly fond of hiking with my two energetic golden retrievers, Murphy the Noble and Lily Belle.
+            </p>
         </div>
 
         <div class="footer">
@@ -244,7 +187,7 @@
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;
                 // Set current page indicator
-                const currentNav = document.getElementById('nav-team');
+                const currentNav = document.getElementById('nav-about');
                 if (currentNav) currentNav.classList.add('current');
             })
             .catch(error => {
@@ -253,9 +196,9 @@
                     <nav class="header">
                         <a href="https://msoaresfurtado.github.io/WebPage">Home</a>
                         <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a>
+                        <a href="https://msoaresfurtado.github.io/WebPage/About.html" class="current">About</a>
                         <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html" class="current">Team</a>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
                         <span class="nav-sep">|</span>
                         <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank">CV</a>
                         <span class="nav-sep">|</span>
