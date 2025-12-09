@@ -27,17 +27,17 @@
             font-family: 'Source Sans 3', sans-serif;
             margin: 0;
             padding: 0;
-            line-height: 1.7;
+            line-height: 1.65;
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 300;
         }
 
         .container {
-            max-width: 920px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 40px 30px;
+            padding: 30px 30px;
         }
 
         a {
@@ -61,15 +61,15 @@
             display: flex;
             justify-content: center;
             gap: 8px;
-            padding: 15px 0;
+            padding: 12px 0;
             border-bottom: 2px solid var(--accent-color);
             border-top: 2px solid var(--accent-color);
-            font-size: 15px;
+            font-size: 14px;
             letter-spacing: 0.5px;
         }
 
         .header a {
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 3px;
             transition: all 0.2s ease;
         }
@@ -93,20 +93,20 @@
         .profile-section {
             display: flex;
             align-items: flex-start;
-            gap: 40px;
-            margin: 50px 0 40px 0;
+            gap: 30px;
+            margin: 35px 0 30px 0;
         }
 
         .profile-picture {
             flex-shrink: 0;
-            width: 180px;
-            height: 180px;
+            width: 160px;
+            height: 160px;
             border: 3px solid var(--accent-color);
             border-radius: 50%;
             background-image: url('https://msoaresfurtado.github.io/WebPage/photos/profile2.png');
             background-size: 105%;
             background-position: 65% 35%;
-            box-shadow: 0 0 0 3px var(--text-color), 0 8px 30px rgba(0,0,0,0.12);
+            box-shadow: 0 0 0 3px var(--text-color), 0 6px 20px rgba(0,0,0,0.1);
         }
 
         .profile-info {
@@ -115,30 +115,30 @@
 
         .profile-name {
             font-family: 'Crimson Pro', serif;
-            font-size: 2.2em;
+            font-size: 2em;
             font-weight: 600;
-            margin: 0 0 8px 0;
+            margin: 0 0 6px 0;
             color: var(--text-color);
         }
 
         .profile-title {
-            font-size: 1.1em;
+            font-size: 1.05em;
             color: var(--text-muted);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .profile-links {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
 
         .profile-links a {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            font-size: 14px;
-            padding: 6px 12px;
+            font-size: 13px;
+            padding: 5px 10px;
             border: 1px solid var(--border-light);
             border-radius: 20px;
             transition: all 0.2s ease;
@@ -151,42 +151,42 @@
         }
 
         .orcid-logo {
-            height: 18px;
+            height: 16px;
             vertical-align: middle;
         }
 
         /* Introduction */
         .intro-text {
-            font-size: 1.05em;
-            line-height: 1.8;
+            font-size: 1em;
+            line-height: 1.75;
         }
 
         .intro-text p {
-            margin: 0 0 15px 0;
+            margin: 0 0 12px 0;
         }
 
         /* Section Styling */
         .section-title {
             font-family: 'Crimson Pro', serif;
-            font-size: 1.6em;
+            font-size: 1.5em;
             font-weight: 600;
             color: var(--accent-color);
-            margin: 50px 0 25px 0;
-            padding-bottom: 10px;
+            margin: 40px 0 20px 0;
+            padding-bottom: 8px;
             border-bottom: 1px solid var(--border-light);
         }
 
         /* Research Cards */
         .research-grid {
             display: grid;
-            gap: 35px;
+            gap: 22px;
         }
 
         .research-card {
             display: grid;
-            grid-template-columns: 140px 1fr;
-            gap: 25px;
-            padding: 25px;
+            grid-template-columns: 120px 1fr;
+            gap: 20px;
+            padding: 20px;
             background: var(--bg-subtle);
             border-radius: 8px;
             border-left: 4px solid var(--accent-color);
@@ -199,8 +199,8 @@
         }
 
         .research-figure {
-            width: 140px;
-            height: 140px;
+            width: 120px;
+            height: 120px;
             border: 2px solid var(--accent-color);
             border-radius: 50%;
             background-size: cover;
@@ -234,60 +234,56 @@
 
         .research-content h3 {
             font-family: 'Crimson Pro', serif;
-            font-size: 1.25em;
+            font-size: 1.2em;
             font-weight: 600;
             color: var(--accent-color);
-            margin: 0 0 12px 0;
+            margin: 0 0 10px 0;
         }
 
         .research-content p {
-            margin: 0 0 12px 0;
-            font-size: 0.95em;
+            margin: 0 0 10px 0;
+            font-size: 0.93em;
         }
 
-        .paper-links {
-            font-size: 0.9em;
-        }
-
-        .paper-links a {
-            color: var(--highlight-color);
-            font-weight: 600;
-            margin-right: 8px;
+        .research-content p:last-child {
+            margin-bottom: 0;
         }
 
         /* Join Section */
         .join-section {
             background: linear-gradient(135deg, #f0f4f8 0%, #e8eef3 100%);
-            border-radius: 12px;
-            padding: 35px 40px;
-            margin: 50px 0;
+            border-radius: 10px;
+            padding: 28px 32px;
+            margin: 40px 0;
             border: 2px solid var(--accent-color);
         }
 
         .join-section h2 {
             font-family: 'Crimson Pro', serif;
-            font-size: 1.5em;
+            font-size: 1.4em;
             color: var(--accent-color);
-            margin: 0 0 20px 0;
+            margin: 0 0 16px 0;
         }
 
         .join-section p {
-            margin: 0 0 15px 0;
+            margin: 0 0 12px 0;
+            font-size: 0.95em;
         }
 
         .join-section ul {
-            margin: 15px 0;
+            margin: 12px 0;
             padding-left: 20px;
         }
 
         .join-section li {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            font-size: 0.95em;
         }
 
         .join-cta {
             display: inline-block;
-            margin-top: 15px;
-            padding: 12px 25px;
+            margin-top: 12px;
+            padding: 10px 22px;
             background-color: var(--accent-color);
             color: white;
             border-radius: 6px;
@@ -338,17 +334,8 @@
 
 <body>
     <div class="container">
-        <nav class="header">
-            <a href="https://msoaresfurtado.github.io/WebPage" class="current">Home</a>
-            <span class="nav-sep">|</span>
-            <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a>
-            <span class="nav-sep">|</span>
-            <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
-            <span class="nav-sep">|</span>
-            <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank" rel="noopener noreferrer">CV</a>
-            <span class="nav-sep">|</span>
-            <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
-        </nav>
+        <!-- Header loaded from external file -->
+        <div id="header-container"></div>
 
         <section class="profile-section">
             <div class="profile-picture"></div>
@@ -373,28 +360,11 @@
         </section>
 
         <div class="intro-text">
-            <p>I am an astrophysicist investigating the formation and evolution of stars and planetary systems. My research integrates observational data—from missions like TESS, JWST, and ground-based spectroscopy—with computational simulations to address fundamental questions about stellar ages, exoplanet demographics, and the dynamic interactions between stars and their orbiting worlds.</p>
-            <p>Prior to joining the UW-Madison faculty in Fall 2024, I was a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a> here at Wisconsin and a Science Affiliate at the <a href="https://space.mit.edu/" target="_blank" rel="noopener noreferrer">MIT Kavli Institute for Astrophysics and Space Research</a>. I am affiliated with the <a href="https://wicor.wisc.edu/" target="_blank" rel="noopener noreferrer">Wisconsin Center for Origins Research (WiCOR)</a>.</p>
+            <p>I am an astrophysicist investigating the formation and evolution of stars and planetary systems. My research integrates observational data (including missions like Kepler, TESS, JWST, Gaia, and ground-based spectroscopy) with computational simulations to address fundamental questions about stellar ages, exoplanet demographics, and the dynamic interactions between stars and their orbiting worlds.</p>
+            <p>Before joining UW-Madison faculty in 2024, I was a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a> here at UW-Wisconsin and a Science Affiliate at the <a href="https://space.mit.edu/" target="_blank" rel="noopener noreferrer">MIT Kavli Institute for Astrophysics and Space Research</a>. I am affiliated with the <a href="https://wicor.wisc.edu/" target="_blank" rel="noopener noreferrer">Wisconsin Center for Origins Research (WiCOR)</a>.</p>
         </div>
 
-        <!--
         <!-- Recruitment Section -->
-        <div class="join-section">
-            <h2>🌟 Join Our Research Group</h2>
-            <p>I am actively seeking motivated <strong>postdoctoral scholars</strong>, <strong>graduate students</strong>, and <strong>undergraduates</strong> to join our research team. We tackle exciting problems at the intersection of stellar astrophysics and exoplanet science using cutting-edge observational facilities and computational techniques.</p>
-            <p>Current opportunities include projects in:</p>
-            <ul>
-                <li><strong>Stellar age determination</strong> — developing machine learning approaches for gyrochronology and spectroscopic age indicators</li>
-                <li><strong>Young exoplanet detection</strong> — searching for planets in stellar associations using TESS, JWST, and Roman</li>
-                <li><strong>Planetary engulfment</strong> — identifying signatures of planet consumption through stellar chemical abundances</li>
-                <li><strong>Stellar cluster science</strong> — variable star investigations and membership analysis</li>
-            </ul>
-            <p>We offer a collaborative, supportive environment with access to premier observational facilities including WIYN/NEID, JWST, and the upcoming Roman Space Telescope.</p>
-            <a href="mailto:mmsoares@wisc.edu" class="join-cta">Get in Touch →</a>
-        </div>
-        -->
-
-                <!-- Recruitment Section -->
         <div class="join-section">
             <h2>🌟 Join Our Research Group</h2>
             <p>I will be recruiting <strong>postdoctoral scholars</strong>, <strong>graduate students</strong>, and <strong>undergraduates</strong> beginning in <strong>Fall 2026</strong>. If you're interested in joining our team, please check back or reach out to express your interest.</p>
@@ -407,15 +377,13 @@
                 <li><strong>Stellar cluster science</strong> — variable star investigations and membership analysis</li>
             </ul>
 
-            <p><strong>Observational resources:</strong> Group members have access to premier facilities including WIYN/NEID, the Southern African Large Telescope (SALT), Magellan, and the ANU 2.3m at Siding Spring—plus space-based data from TESS, JWST, and the upcoming Roman Space Telescope.</p>
+            <p><strong>Observational resources:</strong> Group members have institutional access to premier facilities including WIYN/NEID, the Southern African Large Telescope (SALT), the Northern Extended Millimeter Array (NOEMA), and the Center for High Throughput Computing (CHTC).</p>
 
             <p><strong>Mentorship:</strong> I received the 2023 UW-Madison <em>Postdoctoral Excellence in Mentoring Award</em> and am committed to supporting students at all career stages. Multiple former mentees have received NSF Graduate Research Fellowships and NASA FINESST awards.</p>
 
             <a href="mailto:mmsoares@wisc.edu" class="join-cta">Express Interest →</a>
         </div>
 
-
-        
         <h2 class="section-title">Scientific Research</h2>
         <p>Below is a selection of ongoing research projects. Visit our <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team page</a> to learn about the talented researchers contributing to these investigations.</p>
 
@@ -427,9 +395,6 @@
                     <h3>Stellar Age Determination &amp; Gyrochronology</h3>
                     <p>Accurate stellar ages are essential for understanding planetary system evolution. Our team develops novel age-dating techniques using stellar rotation (gyrochronology), lithium abundances, and ensemble approaches combining multiple age indicators. We apply machine learning and Bayesian methods to calibrate these techniques using benchmark stellar populations like the Ursa Major Moving Group.</p>
                     <p>The Earth is embedded within the Ursa Major system, making its members ideal laboratories for studying stellar and planetary evolution. Our recent work identified the closest young Earth-sized planet transiting a Sun-like star in this association.</p>
-                    <div class="paper-links">
-                        Selected papers: <a href="https://iopscience.iop.org/article/10.3847/1538-3881/ad1039" target="_blank" rel="noopener noreferrer">[a]</a>
-                    </div>
                 </div>
             </article>
 
@@ -440,13 +405,6 @@
                     <h3>Planetary Engulfment Events</h3>
                     <p>A non-negligible fraction of planets meet their end by being engulfed by their host stars. We identify long-devoured planets through the chemical signatures they impart on stellar atmospheres—particularly lithium enhancement and refractory element enrichment. By quantifying these tracers, we constrain the bulk composition and mass of destroyed worlds.</p>
                     <p>Our team also investigates the engulfment process itself, probing the transfer of angular momentum, energy, and mass through hydrodynamical simulations and tidal modeling.</p>
-                    <div class="paper-links">
-                        Selected papers:
-                        <a href="https://ui.adsabs.harvard.edu/abs/2021AJ....162..273S/abstract" target="_blank" rel="noopener noreferrer">[a]</a>
-                        <a href="https://ui.adsabs.harvard.edu/abs/2018ApJ...853L...1M/abstract" target="_blank" rel="noopener noreferrer">[b]</a>
-                        <a href="https://ui.adsabs.harvard.edu/abs/2022ApJ...940...23T/abstract" target="_blank" rel="noopener noreferrer">[c]</a>
-                        <a href="https://ui.adsabs.harvard.edu/abs/2023ApJ...954..176Y/abstract" target="_blank" rel="noopener noreferrer">[d]</a>
-                    </div>
                 </div>
             </article>
 
@@ -457,11 +415,6 @@
                     <h3>Detection &amp; Characterization of Young Exoplanets</h3>
                     <p>Despite 5,000+ confirmed exoplanets, the census of young worlds with well-constrained ages remains sparse. These systems offer critical insights into planet formation and atmospheric evolution. Our team recently detected the nearest Earth-sized exoplanet orbiting a Sun-like star—a world in a 400 Myr stellar association, ten times younger than our Solar System.</p>
                     <p>We also discovered a young mini-Neptune on the upper edge of the radius valley orbiting a bright M dwarf in the Hyades cluster, providing unique constraints on how stellar age shapes planetary atmospheres and the emergence of the M dwarf radius valley.</p>
-                    <div class="paper-links">
-                        Selected papers:
-                        <a href="https://iopscience.iop.org/article/10.3847/1538-3881/ad1039" target="_blank" rel="noopener noreferrer">[a]</a>
-                        <a href="https://arxiv.org/abs/2410.11990" target="_blank" rel="noopener noreferrer">[b]</a>
-                    </div>
                 </div>
             </article>
 
@@ -472,11 +425,6 @@
                     <h3>The Search for Young Exomoons</h3>
                     <p>The Nancy Grace Roman Space Telescope's infrared capabilities will enable searches for transiting exosatellites in young star-forming regions. The Orion Nebula Cluster—extremely young (1–3 Myr) and densely populated with brown dwarfs and free-floating planets—presents an ideal target.</p>
                     <p>Our simulations predict that a 30-day Roman survey of the ONC could discover ~14 exomoons transiting free-floating planets and ~54 exosatellites transiting brown dwarfs. We continue exploring yields in other star-forming regions, including JWST observations of the Rosette Nebula.</p>
-                    <div class="paper-links">
-                        Selected papers:
-                        <a href="https://arxiv.org/abs/2209.12916" target="_blank" rel="noopener noreferrer">[a]</a>
-                        <a href="https://arxiv.org/abs/2406.01492" target="_blank" rel="noopener noreferrer">[b]</a>
-                    </div>
                 </div>
             </article>
 
@@ -487,11 +435,6 @@
                     <h3>Open Cluster Variable Star Investigations</h3>
                     <p>Variable stars in stellar clusters probe fundamental astrophysical questions. Rotational variables reveal angular momentum evolution; pulsators illuminate relationships between stellar structure, activity, age, and mass; eclipsing binaries yield precise masses, radii, and ages that stringently test stellar evolutionary theory.</p>
                     <p>Our cluster surveys also enable searches for exoplanets among hosts with known ages and compositions—addressing whether planet occurrence rates and orbital architectures differ between cluster and field populations.</p>
-                    <div class="paper-links">
-                        Selected papers:
-                        <a href="https://ui.adsabs.harvard.edu/abs/2017PASP..129d4501S/abstract" target="_blank" rel="noopener noreferrer">[a]</a>
-                        <a href="https://ui.adsabs.harvard.edu/abs/2020ApJS..246...15S/abstract" target="_blank" rel="noopener noreferrer">[b]</a>
-                    </div>
                 </div>
             </article>
         </div>
@@ -501,6 +444,32 @@
     </div>
 
     <script>
+        // Load the header component
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+                // Set current page indicator
+                const currentNav = document.getElementById('nav-home');
+                if (currentNav) currentNav.classList.add('current');
+            })
+            .catch(error => {
+                // Fallback header if fetch fails
+                document.getElementById('header-container').innerHTML = `
+                    <nav class="header">
+                        <a href="https://msoaresfurtado.github.io/WebPage" class="current">Home</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank">CV</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
+                    </nav>
+                `;
+            });
+
         // Load the footer component
         fetch('footer.html')
             .then(response => response.text())
@@ -508,11 +477,11 @@
                 document.getElementById('footer-container').innerHTML = data;
             })
             .catch(error => {
-                // Fallback footer if fetch fails (e.g., when viewing locally without a server)
+                // Fallback footer if fetch fails
                 document.getElementById('footer-container').innerHTML = `
-                    <footer style="margin-top:60px; padding:20px 0; border-top:2px solid #20578A; text-align:center; font-size:14px; color:#555;">
+                    <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #20578A; text-align:center; font-size:13px; color:#555;">
                         <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#20578A;">mmsoares@wisc.edu</a> ⊕ Updated 12/2025</div>
-                        <div style="margin-top:10px; font-size:12px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy & Physics</div>
+                        <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy & Physics</div>
                     </footer>
                 `;
             });
