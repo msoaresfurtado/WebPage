@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Madison Giant Santa Tracker 🎅</title>
+  
+  <!-- Leaflet CSS & JS for real interactive maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(180deg, #1e3a5f 0%, #0f2744 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    /* Snow animation */
+    .snowflake {
+      position: fixed;
+      color: rgba(255,255,255,0.8);
+      pointer-events: none;
+      z-index: 1;
+      animation: snow linear infinite;
+    }
+    
+    @keyframes snow {
+      0% { transform: translateY(-10px) rotate(0deg); }
+      100% { transform: translateY(100vh) rotate(360deg); }
+    }
+    
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 30px rgba(251,191,36,0.4); }
+      50% { box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 50px rgba(251,191,36,0.7); }
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    
+    /* Header */
+    header {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 28px 16px 20px;
+    }
+    
+    .title-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      padding: 14px 32px;
+      border-radius: 50px;
+      border: 3px solid #fbbf24;
+      animation: glow 2s ease-in-out infinite;
+    }
+    
+    .title-badge h1 {
+      font-size: 1.5rem;
+      color: #fff;
+      font-weight: 700;
+    }
+    
+    .title-badge .santa-icon {
+      font-size: 2rem;
+      animation: bounce 1s ease-in-out infinite;
+    }
+    
+    .subtitle {
+      color: rgba(255,255,255,0.8);
+      margin-top: 12px;
+      font-size: 1rem;
+    }
+    
+    .counter {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      padding: 8px 20px;
+      border-radius: 20px;
+      margin-top: 10px;
+      color: #fff;
+    }
+    
+    .counter .count {
+      color: #fbbf24;
+      font-weight: 700;
+      font-size: 1.3rem;
+    }
+    
+    /* Main content */
+    .container {
+      position: relative;
+      z-index: 10;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
+    
+    /* Map */
+    .map-container {
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+      border: 4px solid #dc2626;
+      margin-bottom: 20px;
+    }
+    
+    .map-header {
+      padding: 12px 16px;
+      background: #fef2f2;
+      border-bottom: 2px solid #fecaca;
+      font-weight: 600;
+      color: #991b1b;
+    }
+    
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+    
+    /* Selected santa card */
+    .selected-santa {
+      background: linear-gradient(135deg, #fef2f2 0%, #fff 100%);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 2px solid #fca5a5;
+      display: none;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    
+    .selected-santa.visible {
+      display: flex;
+    }
+    
+    .selected-santa .santa-emoji {
+      font-size: 2.5rem;
+    }
+    
+    .selected-santa .info {
+      flex: 1;
+      min-width: 150px;
+    }
+    
+    .selected-santa .address {
+      font-weight: 700;
+      color: #dc2626;
+      font-size: 1.1rem;
+    }
+    
+    .selected-santa .submitter {
+      color: #666;
+      font-size: 0.85rem;
+    }
+    
+    .selected-santa .verified {
+      display: inline-block;
+      background: #166534;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      margin-top: 4px;
+    }
+    
+    .maps-link {
+      background: #166534;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    
+    .maps-link:hover {
+      background: #14532d;
+    }
+    
+    /* Santa list */
+    .santa-list {
+      background: rgba(255,255,255,0.95);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .santa-list h3 {
+      margin-bottom: 12px;
+      color: #166534;
+      font-size: 1rem;
+    }
+    
+    .santa-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .santa-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: #f0fdf4;
+      border: 2px solid #86efac;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #333;
+      transition: all 0.15s ease;
+    }
+    
+    .santa-btn:hover {
+      background: #dcfce7;
+    }
+    
+    .santa-btn.selected {
+      background: #fee2e2;
+      border-color: #dc2626;
+    }
+    
+    /* Form */
+    .form-container {
+      background: linear-gradient(135deg, #fff 0%, #f0fdf4 100%);
+      border-radius: 16px;
+      padding: 24px;
+      border: 3px solid #166534;
+    }
+    
+    .form-container h2 {
+      margin-bottom: 16px;
+      color: #dc2626;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .form-group {
+      margin-bottom: 14px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: 2px solid #d1d5db;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #dc2626;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(220,38,38,0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(220,38,38,0.4);
+    }
+    
+    .submit-btn:disabled {
+      background: #9ca3af;
+      cursor: wait;
+      transform: none;
+    }
+    
+    .message {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+      display: none;
+    }
+    
+    .message.success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .message.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 20px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+    }
+    
+    /* Leaflet popup styling */
+    .santa-popup {
+      text-align: center;
+    }
+    
+    .santa-popup .popup-emoji {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    
+    .santa-popup .popup-address {
+      font-weight: 700;
+      color: #dc2626;
+      margin-bottom: 4px;
+    }
+    
+    .santa-popup .popup-submitter {
+      font-size: 0.85rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Snowflakes (generated by JS) -->
+  <div id="snow-container"></div>
+  
+  <!-- Header -->
+  <header>
+    <div class="title-badge">
+      <span class="santa-icon">🎅</span>
+      <h1>Madison Giant Santa Tracker</h1>
+      <span class="santa-icon" style="animation-delay: 0.3s">🎅</span>
+    </div>
+    <p class="subtitle">Mapping every glorious 12-foot inflatable in the city!</p>
+    <div class="counter">
+      <span class="count" id="santa-count">5</span> Santas spotted!
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <div class="container">
+    
+    <!-- Map -->
+    <div class="map-container">
+      <div class="map-header">🗺️ Madison, WI — Click a Santa for details</div>
+      <div id="map"></div>
+    </div>
+    
+    <!-- Selected Santa Detail -->
+    <div class="selected-santa" id="selected-santa">
+      <span class="santa-emoji">🎅</span>
+      <div class="info">
+        <div class="address" id="selected-address"></div>
+        <div class="submitter" id="selected-submitter"></div>
+        <span class="verified" id="selected-verified" style="display: none;">✓ Verified</span>
+      </div>
+      <a class="maps-link" id="selected-link" href="#" target="_blank">Open in Maps ↗</a>
+    </div>
+    
+    <!-- Santa List -->
+    <div class="santa-list">
+      <h3>📍 All Sightings</h3>
+      <div class="santa-buttons" id="santa-buttons"></div>
+    </div>
+    
+    <!-- Submission Form -->
+    <div class="form-container">
+      <h2><span>📍</span> Spot a Giant Santa?</h2>
+      
+      <form id="santa-form">
+        <div class="form-group">
+          <label for="address">Address in Madison *</label>
+          <input type="text" id="address" placeholder="e.g., 123 Regent St or Willy Street" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="submitter">Your Name (optional)</label>
+          <input type="text" id="submitter" placeholder="Anonymous Elf">
+        </div>
+        
+        <button type="submit" class="submit-btn" id="submit-btn">🎄 Submit Santa Sighting!</button>
+      </form>
+      
+      <div class="message" id="message"></div>
+    </div>
+    
+  </div>
+  
+  <footer>
+    Made with ❤️ in Madison, WI • Happy Holidays! 🎄
+  </footer>
+  
+  <script>
+    // ============ DATA ============
+    let santas = [
+      { id: 1, lat: 43.0731, lng: -89.4012, address: "Capitol Square", submitter: "Holiday Scout", verified: true },
+      { id: 2, lat: 43.0695, lng: -89.4090, address: "Monroe Street", submitter: "Santa Spotter", verified: true },
+      { id: 3, lat: 43.0889, lng: -89.4375, address: "Hilldale Area", submitter: "Festive Fred", verified: true },
+      { id: 4, lat: 43.0545, lng: -89.4673, address: "West Towne", submitter: "Jingle Jane", verified: true },
+      { id: 5, lat: 43.0812, lng: -89.3731, address: "Atwood Area", submitter: "Frosty Frank", verified: false },
+    ];
+    
+    let selectedSanta = null;
+    let map;
+    let markers = [];
+    
+    // ============ INITIALIZE MAP ============
+    function initMap() {
+      // Create map centered on Madison
+      map = L.map('map').setView([43.073, -89.40], 12);
+      
+      // Add OpenStreetMap tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      
+      // Add all santa markers
+      updateMarkers();
+    }
+    
+    // ============ MARKERS ============
+    function updateMarkers() {
+      // Clear existing markers
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      
+      // Create santa icon
+      const santaIcon = L.divIcon({
+        className: 'santa-marker',
+        html: `<div style="
+          font-size: 28px;
+          filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3));
+          cursor: pointer;
+          transition: transform 0.2s;
+        ">🎅</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -30]
+      });
+      
+      // Add markers for each santa
+      santas.forEach(santa => {
+        const marker = L.marker([santa.lat, santa.lng], { icon: santaIcon })
+          .addTo(map)
+          .bindPopup(`
+            <div class="santa-popup">
+              <div class="popup-emoji">🎅</div>
+              <div class="popup-address">${santa.address}</div>
+              <div class="popup-submitter">Spotted by: ${santa.submitter}</div>
+            </div>
+          `);
+        
+        marker.on('click', () => selectSanta(santa));
+        markers.push(marker);
+      });
+    }
+    
+    // ============ SELECT SANTA ============
+    function selectSanta(santa) {
+      selectedSanta = santa;
+      
+      // Update UI
+      const card = document.getElementById('selected-santa');
+      card.classList.add('visible');
+      document.getElementById('selected-address').textContent = santa.address;
+      document.getElementById('selected-submitter').textContent = `Spotted by ${santa.submitter}`;
+      document.getElementById('selected-verified').style.display = santa.verified ? 'inline-block' : 'none';
+      document.getElementById('selected-link').href = `https://www.google.com/maps/search/?api=1&query=${santa.lat},${santa.lng}`;
+      
+      // Update button states
+      document.querySelectorAll('.santa-btn').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.dataset.id) === santa.id);
+      });
+      
+      // Pan map to santa
+      map.setView([santa.lat, santa.lng], 14);
+    }
+    
+    // ============ RENDER SANTA BUTTONS ============
+    function renderSantaButtons() {
+      const container = document.getElementById('santa-buttons');
+      container.innerHTML = '';
+      
+      santas.forEach(santa => {
+        const btn = document.createElement('button');
+        btn.className = 'santa-btn';
+        btn.dataset.id = santa.id;
+        btn.innerHTML = `🎅 ${santa.address} ${santa.verified ? '<span style="color:#166534">✓</span>' : ''}`;
+        btn.onclick = () => selectSanta(santa);
+        container.appendChild(btn);
+      });
+      
+      document.getElementById('santa-count').textContent = santas.length;
+    }
+    
+    // ============ GEOCODE ADDRESS ============
+    async function geocodeAddress(address) {
+      const query = encodeURIComponent(`${address}, Madison, WI`);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+      }
+      return null;
+    }
+    
+    // ============ FORM SUBMISSION ============
+    document.getElementById('santa-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const addressInput = document.getElementById('address');
+      const submitterInput = document.getElementById('submitter');
+      const submitBtn = document.getElementById('submit-btn');
+      const messageEl = document.getElementById('message');
+      
+      const address = addressInput.value.trim();
+      const submitter = submitterInput.value.trim() || 'Anonymous Elf';
+      
+      if (!address) return;
+      
+      // Show loading state
+      submitBtn.disabled = true;
+      submitBtn.textContent = '🔍 Locating...';
+      messageEl.className = 'message';
+      
+      try {
+        const coords = await geocodeAddress(address);
+        
+        if (coords) {
+          // Add new santa
+          const newSanta = {
+            id: Date.now(),
+            lat: coords.lat,
+            lng: coords.lng,
+            address: address,
+            submitter: submitter,
+            verified: false
+          };
+          
+          santas.push(newSanta);
+          updateMarkers();
+          renderSantaButtons();
+          selectSanta(newSanta);
+          
+          // Clear form
+          addressInput.value = '';
+          submitterInput.value = '';
+          
+          // Show success
+          messageEl.textContent = '🎄 Santa spotted and added to the map!';
+          messageEl.className = 'message success';
+        } else {
+          messageEl.textContent = 'Could not find that address. Try a Madison street name!';
+          messageEl.className = 'message error';
+        }
+      } catch (err) {
+        messageEl.textContent = 'Network error. Please try again!';
+        messageEl.className = 'message error';
+      }
+      
+      // Reset button
+      submitBtn.disabled = false;
+      submitBtn.textContent = '🎄 Submit Santa Sighting!';
+    });
+    
+    // ============ SNOW EFFECT ============
+    function createSnowflakes() {
+      const container = document.getElementById('snow-container');
+      
+      for (let i = 0; i < 50; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        flake.textContent = '❄';
+        flake.style.left = `${Math.random() * 100}%`;
+        flake.style.fontSize = `${6 + Math.random() * 12}px`;
+        flake.style.animationDuration = `${3 + Math.random() * 7}s`;
+        flake.style.animationDelay = `${Math.random() * 5}s`;
+        container.appendChild(flake);
+      }
+    }
+    
+    // ============ INIT ============
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      renderSantaButtons();
+      createSnowflakes();
+    });
+  </script>
+  
+</body>
+</html>
