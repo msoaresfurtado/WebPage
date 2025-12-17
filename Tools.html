@@ -87,27 +87,12 @@
         /* Page Title */
         .page-title {
             font-family: 'Crimson Pro', serif;
-            font-size: 2em;
-            font-weight: 600;
-            color: var(--text-color);
-            margin: 35px 0 12px 0;
-        }
-
-        .page-intro {
-            font-size: 1em;
-            line-height: 1.75;
-            margin-bottom: 30px;
-            color: var(--text-muted);
-        }
-
-        /* Section Styling */
-        .section-title {
-            font-family: 'Crimson Pro', serif;
-            font-size: 1.5em;
+            font-size: 1.6em;
             font-weight: 600;
             color: var(--accent-color);
-            margin: 40px 0 20px 0;
-            padding-bottom: 6px;
+            margin: 30px 0 20px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-light);
         }
 
         /* Tool Cards */
@@ -195,7 +180,7 @@
             background: linear-gradient(135deg, #f0f4f8 0%, #e8eef3 100%);
             border-radius: 8px;
             padding: 16px 20px;
-            margin: 30px 0;
+            margin: 0 0 30px 0;
             border: 1px solid var(--border-light);
             font-size: 0.9em;
             color: var(--text-muted);
@@ -233,7 +218,8 @@
         <!-- Header loaded from external file -->
         <div id="header-container"></div>
 
-        <h2 class="section-title">Research Tools</h2>
+        <div class="page-title">Research Tools</div>
+
         <div class="access-notice">
             <strong>🔒 Collaboration Access:</strong> These tools are intended for use by members of our research collaboration. If you need access or have questions, please contact <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a>.
         </div>
@@ -286,7 +272,7 @@
                         <span class="nav-sep">|</span>
                         <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
                         <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.com/tools/Tools.html" class="current">Tools</a>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Tools.html" class="current">Tools</a>
                     </nav>
                 `;
             });
