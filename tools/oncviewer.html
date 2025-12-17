@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONC FITS Viewer</title>
+    <title>ONC Source Viewer</title>
     
     <!-- Aladin Lite -->
     <link rel="stylesheet" href="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.min.css" />
@@ -175,7 +175,7 @@
             letter-spacing: 0.05em;
         }
         
-        input[type="text"], select {
+        input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 0.4rem 0.5rem;
             background: var(--bg-primary);
@@ -218,6 +218,13 @@
             box-shadow: 0 3px 10px var(--accent-glow);
         }
         
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
         .btn-secondary {
             background: var(--bg-primary);
             color: var(--text-primary);
@@ -231,6 +238,9 @@
         
         .btn-roman { background: linear-gradient(135deg, var(--roman-color), #ff7ae8); }
         .btn-jwst { background: linear-gradient(135deg, var(--jwst-color), #ffe066); }
+        .btn-catalog { background: linear-gradient(135deg, var(--success), #7affb5); }
+        .btn-coup { background: linear-gradient(135deg, #ff9f4a, #ffbf7a); }
+        .btn-pm { background: linear-gradient(135deg, var(--accent-secondary), #7ac0ff); }
         .btn-spacing { margin-top: 0.3rem; }
         
         .main-content {
@@ -502,6 +512,15 @@
         }
         
         .footer a:hover { color: var(--accent-primary); }
+        
+        .catalog-info {
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+            padding: 0.3rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -509,14 +528,14 @@
         <header>
             <div class="logo">
                 <div class="logo-icon">✦</div>
-                <h1>ONC <span class="logo-highlight">FITS</span> Viewer</h1>
+                <h1>ONC <span class="logo-highlight">Source</span> Viewer</h1>
             </div>
             <div class="header-info">Orion Nebula Cluster</div>
         </header>
         
         <aside class="sidebar">
             <!-- FITS Image Panel -->
-            <div class="panel" id="panel-fits">
+            <div class="panel collapsed" id="panel-fits">
                 <div class="panel-header" onclick="togglePanel('panel-fits')">
                     <div class="panel-header-left">
                         <div class="panel-header-dot"></div>
@@ -529,18 +548,53 @@
                         <div class="fits-status-icon"></div>
                         <span class="fits-status-name" id="fits-name">No FITS loaded</span>
                     </div>
-                    <div class="input-group">
+                    <button class="btn-jwst" onclick="loadJWSTFits()">Load JWST ONC Image</button>
+                    <div class="input-group" style="margin-top: 0.5rem;">
                         <div class="file-input-wrapper">
                             <input type="file" id="fits-file" class="file-input-hidden" accept=".fits,.fit,.fts">
-                            <div class="file-input-display" id="file-input-label">Drop FITS or click to browse</div>
+                            <div class="file-input-display" id="file-input-label">Or upload custom FITS</div>
                         </div>
                     </div>
                     <button class="btn-secondary" onclick="clearFITS()">Clear FITS</button>
                 </div>
             </div>
             
+            <!-- Catalog Panel -->
+            <div class="panel collapsed" id="panel-catalog">
+                <div class="panel-header" onclick="togglePanel('panel-catalog')">
+                    <div class="panel-header-left">
+                        <div class="panel-header-dot"></div>
+                        <span>Catalogs</span>
+                    </div>
+                    <span class="panel-toggle">▼</span>
+                </div>
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label>Max Sources</label>
+                        <input type="number" id="max-sources" value="150" min="10" max="2000" step="50">
+                    </div>
+                    <button class="btn-catalog" onclick="loadKimCatalog()">Load Kim+2019 (PM)</button>
+                    <button class="btn-coup btn-spacing" onclick="loadCOUPCatalog()">Load COUP (X-ray)</button>
+                    <button class="btn-pm btn-spacing" id="btn-pm-arrows" onclick="addPMArrows()" disabled>Add PM Arrows</button>
+                    <div class="catalog-info" id="catalog-info">
+                        Kim+2019: J/AJ/157/109 · COUP: J/ApJS/160/319
+                    </div>
+                    <div class="coord-row" style="margin-top: 0.4rem;">
+                        <div class="input-group">
+                            <label>Arrow Scale</label>
+                            <input type="number" id="pm-scale" value="50" min="1" max="500" step="10">
+                        </div>
+                        <div class="input-group">
+                            <label>Time (yr)</label>
+                            <input type="number" id="pm-time" value="1000" min="100" max="10000" step="100">
+                        </div>
+                    </div>
+                    <button class="btn-secondary" onclick="clearCatalog()">Clear Catalog</button>
+                </div>
+            </div>
+            
             <!-- Instrument Footprints Panel -->
-            <div class="panel" id="panel-footprints">
+            <div class="panel collapsed" id="panel-footprints">
                 <div class="panel-header" onclick="togglePanel('panel-footprints')">
                     <div class="panel-header-left">
                         <div class="panel-header-dot"></div>
@@ -571,7 +625,7 @@
             </div>
             
             <!-- Object Lookup Panel -->
-            <div class="panel" id="panel-simbad">
+            <div class="panel collapsed" id="panel-simbad">
                 <div class="panel-header" onclick="togglePanel('panel-simbad')">
                     <div class="panel-header-left">
                         <div class="panel-header-dot"></div>
@@ -674,7 +728,7 @@
             </div>
             
             <!-- Sources List Panel -->
-            <div class="panel" id="panel-sources">
+            <div class="panel collapsed" id="panel-sources">
                 <div class="panel-header" onclick="togglePanel('panel-sources')">
                     <div class="panel-header-left">
                         <div class="panel-header-dot"></div>
@@ -710,7 +764,7 @@
         </main>
         
         <footer class="footer">
-            Created by <a href="https://msoaresfurtado.com" target="_blank">Melinda Soares-Furtado</a>
+            Created by <a href="https://msoaresfurtado.com" target="_blank">Melinda Soares-Furtado</a> and her honorary postdoc, Claude
         </footer>
     </div>
     
@@ -722,6 +776,10 @@
         var footprints = [];
         var currentFITSLayer = null;
         var currentFITSUrl = null;
+        var catalogOverlay = null;
+        var catalogSources = null;
+        var catalogData = [];
+        var currentCatalogType = null;
         
         var selectedColors = {
             simbad: '#4a9eff',
@@ -729,52 +787,19 @@
             bulk: '#4aff9f'
         };
         
-        // Roman WFI 18 detector positions
-        // Layout: 6 columns x 3 rows, but with STAGGERED rows
-        // Outer columns (1,6) are shifted UP (north)
-        // Middle columns (2,5) are in between
-        // Inner columns (3,4) are shifted DOWN (south)
-        // This creates the distinctive WFI footprint shape
-        //
-        // Derived from the DS9 region file - positions are [dx, dy] in degrees
-        // dx = offset in RA direction (west negative, east positive)
-        // dy = offset in Dec direction (south negative, north positive)
+        var JWST_FITS_URL = 'https://github.com/msoaresfurtado/WebPage/raw/main/tools/jwst_onc.fits';
         
         var ROMAN_WFI_DETECTORS = [
-            // Column 1 (westmost) - shifted UP
-            [-0.335, +0.18],   // row 1 (top)
-            [-0.335, +0.03],   // row 2 (middle)
-            [-0.335, -0.10],   // row 3 (bottom)
-            
-            // Column 2 - middle position
-            [-0.200, +0.11],   // row 1
-            [-0.200, -0.03],   // row 2
-            [-0.200, -0.16],   // row 3
-            
-            // Column 3 - shifted DOWN
-            [-0.065, +0.09],   // row 1
-            [-0.065, -0.06],   // row 2
-            [-0.065, -0.19],   // row 3
-            
-            // Column 4 - shifted DOWN (mirror of column 3)
-            [+0.065, +0.09],   // row 1
-            [+0.065, -0.06],   // row 2
-            [+0.065, -0.19],   // row 3
-            
-            // Column 5 - middle position (mirror of column 2)
-            [+0.200, +0.11],   // row 1
-            [+0.200, -0.03],   // row 2
-            [+0.200, -0.16],   // row 3
-            
-            // Column 6 (eastmost) - shifted UP (mirror of column 1)
-            [+0.335, +0.18],   // row 1
-            [+0.335, +0.03],   // row 2
-            [+0.335, -0.10]    // row 3
+            [-0.335, +0.18], [-0.335, +0.03], [-0.335, -0.10],
+            [-0.200, +0.11], [-0.200, -0.03], [-0.200, -0.16],
+            [-0.065, +0.09], [-0.065, -0.06], [-0.065, -0.19],
+            [+0.065, +0.09], [+0.065, -0.06], [+0.065, -0.19],
+            [+0.200, +0.11], [+0.200, -0.03], [+0.200, -0.16],
+            [+0.335, +0.18], [+0.335, +0.03], [+0.335, -0.10]
         ];
         
-        var ROMAN_DET_SIZE = 0.11; // detector size in degrees (~6.6 arcmin)
+        var ROMAN_DET_SIZE = 0.11;
         
-        // Initialize Aladin
         A.init.then(function() {
             aladin = A.aladin('#aladin-container', {
                 survey: 'P/2MASS/color',
@@ -815,6 +840,35 @@
         
         // ==================== FITS ====================
         
+        function loadJWSTFits() {
+            showLoading(true, 'Loading JWST ONC image...');
+            
+            if (currentFITSLayer) {
+                try { aladin.setOverlayImageLayer(null); } catch(e) {}
+            }
+            
+            try {
+                currentFITSLayer = aladin.createImageFITS(JWST_FITS_URL, { 
+                    name: 'JWST ONC', 
+                    opacity: 1.0 
+                }, function(ra, dec, fov) {
+                    if (ra && dec) {
+                        aladin.gotoRaDec(ra, dec);
+                        if (fov) aladin.setFoV(fov * 1.2);
+                    }
+                    showLoading(false);
+                    showToast('Loaded JWST ONC image', 'success');
+                });
+                
+                aladin.setOverlayImageLayer(currentFITSLayer);
+                document.getElementById('fits-name').textContent = 'JWST ONC (GitHub)';
+                document.getElementById('fits-status').classList.add('loaded');
+            } catch (error) {
+                showLoading(false);
+                showToast('Error loading JWST FITS', 'error');
+            }
+        }
+        
         function clearFITS() {
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
@@ -828,7 +882,7 @@
                 currentFITSLayer = null;
                 document.getElementById('fits-name').textContent = 'No FITS loaded';
                 document.getElementById('fits-status').classList.remove('loaded');
-                document.getElementById('file-input-label').textContent = 'Drop FITS or click to browse';
+                document.getElementById('file-input-label').textContent = 'Or upload custom FITS';
                 document.getElementById('fits-file').value = '';
                 
                 showToast('FITS cleared', 'success');
@@ -873,10 +927,179 @@
             }
         });
         
+        // ==================== Catalogs ====================
+        
+        function getMaxSources() {
+            return parseInt(document.getElementById('max-sources').value) || 150;
+        }
+        
+        function loadKimCatalog() {
+            showLoading(true, 'Loading Kim+2019 catalog...');
+            clearCatalog();
+            
+            var maxSrc = getMaxSources();
+            currentCatalogType = 'kim';
+            
+            var cat = A.catalogFromVizieR('J/AJ/157/109/table3', '83.8187 -5.3897', 0.5, {
+                onClick: 'showTable',
+                color: '#4afff4',
+                sourceSize: 10,
+                shape: 'circle',
+                limit: maxSrc
+            });
+            
+            cat.on('catalogLoaded', function() {
+                catalogSources = cat;
+                
+                var sources = cat.getSources();
+                catalogData = [];
+                sources.forEach(function(src) {
+                    var data = src.data;
+                    catalogData.push({
+                        ra: src.ra,
+                        dec: src.dec,
+                        pmRA: parseFloat(data.pmRA) || 0,
+                        pmDE: parseFloat(data.pmDE) || 0,
+                        id: data.ID || ''
+                    });
+                });
+                
+                showLoading(false);
+                var loadedCount = Math.min(sources.length, maxSrc);
+                document.getElementById('catalog-info').textContent = 
+                    'Kim+2019 · ' + loadedCount + ' sources loaded';
+                document.getElementById('btn-pm-arrows').disabled = false;
+                showToast('Loaded ' + loadedCount + ' Kim+2019 sources', 'success');
+            });
+            
+            cat.on('catalogFailed', function(error) {
+                showLoading(false);
+                showToast('Error loading Kim catalog', 'error');
+            });
+            
+            aladin.addCatalog(cat);
+        }
+        
+        function loadCOUPCatalog() {
+            showLoading(true, 'Loading COUP catalog...');
+            clearCatalog();
+            
+            var maxSrc = getMaxSources();
+            currentCatalogType = 'coup';
+            
+            var cat = A.catalogFromVizieR('J/ApJS/160/319/coup', '83.8187 -5.3897', 0.5, {
+                onClick: 'showTable',
+                color: '#ff9f4a',
+                sourceSize: 10,
+                shape: 'square',
+                limit: maxSrc
+            });
+            
+            cat.on('catalogLoaded', function() {
+                catalogSources = cat;
+                
+                var sources = cat.getSources();
+                catalogData = [];
+                sources.forEach(function(src) {
+                    var data = src.data;
+                    catalogData.push({
+                        ra: src.ra,
+                        dec: src.dec,
+                        pmRA: 0,
+                        pmDE: 0,
+                        id: data.CXOONCJ || data.Seq || ''
+                    });
+                });
+                
+                showLoading(false);
+                var loadedCount = Math.min(sources.length, maxSrc);
+                document.getElementById('catalog-info').textContent = 
+                    'COUP · ' + loadedCount + ' X-ray sources loaded';
+                document.getElementById('btn-pm-arrows').disabled = true; // COUP has no PM
+                showToast('Loaded ' + loadedCount + ' COUP sources', 'success');
+            });
+            
+            cat.on('catalogFailed', function(error) {
+                showLoading(false);
+                showToast('Error loading COUP catalog', 'error');
+            });
+            
+            aladin.addCatalog(cat);
+        }
+        
+        function addPMArrows() {
+            if (catalogData.length === 0) {
+                showToast('Load catalog first', 'error');
+                return;
+            }
+            
+            if (currentCatalogType !== 'kim') {
+                showToast('PM arrows only for Kim+2019', 'error');
+                return;
+            }
+            
+            if (catalogOverlay) {
+                try { aladin.removeLayer(catalogOverlay); } catch(e) {}
+            }
+            
+            var scale = parseFloat(document.getElementById('pm-scale').value) || 50;
+            var timeYr = parseFloat(document.getElementById('pm-time').value) || 1000;
+            
+            catalogOverlay = A.graphicOverlay({ color: '#ff6b4a', lineWidth: 1.5 });
+            
+            var arrowCount = 0;
+            catalogData.forEach(function(src) {
+                if (src.pmRA !== 0 || src.pmDE !== 0) {
+                    var pmRaDeg = (src.pmRA / 3600000) * timeYr * scale;
+                    var pmDeDeg = (src.pmDE / 3600000) * timeYr * scale;
+                    
+                    var cosDec = Math.cos(src.dec * Math.PI / 180);
+                    var endRa = src.ra + pmRaDeg / cosDec;
+                    var endDec = src.dec + pmDeDeg;
+                    
+                    catalogOverlay.add(A.polyline([
+                        [src.ra, src.dec],
+                        [endRa, endDec]
+                    ], { color: '#ff6b4a', lineWidth: 1.5 }));
+                    
+                    var arrowLen = 0.003 * scale / 50;
+                    var angle = Math.atan2(pmDeDeg, pmRaDeg / cosDec);
+                    var headAngle1 = angle + 2.5;
+                    var headAngle2 = angle - 2.5;
+                    
+                    catalogOverlay.add(A.polyline([
+                        [endRa + arrowLen * Math.cos(headAngle1) / cosDec, endDec + arrowLen * Math.sin(headAngle1)],
+                        [endRa, endDec],
+                        [endRa + arrowLen * Math.cos(headAngle2) / cosDec, endDec + arrowLen * Math.sin(headAngle2)]
+                    ], { color: '#ff6b4a', lineWidth: 1.5 }));
+                    
+                    arrowCount++;
+                }
+            });
+            
+            aladin.addOverlay(catalogOverlay);
+            showToast('Added ' + arrowCount + ' PM arrows', 'success');
+        }
+        
+        function clearCatalog() {
+            if (catalogSources) {
+                try { aladin.removeLayers([catalogSources]); } catch(e) {}
+                catalogSources = null;
+            }
+            if (catalogOverlay) {
+                try { aladin.removeLayer(catalogOverlay); } catch(e) {}
+                catalogOverlay = null;
+            }
+            catalogData = [];
+            currentCatalogType = null;
+            document.getElementById('catalog-info').textContent = 
+                'Kim+2019: J/AJ/157/109 · COUP: J/ApJS/160/319';
+            document.getElementById('btn-pm-arrows').disabled = true;
+        }
+        
         // ==================== Footprints ====================
         
         function rotatePoint(x, y, paDeg) {
-            // PA is East of North
             var rad = -paDeg * Math.PI / 180;
             return {
                 x: x * Math.cos(rad) - y * Math.sin(rad),
@@ -919,7 +1142,6 @@
             var overlay = A.graphicOverlay({ color: '#ff4adc', lineWidth: 2 });
             aladin.addOverlay(overlay);
             
-            // Draw each of the 18 detectors
             ROMAN_WFI_DETECTORS.forEach(function(det) {
                 var poly = createDetectorPoly(ra, dec, det[0], det[1], ROMAN_DET_SIZE, pa);
                 overlay.add(A.polyline(poly, {color: '#ff4adc', lineWidth: 2}));
