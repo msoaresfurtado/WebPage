@@ -114,24 +114,6 @@
             clear: both;
         }
 
-        /* Footer */
-        .footer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-top: 40px;
-            padding: 14px 0;
-            border-top: 2px solid var(--accent-color);
-            border-bottom: 2px solid var(--accent-color);
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .footer a {
-            color: var(--accent-color);
-        }
-
         /* Responsive */
         @media only screen and (max-width: 768px) {
             .header {
@@ -173,11 +155,8 @@
             </p>
         </div>
 
-        <div class="footer">
-            <span>✉ <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a></span>
-            <span>⊕</span>
-            <span>Updated 12/2025</span>
-        </div>
+        <!-- Footer will be loaded here -->
+        <div id="footer-container"></div>
     </div>
 
     <script>
@@ -200,10 +179,26 @@
                         <span class="nav-sep">|</span>
                         <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
                         <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank">CV</a>
-                        <span class="nav-sep">|</span>
                         <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Tools.html">Tools</a>
                     </nav>
+                `;
+            });
+
+        // Load the footer component
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            })
+            .catch(error => {
+                // Fallback footer if fetch fails
+                document.getElementById('footer-container').innerHTML = `
+                    <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #20578A; text-align:center; font-size:13px; color:#555;">
+                        <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#20578A;">mmsoares@wisc.edu</a> ⊕ Updated 12/2025</div>
+                        <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy & Physics</div>
+                    </footer>
                 `;
             });
     </script>
