@@ -89,11 +89,21 @@
             color: var(--border-light);
         }
 
+        /* Page Title */
+        .page-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.6em;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin: 30px 0 20px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
         /* Content with image on right */
         .content {
             font-size: 1em;
             line-height: 1.75;
-            margin-top: 30px;
         }
 
         .content p {
@@ -140,6 +150,8 @@
     <div class="container">
         <!-- Header loaded from external file -->
         <div id="header-container"></div>
+
+        <div class="page-title">About Me</div>
 
         <div class="content clearfix">
             <img src="https://imageio.forbes.com/specials-images/imageserve/60c72ba42c6e037938b4012e/0x0.jpg?format=jpg&height=600&width=1200&fit=bounds" alt="About" class="content-image">
