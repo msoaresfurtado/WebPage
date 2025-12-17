@@ -164,24 +164,6 @@
             margin: 20px 0;
         }
 
-        /* Footer */
-        .footer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-top: 40px;
-            padding: 14px 0;
-            border-top: 2px solid var(--accent-color);
-            border-bottom: 2px solid var(--accent-color);
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .footer a {
-            color: var(--accent-color);
-        }
-
         /* Responsive */
         @media only screen and (max-width: 768px) {
             .header {
@@ -257,44 +239,4 @@
         </div>
 
         <div class="callout">
-            <p><strong>Applying for the <a href="https://www.stsci.edu/stsci-research/fellowships/nasa-hubble-fellowship-program/" target="_blank">NASA Hubble Fellowship Program</a> or the <a href="https://www.hsfoundation.org/programs/science/51-pegasi-b-fellowship/" target="_blank">51 Peg b Fellowship</a>?</strong> UW–Madison is a fantastic place to bring these prestigious awards. UW–Madison, in partnership with the interdisciplinary <a href="https://wicor.wisc.edu/" target="_blank">WiCOR</a> initiative, offers an exceptional environment to advance the pioneering research supported by these prestigious fellowships.</p>
-            <p>If you're considering applying, feel free to reach out to discuss potential synergies or hosting opportunities.</p>
-        </div>
-
-        <div class="footer">
-            <span>✉ <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a></span>
-            <span>⊕</span>
-            <span>Updated 12/2025</span>
-        </div>
-    </div>
-
-    <script>
-        // Load the header component
-        fetch('header.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('header-container').innerHTML = data;
-                // Set current page indicator
-                const currentNav = document.getElementById('nav-team');
-                if (currentNav) currentNav.classList.add('current');
-            })
-            .catch(error => {
-                // Fallback header if fetch fails
-                document.getElementById('header-container').innerHTML = `
-                    <nav class="header">
-                        <a href="https://msoaresfurtado.github.io/WebPage">Home</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html" class="current">Team</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/CV/CV_2025.pdf" target="_blank">CV</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
-                    </nav>
-                `;
-            });
-    </script>
-</body>
-
-</html>
+            <p><strong>Applying for the <a href="https://www.stsci.edu/stsci-research/fellowships/nasa-hubble-fellowship-program/" target="_blank">NASA Hubble Fellowship Program</a> or the <a href="https://www.hsfoun
