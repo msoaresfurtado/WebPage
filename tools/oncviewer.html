@@ -569,10 +569,6 @@
                     <span class="panel-toggle">▼</span>
                 </div>
                 <div class="panel-content">
-                    <div class="input-group">
-                        <label>Max Sources</label>
-                        <input type="number" id="max-sources" value="150" min="10" max="2000" step="50">
-                    </div>
                     <button class="btn-catalog" onclick="loadKimCatalog()">Load Kim+2019 (PM)</button>
                     <button class="btn-coup btn-spacing" onclick="loadCOUPCatalog()">Load COUP (X-ray)</button>
                     <button class="btn-pm btn-spacing" id="btn-pm-arrows" onclick="addPMArrows()" disabled>Add PM Arrows</button>
@@ -606,15 +602,15 @@
                     <div class="coord-row-3">
                         <div class="input-group">
                             <label>RA (deg)</label>
-                            <input type="text" id="footprint-ra" placeholder="83.82">
+                            <input type="text" id="footprint-ra" value="83.8187">
                         </div>
                         <div class="input-group">
                             <label>Dec (deg)</label>
-                            <input type="text" id="footprint-dec" placeholder="-5.39">
+                            <input type="text" id="footprint-dec" value="-5.3897">
                         </div>
                         <div class="input-group">
                             <label>PA (deg)</label>
-                            <input type="text" id="footprint-pa" placeholder="0">
+                            <input type="text" id="footprint-pa" value="0">
                         </div>
                     </div>
                     <button class="btn-roman" onclick="addRomanFootprint()">Add Roman WFI</button>
@@ -929,102 +925,151 @@
         
         // ==================== Catalogs ====================
         
-        function getMaxSources() {
-            return parseInt(document.getElementById('max-sources').value) || 150;
-        }
-        
         function loadKimCatalog() {
             showLoading(true, 'Loading Kim+2019 catalog...');
             clearCatalog();
             
-            var maxSrc = getMaxSources();
             currentCatalogType = 'kim';
             
-            var cat = A.catalogFromVizieR('J/AJ/157/109/table3', '83.8187 -5.3897', 0.5, {
-                onClick: 'showTable',
-                color: '#4afff4',
-                sourceSize: 10,
-                shape: 'circle',
-                limit: maxSrc
-            });
+            // Direct VizieR query - unlimited sources
+            var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?' +
+                '-source=J/AJ/157/109/table3' +
+                '&-c=83.8187%20-5.3897' +
+                '&-c.rd=0.5' +
+                '&-out.max=unlimited' +
+                '&-out=RAJ2000,DEJ2000,pmRA,pmDE,ID';
             
-            cat.on('catalogLoaded', function() {
-                catalogSources = cat;
-                
-                var sources = cat.getSources();
-                catalogData = [];
-                sources.forEach(function(src) {
-                    var data = src.data;
-                    catalogData.push({
-                        ra: src.ra,
-                        dec: src.dec,
-                        pmRA: parseFloat(data.pmRA) || 0,
-                        pmDE: parseFloat(data.pmDE) || 0,
-                        id: data.ID || ''
-                    });
+            fetch(url)
+                .then(function(response) { 
+                    if (!response.ok) throw new Error('Network error');
+                    return response.text(); 
+                })
+                .then(function(votable) {
+                    var data = parseVOTable(votable);
+                    if (data.length === 0) {
+                        showLoading(false);
+                        showToast('No sources found', 'error');
+                        return;
+                    }
+                    
+                    catalogData = data;
+                    plotCatalogSources(data, '#4afff4', 'circle', 'Kim+2019');
+                    
+                    showLoading(false);
+                    document.getElementById('catalog-info').textContent = 
+                        'Kim+2019 · ' + data.length + ' sources loaded';
+                    document.getElementById('btn-pm-arrows').disabled = false;
+                    showToast('Loaded ' + data.length + ' Kim+2019 sources', 'success');
+                })
+                .catch(function(error) {
+                    showLoading(false);
+                    showToast('Error: ' + error.message, 'error');
+                    console.error('Kim catalog error:', error);
                 });
-                
-                showLoading(false);
-                var loadedCount = Math.min(sources.length, maxSrc);
-                document.getElementById('catalog-info').textContent = 
-                    'Kim+2019 · ' + loadedCount + ' sources loaded';
-                document.getElementById('btn-pm-arrows').disabled = false;
-                showToast('Loaded ' + loadedCount + ' Kim+2019 sources', 'success');
-            });
-            
-            cat.on('catalogFailed', function(error) {
-                showLoading(false);
-                showToast('Error loading Kim catalog', 'error');
-            });
-            
-            aladin.addCatalog(cat);
         }
         
         function loadCOUPCatalog() {
             showLoading(true, 'Loading COUP catalog...');
             clearCatalog();
             
-            var maxSrc = getMaxSources();
             currentCatalogType = 'coup';
             
-            var cat = A.catalogFromVizieR('J/ApJS/160/319/coup', '83.8187 -5.3897', 0.5, {
-                onClick: 'showTable',
-                color: '#ff9f4a',
-                sourceSize: 10,
-                shape: 'square',
-                limit: maxSrc
-            });
+            var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?' +
+                '-source=J/ApJS/160/319/coup' +
+                '&-c=83.8187%20-5.3897' +
+                '&-c.rd=0.5' +
+                '&-out.max=unlimited' +
+                '&-out=RAJ2000,DEJ2000,Seq,CXOONCJ';
             
-            cat.on('catalogLoaded', function() {
-                catalogSources = cat;
-                
-                var sources = cat.getSources();
-                catalogData = [];
-                sources.forEach(function(src) {
-                    var data = src.data;
-                    catalogData.push({
-                        ra: src.ra,
-                        dec: src.dec,
-                        pmRA: 0,
-                        pmDE: 0,
-                        id: data.CXOONCJ || data.Seq || ''
-                    });
+            fetch(url)
+                .then(function(response) { 
+                    if (!response.ok) throw new Error('Network error');
+                    return response.text(); 
+                })
+                .then(function(votable) {
+                    var data = parseVOTable(votable);
+                    if (data.length === 0) {
+                        showLoading(false);
+                        showToast('No sources found', 'error');
+                        return;
+                    }
+                    
+                    // COUP has no PM data
+                    data.forEach(function(d) { d.pmRA = 0; d.pmDE = 0; });
+                    catalogData = data;
+                    plotCatalogSources(data, '#ff9f4a', 'square', 'COUP');
+                    
+                    showLoading(false);
+                    document.getElementById('catalog-info').textContent = 
+                        'COUP · ' + data.length + ' X-ray sources loaded';
+                    document.getElementById('btn-pm-arrows').disabled = true;
+                    showToast('Loaded ' + data.length + ' COUP sources', 'success');
+                })
+                .catch(function(error) {
+                    showLoading(false);
+                    showToast('Error: ' + error.message, 'error');
+                    console.error('COUP catalog error:', error);
                 });
+        }
+        
+        function parseVOTable(votable) {
+            var parser = new DOMParser();
+            var xml = parser.parseFromString(votable, 'text/xml');
+            
+            var tabledata = xml.querySelector('TABLEDATA');
+            if (!tabledata) return [];
+            
+            var fields = xml.querySelectorAll('FIELD');
+            var fieldNames = [];
+            fields.forEach(function(f) {
+                fieldNames.push(f.getAttribute('name') || f.getAttribute('ID') || '');
+            });
+            
+            // Find column indices
+            var raIdx = fieldNames.findIndex(function(n) { return n.match(/RAJ2000|_RAJ2000/i); });
+            var decIdx = fieldNames.findIndex(function(n) { return n.match(/DEJ2000|_DEJ2000/i); });
+            var pmRaIdx = fieldNames.findIndex(function(n) { return n === 'pmRA'; });
+            var pmDeIdx = fieldNames.findIndex(function(n) { return n === 'pmDE'; });
+            var idIdx = fieldNames.findIndex(function(n) { return n.match(/^(ID|Seq|CXOONCJ)$/); });
+            
+            if (raIdx === -1 || decIdx === -1) return [];
+            
+            var rows = tabledata.querySelectorAll('TR');
+            var data = [];
+            
+            rows.forEach(function(row) {
+                var cells = row.querySelectorAll('TD');
+                if (cells.length <= Math.max(raIdx, decIdx)) return;
                 
-                showLoading(false);
-                var loadedCount = Math.min(sources.length, maxSrc);
-                document.getElementById('catalog-info').textContent = 
-                    'COUP · ' + loadedCount + ' X-ray sources loaded';
-                document.getElementById('btn-pm-arrows').disabled = true; // COUP has no PM
-                showToast('Loaded ' + loadedCount + ' COUP sources', 'success');
+                var ra = parseFloat(cells[raIdx].textContent);
+                var dec = parseFloat(cells[decIdx].textContent);
+                
+                if (isNaN(ra) || isNaN(dec)) return;
+                
+                var pmRA = pmRaIdx >= 0 ? parseFloat(cells[pmRaIdx].textContent) || 0 : 0;
+                var pmDE = pmDeIdx >= 0 ? parseFloat(cells[pmDeIdx].textContent) || 0 : 0;
+                var id = idIdx >= 0 ? cells[idIdx].textContent.trim() : '';
+                
+                data.push({ ra: ra, dec: dec, pmRA: pmRA, pmDE: pmDE, id: id });
             });
             
-            cat.on('catalogFailed', function(error) {
-                showLoading(false);
-                showToast('Error loading COUP catalog', 'error');
+            return data;
+        }
+        
+        function plotCatalogSources(data, color, shape, name) {
+            catalogSources = A.catalog({ 
+                name: name, 
+                sourceSize: 10, 
+                color: color, 
+                shape: shape 
             });
             
-            aladin.addCatalog(cat);
+            var aladinSources = data.map(function(d) {
+                return A.source(d.ra, d.dec, { name: d.id || name + ' source', pmRA: d.pmRA, pmDE: d.pmDE });
+            });
+            
+            catalogSources.addSources(aladinSources);
+            aladin.addCatalog(catalogSources);
         }
         
         function addPMArrows() {
