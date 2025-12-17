@@ -119,7 +119,7 @@
 
         .tool-card {
             display: grid;
-            grid-template-columns: 100px 1fr;
+            grid-template-columns: 120px 1fr;
             gap: 20px;
             padding: 24px;
             background: var(--bg-subtle);
@@ -134,15 +134,22 @@
         }
 
         .tool-icon {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, var(--accent-color) 0%, #1a4670 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 42px;
-            box-shadow: 0 4px 12px rgba(32, 87, 138, 0.25);
+            width: 120px;
+            height: 120px;
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 0 0 2px var(--text-color);
+            flex-shrink: 0;
+        }
+
+        .icon-onc {
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/800px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg');
+        }
+
+        .icon-cra {
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/R_Coronae_Australis_region.jpg/800px-R_Coronae_Australis_region.jpg');
         }
 
         .tool-content h3 {
@@ -228,6 +235,8 @@
         <div id="header-container"></div>
 
         <h1 class="page-title">Research Tools</h1>
+        <p class="page-intro">Interactive data visualization tools developed for collaboration members. These tools provide browser-based access to explore photometric data from our ongoing observational programs.</p>
+
         <div class="access-notice">
             <strong>🔒 Collaboration Access:</strong> These tools are intended for use by members of our research collaboration. If you need access or have questions, please contact <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a>.
         </div>
@@ -237,20 +246,20 @@
         <div class="tools-grid">
             <!-- ONC Viewer -->
             <article class="tool-card">
-                <div class="tool-icon">🔭</div>
+                <div class="tool-icon icon-onc"></div>
                 <div class="tool-content">
                     <h3><a href="https://msoaresfurtado.com/tools/oncviewer.html">ONC Viewer</a></h3>
-                    <p>Interactive viewer for Orion Nebula Cluster photometric data. Explore light curves, identify variable stars, and analyze time-series observations from our ONC monitoring program.</p>
+                    <p>Source identification and centroid matching for ONC survey design and archival cross-matching.</p>
                     <a href="https://msoaresfurtado.com/tools/oncviewer.html" class="tool-link">Launch ONC Viewer →</a>
                 </div>
             </article>
 
             <!-- CRA Viewer -->
             <article class="tool-card">
-                <div class="tool-icon">⭐</div>
+                <div class="tool-icon icon-cra"></div>
                 <div class="tool-content">
                     <h3><a href="https://msoaresfurtado.com/tools/craviewer.html">CRA Viewer</a></h3>
-                    <p>Interactive viewer for Corona Australis photometric data. Browse and analyze stellar variability data from our observations of this nearby star-forming region.</p>
+                    <p>Source identification and centroid matching for CrA survey design and archival cross-matching.</p>
                     <a href="https://msoaresfurtado.com/tools/craviewer.html" class="tool-link">Launch CRA Viewer →</a>
                 </div>
             </article>
