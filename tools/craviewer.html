@@ -267,7 +267,7 @@
         .btn-roman { background: linear-gradient(135deg, var(--roman-color), #ff7ae8); }
         .btn-jwst { background: linear-gradient(135deg, var(--jwst-color), #ffe066); }
         .btn-catalog { background: linear-gradient(135deg, var(--success), #7affb5); }
-        .btn-pm { background: linear-gradient(135deg, var(--accent-secondary), #ff8a6b); }
+        .btn-sgr { background: linear-gradient(135deg, #ffd24a, #ffe066); }
         .btn-spacing { margin-top: 0.3rem; }
         
         .main-content {
@@ -595,30 +595,12 @@
                     <span class="panel-toggle">▼</span>
                 </div>
                 <div class="panel-content">
-                    <div class="input-group">
-                        <label>Image Contrast</label>
-                        <input type="range" id="contrast-slider" min="0" max="1" step="0.05" value="1" style="width:100%;">
-                    </div>
-                    <div class="divider"></div>
-                    <button class="btn-catalog" onclick="loadCrACatalog()">Load CrA Members (2025)</button>
-                    <div id="cra-pm-controls" style="display:none; margin-top:0.4rem; padding:0.4rem; background:var(--bg-primary); border-radius:3px;">
-                        <div class="coord-row">
-                            <div class="input-group">
-                                <label>Arrow Scale</label>
-                                <input type="number" id="pm-scale" value="50" min="1" max="500" step="10">
-                            </div>
-                            <div class="input-group">
-                                <label>Time (yr)</label>
-                                <input type="number" id="pm-time" value="100" min="10" max="10000" step="50">
-                            </div>
-                        </div>
-                        <button class="btn-pm" id="btn-pm-arrows" onclick="addPMArrows()">Add PM Arrows</button>
-                        <button class="btn-secondary btn-spacing" onclick="clearPMArrows()">Clear PM Arrows</button>
-                    </div>
+                    <button class="btn-catalog" onclick="loadCrACatalog()">Load CrA Substellar (2025)</button>
+                    <button class="btn-sgr btn-spacing" onclick="loadSgrStreamCatalog()">Load Sgr Stream Stars</button>
                     <div class="catalog-info" id="catalog-info">
-                        J/A+A/701/A147 · CrA star-forming region members
+                        CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1
                     </div>
-                    <button class="btn-secondary btn-spacing" onclick="clearCatalog()">Clear Catalog</button>
+                    <button class="btn-secondary btn-spacing" onclick="clearCatalog()">Clear All Catalogs</button>
                 </div>
             </div>
             
@@ -632,24 +614,29 @@
                     <span class="panel-toggle">▼</span>
                 </div>
                 <div class="panel-content">
-                    <div class="coord-row-3">
-                        <div class="input-group">
-                            <label>RA (deg)</label>
-                            <input type="text" id="footprint-ra" value="285.47">
-                        </div>
-                        <div class="input-group">
-                            <label>Dec (deg)</label>
-                            <input type="text" id="footprint-dec" value="-36.95">
-                        </div>
-                        <div class="input-group">
-                            <label>PA (deg)</label>
-                            <input type="text" id="footprint-pa" value="0">
-                        </div>
+                    <div class="input-group">
+                        <label>Instrument</label>
+                        <select id="footprint-instrument">
+                            <option value="roman">Roman WFI</option>
+                            <option value="jwst">JWST NIRCam</option>
+                        </select>
                     </div>
-                    <button class="btn-roman" onclick="addRomanFootprint()">Add Roman WFI</button>
-                    <button class="btn-jwst btn-spacing" onclick="addJWSTFootprint()">Add JWST NIRCam</button>
-                    <div class="footprint-list" id="footprint-list"></div>
-                    <button class="btn-secondary" onclick="clearFootprints()">Clear Footprints</button>
+                    <div class="input-group">
+                        <label>RA: <span id="fp-ra-display">285.4700</span>°</label>
+                        <input type="range" id="footprint-ra-slider" min="280" max="290" step="0.001" value="285.47" style="width:100%;">
+                    </div>
+                    <div class="input-group">
+                        <label>Dec: <span id="fp-dec-display">-36.9500</span>°</label>
+                        <input type="range" id="footprint-dec-slider" min="-42" max="-32" step="0.001" value="-36.95" style="width:100%;">
+                    </div>
+                    <div class="input-group">
+                        <label>PA: <span id="fp-pa-display">0</span>°</label>
+                        <input type="range" id="footprint-pa-slider" min="0" max="360" step="1" value="0" style="width:100%;">
+                    </div>
+                    <div class="coord-row">
+                        <button onclick="centerFootprintOnView()">Center on View</button>
+                        <button class="btn-secondary" onclick="clearActiveFootprint()">Clear</button>
+                    </div>
                 </div>
             </div>
             
@@ -807,12 +794,12 @@
         
         var aladin;
         var sources = [];
-        var footprints = [];
         var currentFITSLayer = null;
         var currentFITSUrl = null;
-        var catalogOverlay = null;
         var craCatalogSources = null;
+        var sgrCatalogSources = null;
         var craData = [];
+        var sgrData = [];
         var pastObjects = JSON.parse(localStorage.getItem('craPastObjects') || '[]');
         
         var selectedColors = {
@@ -853,14 +840,11 @@
                 }
             });
             
-            // Contrast slider
-            document.getElementById('contrast-slider').addEventListener('input', function(e) {
-                var val = parseFloat(e.target.value);
-                aladin.getBaseImageLayer().setOpacity(val);
-            });
-            
             // Populate past objects datalist
             updatePastObjectsDatalist();
+            
+            // Initialize footprint controls
+            initFootprintControls();
             
             showToast('Viewer initialized · Centered on CrA', 'success');
         });
@@ -967,21 +951,23 @@
             }
             craData = [];
             
-            // J/A+A/701/A147 - CrA star forming region members
-            var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?' +
-                '-source=J/A+A/701/A147' +
-                '&-c=' + CRA_RA + '%20' + CRA_DEC +
-                '&-c.rd=2' +
-                '&-out.max=unlimited' +
-                '&-out=RAJ2000,DEJ2000,pmRA,pmDE,Gaia';
+            // Use VizieR votable endpoint with CORS-friendly format
+            var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?-source=J/A+A/701/A147/tablea1&-out.max=unlimited&-out=_RAJ2000,_DEJ2000,Gaia';
+            
+            console.log('Fetching CrA:', url);
             
             fetch(url)
                 .then(function(response) { 
-                    if (!response.ok) throw new Error('Network error');
+                    console.log('CrA response status:', response.status);
                     return response.text(); 
                 })
-                .then(function(votable) {
-                    var data = parseVOTable(votable);
+                .then(function(text) {
+                    console.log('CrA response length:', text.length);
+                    console.log('CrA response preview:', text.substring(0, 300));
+                    
+                    var data = parseVOTableSimple(text);
+                    console.log('Parsed CrA data:', data.length, 'sources');
+                    
                     if (data.length === 0) {
                         showLoading(false);
                         showToast('No CrA sources found', 'error');
@@ -989,13 +975,11 @@
                     }
                     
                     craData = data;
-                    craCatalogSources = plotCatalogSources(data, '#4afff4', 'circle', 'CrA Members');
+                    craCatalogSources = plotCatalogSources(craData, '#4afff4', 'circle', 'CrA Substellar');
                     
                     showLoading(false);
-                    document.getElementById('catalog-info').textContent = 
-                        'J/A+A/701/A147 · ' + data.length + ' sources loaded';
-                    document.getElementById('cra-pm-controls').style.display = 'block';
-                    showToast('Loaded ' + data.length + ' CrA members', 'success');
+                    updateCatalogInfo();
+                    showToast('Loaded ' + craData.length + ' CrA substellar objects', 'success');
                 })
                 .catch(function(error) {
                     showLoading(false);
@@ -1004,164 +988,126 @@
                 });
         }
         
-        function parseVOTable(votable) {
-            var parser = new DOMParser();
-            var xml = parser.parseFromString(votable, 'text/xml');
+        function loadSgrStreamCatalog() {
+            showLoading(true, 'Loading Sgr stream catalog...');
             
-            var tabledata = xml.querySelector('TABLEDATA');
-            if (!tabledata) {
-                console.error('No TABLEDATA found in VOTable');
-                return [];
+            if (sgrCatalogSources) {
+                try { aladin.removeLayers([sgrCatalogSources]); } catch(e) {}
+                sgrCatalogSources = null;
             }
+            sgrData = [];
             
-            var fields = xml.querySelectorAll('FIELD');
-            var fieldNames = [];
-            fields.forEach(function(f) {
-                fieldNames.push(f.getAttribute('name') || f.getAttribute('ID') || '');
-            });
+            // Load first 50000 sources from catalog
+            var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?-source=J/A+A/666/A64/tablec1' +
+                '&-out.max=50000' +
+                '&-out=_RAJ2000,_DEJ2000,GaiaDR3';
             
-            console.log('VOTable fields:', fieldNames);
+            console.log('Fetching Sgr:', url);
             
-            var raIdx = fieldNames.findIndex(function(n) { return n.match(/RAJ2000|_RAJ2000|RA_ICRS/i); });
-            var decIdx = fieldNames.findIndex(function(n) { return n.match(/DEJ2000|_DEJ2000|DE_ICRS/i); });
-            var pmRaIdx = fieldNames.findIndex(function(n) { return n.match(/^pmRA$/i); });
-            var pmDeIdx = fieldNames.findIndex(function(n) { return n.match(/^pmDE$/i); });
-            var idIdx = fieldNames.findIndex(function(n) { return n.match(/^(Gaia|Name|ID|Seq)$/i); });
-            
-            console.log('Column indices - RA:', raIdx, 'Dec:', decIdx, 'pmRA:', pmRaIdx, 'pmDE:', pmDeIdx, 'ID:', idIdx);
-            
-            if (raIdx === -1 || decIdx === -1) {
-                console.error('Could not find RA/Dec columns');
-                return [];
-            }
-            
-            var rows = tabledata.querySelectorAll('TR');
+            fetch(url)
+                .then(function(response) { 
+                    console.log('Sgr response status:', response.status);
+                    return response.text(); 
+                })
+                .then(function(text) {
+                    console.log('Sgr response length:', text.length);
+                    
+                    var data = parseVOTableSimple(text);
+                    console.log('Parsed Sgr data:', data.length, 'sources');
+                    
+                    if (data.length === 0) {
+                        showLoading(false);
+                        showToast('No Sgr sources found', 'error');
+                        return;
+                    }
+                    
+                    sgrData = data;
+                    sgrCatalogSources = plotCatalogSources(sgrData, '#ffd24a', 'square', 'Sgr Stream');
+                    
+                    showLoading(false);
+                    updateCatalogInfo();
+                    showToast('Loaded ' + sgrData.length + ' Sgr stream stars', 'success');
+                })
+                .catch(function(error) {
+                    showLoading(false);
+                    showToast('Error: ' + error.message, 'error');
+                    console.error('Sgr catalog error:', error);
+                });
+        }
+        
+        function parseVOTableSimple(text) {
+            // Simple regex-based parser for VOTable
             var data = [];
-            var pmCount = 0;
             
-            rows.forEach(function(row) {
-                var cells = row.querySelectorAll('TD');
-                if (cells.length <= Math.max(raIdx, decIdx)) return;
+            // Find all TR rows
+            var trMatch = text.match(/<TR>([\s\S]*?)<\/TR>/gi);
+            if (!trMatch) {
+                console.log('No TR elements found');
+                return data;
+            }
+            
+            console.log('Found', trMatch.length, 'TR rows');
+            
+            trMatch.forEach(function(tr, idx) {
+                var tdMatch = tr.match(/<TD[^>]*>([^<]*)<\/TD>/gi);
+                if (!tdMatch || tdMatch.length < 2) return;
                 
-                var ra = parseFloat(cells[raIdx].textContent);
-                var dec = parseFloat(cells[decIdx].textContent);
+                var values = tdMatch.map(function(td) {
+                    return td.replace(/<[^>]*>/g, '').trim();
+                });
+                
+                // First two columns should be RA and Dec
+                var ra = parseFloat(values[0]);
+                var dec = parseFloat(values[1]);
                 
                 if (isNaN(ra) || isNaN(dec)) return;
                 
-                var pmRA = pmRaIdx >= 0 ? parseFloat(cells[pmRaIdx].textContent) : 0;
-                var pmDE = pmDeIdx >= 0 ? parseFloat(cells[pmDeIdx].textContent) : 0;
+                var id = values.length > 2 ? values[2] : '';
                 
-                if (isNaN(pmRA)) pmRA = 0;
-                if (isNaN(pmDE)) pmDE = 0;
+                if (idx < 3) {
+                    console.log('Sample row', idx, ':', ra, dec, id);
+                }
                 
-                if (pmRA !== 0 || pmDE !== 0) pmCount++;
-                
-                var id = idIdx >= 0 ? cells[idIdx].textContent.trim() : '';
-                
-                data.push({ ra: ra, dec: dec, pmRA: pmRA, pmDE: pmDE, id: id });
+                data.push({ ra: ra, dec: dec, id: id });
             });
-            
-            console.log('Parsed', data.length, 'sources,', pmCount, 'with PM data');
             
             return data;
         }
         
+        function updateCatalogInfo() {
+            var parts = [];
+            if (craData.length > 0) parts.push('CrA Substellar: ' + craData.length);
+            if (sgrData.length > 0) parts.push('Sgr Stream: ' + sgrData.length);
+            
+            if (parts.length === 0) {
+                document.getElementById('catalog-info').innerHTML = 'CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1';
+            } else {
+                document.getElementById('catalog-info').textContent = parts.join(' · ') + ' sources';
+            }
+        }
+        
         function plotCatalogSources(data, color, shape, name) {
+            console.log('plotCatalogSources called with', data.length, 'sources');
+            
             var cat = A.catalog({ 
-                name: name, 
+                name: name,
                 sourceSize: 10, 
                 color: color, 
                 shape: shape 
             });
             
             var aladinSources = data.map(function(d) {
-                return A.source(d.ra, d.dec, { name: d.id || name + ' source', pmRA: d.pmRA, pmDE: d.pmDE });
+                return A.source(d.ra, d.dec, { name: d.id || name + ' source' });
             });
+            
+            console.log('Created', aladinSources.length, 'Aladin sources');
             
             cat.addSources(aladinSources);
             aladin.addCatalog(cat);
+            
+            console.log('Catalog added to Aladin');
+            
             return cat;
-        }
-        
-        function addPMArrows() {
-            console.log('addPMArrows called, craData length:', craData.length);
-            
-            if (craData.length === 0) {
-                showToast('Load catalog first', 'error');
-                return;
-            }
-            
-            if (catalogOverlay) {
-                try { aladin.removeLayer(catalogOverlay); } catch(e) {}
-                catalogOverlay = null;
-            }
-            
-            var scale = parseFloat(document.getElementById('pm-scale').value) || 50;
-            var timeYr = parseFloat(document.getElementById('pm-time').value) || 100;
-            
-            console.log('PM arrow params - scale:', scale, 'timeYr:', timeYr);
-            
-            catalogOverlay = A.graphicOverlay({ color: '#ff6b4a', lineWidth: 2 });
-            aladin.addOverlay(catalogOverlay);
-            
-            var arrowCount = 0;
-            
-            craData.forEach(function(src) {
-                if (src.pmRA === 0 && src.pmDE === 0) return;
-                
-                var pmRaDeg = src.pmRA * timeYr * scale / 3600000;
-                var pmDeDeg = src.pmDE * timeYr * scale / 3600000;
-                
-                var cosDec = Math.cos(src.dec * Math.PI / 180);
-                
-                var endRa = src.ra + pmRaDeg / cosDec;
-                var endDec = src.dec + pmDeDeg;
-                
-                try {
-                    var line = A.polyline([[src.ra, src.dec], [endRa, endDec]], {
-                        color: '#ff6b4a',
-                        lineWidth: 2
-                    });
-                    catalogOverlay.add(line);
-                    
-                    var arrowSize = Math.sqrt(pmRaDeg*pmRaDeg + pmDeDeg*pmDeDeg) * 0.3;
-                    if (arrowSize < 0.001) arrowSize = 0.001;
-                    
-                    var angle = Math.atan2(pmDeDeg, pmRaDeg / cosDec);
-                    var head1Angle = angle + Math.PI - 0.4;
-                    var head2Angle = angle + Math.PI + 0.4;
-                    
-                    var head1Ra = endRa + arrowSize * Math.cos(head1Angle) / cosDec;
-                    var head1Dec = endDec + arrowSize * Math.sin(head1Angle);
-                    var head2Ra = endRa + arrowSize * Math.cos(head2Angle) / cosDec;
-                    var head2Dec = endDec + arrowSize * Math.sin(head2Angle);
-                    
-                    catalogOverlay.add(A.polyline([[endRa, endDec], [head1Ra, head1Dec]], {color: '#ff6b4a', lineWidth: 2}));
-                    catalogOverlay.add(A.polyline([[endRa, endDec], [head2Ra, head2Dec]], {color: '#ff6b4a', lineWidth: 2}));
-                    
-                    arrowCount++;
-                } catch(e) {
-                    console.error('Error drawing arrow:', e);
-                }
-            });
-            
-            console.log('Total arrows drawn:', arrowCount);
-            
-            if (arrowCount === 0) {
-                showToast('No PM data found in catalog', 'error');
-            } else {
-                showToast('Added ' + arrowCount + ' PM arrows', 'success');
-            }
-        }
-        
-        function clearPMArrows() {
-            if (catalogOverlay) {
-                try { aladin.removeLayer(catalogOverlay); } catch(e) {}
-                catalogOverlay = null;
-                showToast('PM arrows cleared', 'success');
-            } else {
-                showToast('No PM arrows to clear', 'error');
-            }
         }
         
         function clearCatalog() {
@@ -1169,18 +1115,96 @@
                 try { aladin.removeLayers([craCatalogSources]); } catch(e) {}
                 craCatalogSources = null;
             }
-            if (catalogOverlay) {
-                try { aladin.removeLayer(catalogOverlay); } catch(e) {}
-                catalogOverlay = null;
+            if (sgrCatalogSources) {
+                try { aladin.removeLayers([sgrCatalogSources]); } catch(e) {}
+                sgrCatalogSources = null;
             }
             craData = [];
-            document.getElementById('catalog-info').textContent = 
-                'J/A+A/701/A147 · CrA star-forming region members';
-            document.getElementById('cra-pm-controls').style.display = 'none';
-            showToast('Catalog cleared', 'success');
+            sgrData = [];
+            document.getElementById('catalog-info').innerHTML = 
+                'CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1';
+            showToast('All catalogs cleared', 'success');
         }
         
         // ==================== Footprints ====================
+        
+        var activeFootprintOverlay = null;
+        
+        function initFootprintControls() {
+            var raSlider = document.getElementById('footprint-ra-slider');
+            var decSlider = document.getElementById('footprint-dec-slider');
+            var paSlider = document.getElementById('footprint-pa-slider');
+            var instrumentSelect = document.getElementById('footprint-instrument');
+            
+            raSlider.addEventListener('input', updateFootprintRealtime);
+            decSlider.addEventListener('input', updateFootprintRealtime);
+            paSlider.addEventListener('input', updateFootprintRealtime);
+            instrumentSelect.addEventListener('change', updateFootprintRealtime);
+            
+            // Don't draw initially - wait for user to open panel
+        }
+        
+        function updateFootprintRealtime() {
+            var ra = parseFloat(document.getElementById('footprint-ra-slider').value);
+            var dec = parseFloat(document.getElementById('footprint-dec-slider').value);
+            var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
+            var instrument = document.getElementById('footprint-instrument').value;
+            
+            // Update displays
+            document.getElementById('fp-ra-display').textContent = ra.toFixed(4);
+            document.getElementById('fp-dec-display').textContent = dec.toFixed(4);
+            document.getElementById('fp-pa-display').textContent = pa.toFixed(0);
+            
+            // Clear existing footprint
+            if (activeFootprintOverlay) {
+                try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
+            }
+            
+            // Draw new footprint
+            var color = instrument === 'roman' ? '#ff4adc' : '#ffd24a';
+            activeFootprintOverlay = A.graphicOverlay({ color: color, lineWidth: 2 });
+            aladin.addOverlay(activeFootprintOverlay);
+            
+            if (instrument === 'roman') {
+                ROMAN_WFI_DETECTORS.forEach(function(det) {
+                    var poly = createDetectorPoly(ra, dec, det[0], det[1], ROMAN_DET_SIZE, pa);
+                    activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
+                });
+            } else {
+                var modSize = 0.037;
+                var gap = 0.012;
+                [-1, 1].forEach(function(side) {
+                    var dx = side * (modSize / 2 + gap);
+                    var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
+                    activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
+                });
+            }
+        }
+        
+        function centerFootprintOnView() {
+            var center = aladin.getRaDec();
+            document.getElementById('footprint-ra-slider').value = center[0];
+            document.getElementById('footprint-dec-slider').value = center[1];
+            
+            // Update slider ranges to be centered on current view
+            var raSlider = document.getElementById('footprint-ra-slider');
+            var decSlider = document.getElementById('footprint-dec-slider');
+            raSlider.min = center[0] - 5;
+            raSlider.max = center[0] + 5;
+            decSlider.min = center[1] - 5;
+            decSlider.max = center[1] + 5;
+            
+            updateFootprintRealtime();
+            showToast('Footprint centered on view', 'success');
+        }
+        
+        function clearActiveFootprint() {
+            if (activeFootprintOverlay) {
+                try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
+                activeFootprintOverlay = null;
+                showToast('Footprint cleared', 'success');
+            }
+        }
         
         function rotatePoint(x, y, paDeg) {
             var rad = -paDeg * Math.PI / 180;
@@ -1210,85 +1234,6 @@
             });
             coords.push(coords[0]);
             return coords;
-        }
-        
-        function addRomanFootprint() {
-            var ra = parseFloat(document.getElementById('footprint-ra').value);
-            var dec = parseFloat(document.getElementById('footprint-dec').value);
-            var pa = parseFloat(document.getElementById('footprint-pa').value) || 0;
-            
-            if (isNaN(ra) || isNaN(dec)) {
-                showToast('Enter valid RA and Dec', 'error');
-                return;
-            }
-            
-            var overlay = A.graphicOverlay({ color: '#ff4adc', lineWidth: 2 });
-            aladin.addOverlay(overlay);
-            
-            ROMAN_WFI_DETECTORS.forEach(function(det) {
-                var poly = createDetectorPoly(ra, dec, det[0], det[1], ROMAN_DET_SIZE, pa);
-                overlay.add(A.polyline(poly, {color: '#ff4adc', lineWidth: 2}));
-            });
-            
-            footprints.push({ id: Date.now(), type: 'roman', ra: ra, dec: dec, pa: pa, overlay: overlay });
-            updateFootprintList();
-            aladin.gotoRaDec(ra, dec);
-            aladin.setFoV(0.9);
-            showToast('Roman WFI added (PA=' + pa + '°)', 'success');
-        }
-        
-        function addJWSTFootprint() {
-            var ra = parseFloat(document.getElementById('footprint-ra').value);
-            var dec = parseFloat(document.getElementById('footprint-dec').value);
-            var pa = parseFloat(document.getElementById('footprint-pa').value) || 0;
-            
-            if (isNaN(ra) || isNaN(dec)) {
-                showToast('Enter valid RA and Dec', 'error');
-                return;
-            }
-            
-            var overlay = A.graphicOverlay({ color: '#ffd24a', lineWidth: 2 });
-            aladin.addOverlay(overlay);
-            
-            var modSize = 0.037;
-            var gap = 0.012;
-            
-            [-1, 1].forEach(function(side) {
-                var dx = side * (modSize / 2 + gap);
-                var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
-                overlay.add(A.polyline(poly, {color: '#ffd24a', lineWidth: 2}));
-            });
-            
-            footprints.push({ id: Date.now(), type: 'jwst', ra: ra, dec: dec, pa: pa, overlay: overlay });
-            updateFootprintList();
-            aladin.gotoRaDec(ra, dec);
-            aladin.setFoV(0.15);
-            showToast('JWST NIRCam added (PA=' + pa + '°)', 'success');
-        }
-        
-        function removeFootprint(id) {
-            var fp = footprints.find(function(f) { return f.id === id; });
-            if (fp) aladin.removeLayer(fp.overlay);
-            footprints = footprints.filter(function(f) { return f.id !== id; });
-            updateFootprintList();
-        }
-        
-        function clearFootprints() {
-            footprints.forEach(function(fp) { aladin.removeLayer(fp.overlay); });
-            footprints = [];
-            updateFootprintList();
-            showToast('Footprints cleared', 'success');
-        }
-        
-        function updateFootprintList() {
-            var el = document.getElementById('footprint-list');
-            if (!footprints.length) { el.innerHTML = ''; return; }
-            el.innerHTML = footprints.map(function(fp) {
-                var cls = fp.type === 'roman' ? 'footprint-item-roman' : 'footprint-item-jwst';
-                return '<div class="footprint-item ' + cls + '"><span>' + 
-                    (fp.type === 'roman' ? 'Roman' : 'JWST') + ' PA=' + fp.pa + '°</span>' +
-                    '<button class="remove-btn footprint-remove-btn" onclick="removeFootprint(' + fp.id + ')">✕</button></div>';
-            }).join('');
         }
         
         // ==================== Object Resolution ====================
