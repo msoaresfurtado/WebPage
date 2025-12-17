@@ -266,9 +266,9 @@
         
         .btn-roman { background: linear-gradient(135deg, var(--roman-color), #ff7ae8); }
         .btn-jwst { background: linear-gradient(135deg, var(--jwst-color), #ffe066); }
-        .btn-catalog { background: linear-gradient(135deg, var(--success), #7affb5); }
+        .btn-catalog { background: linear-gradient(135deg, #4afff4, #7afffa); }
         .btn-coup { background: linear-gradient(135deg, #ff9f4a, #ffbf7a); }
-        .btn-pm { background: linear-gradient(135deg, var(--accent-secondary), #7ac0ff); }
+        .btn-pm { background: linear-gradient(135deg, #00b4d8, #4ac8e8); }
         .btn-spacing { margin-top: 0.3rem; }
         
         .main-content {
@@ -630,24 +630,29 @@
                     <span class="panel-toggle">▼</span>
                 </div>
                 <div class="panel-content">
-                    <div class="coord-row-3">
-                        <div class="input-group">
-                            <label>RA (deg)</label>
-                            <input type="text" id="footprint-ra" value="83.8187">
-                        </div>
-                        <div class="input-group">
-                            <label>Dec (deg)</label>
-                            <input type="text" id="footprint-dec" value="-5.3897">
-                        </div>
-                        <div class="input-group">
-                            <label>PA (deg)</label>
-                            <input type="text" id="footprint-pa" value="0">
-                        </div>
+                    <div class="input-group">
+                        <label>Instrument</label>
+                        <select id="footprint-instrument">
+                            <option value="roman">Roman WFI</option>
+                            <option value="jwst">JWST NIRCam</option>
+                        </select>
                     </div>
-                    <button class="btn-roman" onclick="addRomanFootprint()">Add Roman WFI</button>
-                    <button class="btn-jwst btn-spacing" onclick="addJWSTFootprint()">Add JWST NIRCam</button>
-                    <div class="footprint-list" id="footprint-list"></div>
-                    <button class="btn-secondary" onclick="clearFootprints()">Clear Footprints</button>
+                    <div class="input-group">
+                        <label>RA: <span id="fp-ra-display">83.8187</span>°</label>
+                        <input type="range" id="footprint-ra-slider" min="78" max="88" step="0.001" value="83.8187" style="width:100%;">
+                    </div>
+                    <div class="input-group">
+                        <label>Dec: <span id="fp-dec-display">-5.3897</span>°</label>
+                        <input type="range" id="footprint-dec-slider" min="-10" max="0" step="0.001" value="-5.3897" style="width:100%;">
+                    </div>
+                    <div class="input-group">
+                        <label>PA: <span id="fp-pa-display">0</span>°</label>
+                        <input type="range" id="footprint-pa-slider" min="0" max="360" step="1" value="0" style="width:100%;">
+                    </div>
+                    <div class="coord-row">
+                        <button onclick="centerFootprintOnView()">Center on View</button>
+                        <button class="btn-secondary" onclick="clearActiveFootprint()">Clear</button>
+                    </div>
                 </div>
             </div>
             
@@ -833,7 +838,7 @@
         A.init.then(function() {
             aladin = A.aladin('#aladin-container', {
                 survey: 'P/SDSS9/color',
-                fov: 0.5,
+                fov: 0.6,
                 target: '83.8187 -5.3897',
                 cooFrame: 'J2000',
                 showCooGridControl: true,
@@ -842,6 +847,11 @@
                 reticleColor: '#ff6b4a',
                 reticleSize: 22
             });
+            
+            // Apply viridis colormap after survey loads
+            setTimeout(function() {
+                aladin.getBaseImageLayer().setColormap('cividis');
+            }, 500);
             
             aladin.on('mouseMove', function(coords) {
                 if (coords) {
@@ -852,6 +862,9 @@
             
             // Populate past objects datalist
             updatePastObjectsDatalist();
+            
+            // Initialize footprint controls
+            initFootprintControls();
             
             showToast('Viewer initialized · Centered on ONC', 'success');
         });
@@ -1186,7 +1199,7 @@
             console.log('PM arrow params - scale:', scale, 'timeYr:', timeYr);
             
             // Create new overlay
-            catalogOverlay = A.graphicOverlay({ color: '#ff6b4a', lineWidth: 2 });
+            catalogOverlay = A.graphicOverlay({ color: '#00b4d8', lineWidth: 2 });
             aladin.addOverlay(catalogOverlay);
             
             var arrowCount = 0;
@@ -1217,7 +1230,7 @@
                 // Draw the main arrow line
                 try {
                     var line = A.polyline([[src.ra, src.dec], [endRa, endDec]], {
-                        color: '#ff6b4a',
+                        color: '#00b4d8',
                         lineWidth: 2
                     });
                     catalogOverlay.add(line);
@@ -1235,8 +1248,8 @@
                     var head2Ra = endRa + arrowSize * Math.cos(head2Angle) / cosDec;
                     var head2Dec = endDec + arrowSize * Math.sin(head2Angle);
                     
-                    catalogOverlay.add(A.polyline([[endRa, endDec], [head1Ra, head1Dec]], {color: '#ff6b4a', lineWidth: 2}));
-                    catalogOverlay.add(A.polyline([[endRa, endDec], [head2Ra, head2Dec]], {color: '#ff6b4a', lineWidth: 2}));
+                    catalogOverlay.add(A.polyline([[endRa, endDec], [head1Ra, head1Dec]], {color: '#00b4d8', lineWidth: 2}));
+                    catalogOverlay.add(A.polyline([[endRa, endDec], [head2Ra, head2Dec]], {color: '#00b4d8', lineWidth: 2}));
                     
                     arrowCount++;
                 } catch(e) {
@@ -1286,6 +1299,82 @@
         
         // ==================== Footprints ====================
         
+        var activeFootprintOverlay = null;
+        
+        function initFootprintControls() {
+            var raSlider = document.getElementById('footprint-ra-slider');
+            var decSlider = document.getElementById('footprint-dec-slider');
+            var paSlider = document.getElementById('footprint-pa-slider');
+            var instrumentSelect = document.getElementById('footprint-instrument');
+            
+            raSlider.addEventListener('input', updateFootprintRealtime);
+            decSlider.addEventListener('input', updateFootprintRealtime);
+            paSlider.addEventListener('input', updateFootprintRealtime);
+            instrumentSelect.addEventListener('change', updateFootprintRealtime);
+        }
+        
+        function updateFootprintRealtime() {
+            var ra = parseFloat(document.getElementById('footprint-ra-slider').value);
+            var dec = parseFloat(document.getElementById('footprint-dec-slider').value);
+            var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
+            var instrument = document.getElementById('footprint-instrument').value;
+            
+            // Update displays
+            document.getElementById('fp-ra-display').textContent = ra.toFixed(4);
+            document.getElementById('fp-dec-display').textContent = dec.toFixed(4);
+            document.getElementById('fp-pa-display').textContent = pa.toFixed(0);
+            
+            // Clear existing footprint
+            if (activeFootprintOverlay) {
+                try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
+            }
+            
+            // Draw new footprint
+            var color = instrument === 'roman' ? '#ff4adc' : '#ffd24a';
+            activeFootprintOverlay = A.graphicOverlay({ color: color, lineWidth: 2 });
+            aladin.addOverlay(activeFootprintOverlay);
+            
+            if (instrument === 'roman') {
+                ROMAN_WFI_DETECTORS.forEach(function(det) {
+                    var poly = createDetectorPoly(ra, dec, det[0], det[1], ROMAN_DET_SIZE, pa);
+                    activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
+                });
+            } else {
+                var modSize = 0.037;
+                var gap = 0.012;
+                [-1, 1].forEach(function(side) {
+                    var dx = side * (modSize / 2 + gap);
+                    var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
+                    activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
+                });
+            }
+        }
+        
+        function centerFootprintOnView() {
+            var center = aladin.getRaDec();
+            document.getElementById('footprint-ra-slider').value = center[0];
+            document.getElementById('footprint-dec-slider').value = center[1];
+            
+            // Update slider ranges to be centered on current view
+            var raSlider = document.getElementById('footprint-ra-slider');
+            var decSlider = document.getElementById('footprint-dec-slider');
+            raSlider.min = center[0] - 5;
+            raSlider.max = center[0] + 5;
+            decSlider.min = center[1] - 5;
+            decSlider.max = center[1] + 5;
+            
+            updateFootprintRealtime();
+            showToast('Footprint centered on view', 'success');
+        }
+        
+        function clearActiveFootprint() {
+            if (activeFootprintOverlay) {
+                try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
+                activeFootprintOverlay = null;
+                showToast('Footprint cleared', 'success');
+            }
+        }
+        
         function rotatePoint(x, y, paDeg) {
             var rad = -paDeg * Math.PI / 180;
             return {
@@ -1314,85 +1403,6 @@
             });
             coords.push(coords[0]);
             return coords;
-        }
-        
-        function addRomanFootprint() {
-            var ra = parseFloat(document.getElementById('footprint-ra').value);
-            var dec = parseFloat(document.getElementById('footprint-dec').value);
-            var pa = parseFloat(document.getElementById('footprint-pa').value) || 0;
-            
-            if (isNaN(ra) || isNaN(dec)) {
-                showToast('Enter valid RA and Dec', 'error');
-                return;
-            }
-            
-            var overlay = A.graphicOverlay({ color: '#ff4adc', lineWidth: 2 });
-            aladin.addOverlay(overlay);
-            
-            ROMAN_WFI_DETECTORS.forEach(function(det) {
-                var poly = createDetectorPoly(ra, dec, det[0], det[1], ROMAN_DET_SIZE, pa);
-                overlay.add(A.polyline(poly, {color: '#ff4adc', lineWidth: 2}));
-            });
-            
-            footprints.push({ id: Date.now(), type: 'roman', ra: ra, dec: dec, pa: pa, overlay: overlay });
-            updateFootprintList();
-            aladin.gotoRaDec(ra, dec);
-            aladin.setFoV(0.9);
-            showToast('Roman WFI added (PA=' + pa + '°)', 'success');
-        }
-        
-        function addJWSTFootprint() {
-            var ra = parseFloat(document.getElementById('footprint-ra').value);
-            var dec = parseFloat(document.getElementById('footprint-dec').value);
-            var pa = parseFloat(document.getElementById('footprint-pa').value) || 0;
-            
-            if (isNaN(ra) || isNaN(dec)) {
-                showToast('Enter valid RA and Dec', 'error');
-                return;
-            }
-            
-            var overlay = A.graphicOverlay({ color: '#ffd24a', lineWidth: 2 });
-            aladin.addOverlay(overlay);
-            
-            var modSize = 0.037;
-            var gap = 0.012;
-            
-            [-1, 1].forEach(function(side) {
-                var dx = side * (modSize / 2 + gap);
-                var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
-                overlay.add(A.polyline(poly, {color: '#ffd24a', lineWidth: 2}));
-            });
-            
-            footprints.push({ id: Date.now(), type: 'jwst', ra: ra, dec: dec, pa: pa, overlay: overlay });
-            updateFootprintList();
-            aladin.gotoRaDec(ra, dec);
-            aladin.setFoV(0.15);
-            showToast('JWST NIRCam added (PA=' + pa + '°)', 'success');
-        }
-        
-        function removeFootprint(id) {
-            var fp = footprints.find(function(f) { return f.id === id; });
-            if (fp) aladin.removeLayer(fp.overlay);
-            footprints = footprints.filter(function(f) { return f.id !== id; });
-            updateFootprintList();
-        }
-        
-        function clearFootprints() {
-            footprints.forEach(function(fp) { aladin.removeLayer(fp.overlay); });
-            footprints = [];
-            updateFootprintList();
-            showToast('Footprints cleared', 'success');
-        }
-        
-        function updateFootprintList() {
-            var el = document.getElementById('footprint-list');
-            if (!footprints.length) { el.innerHTML = ''; return; }
-            el.innerHTML = footprints.map(function(fp) {
-                var cls = fp.type === 'roman' ? 'footprint-item-roman' : 'footprint-item-jwst';
-                return '<div class="footprint-item ' + cls + '"><span>' + 
-                    (fp.type === 'roman' ? 'Roman' : 'JWST') + ' PA=' + fp.pa + '°</span>' +
-                    '<button class="remove-btn footprint-remove-btn" onclick="removeFootprint(' + fp.id + ')">✕</button></div>';
-            }).join('');
         }
         
         // ==================== Object Resolution ====================
