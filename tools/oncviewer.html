@@ -1017,7 +1017,10 @@
             var xml = parser.parseFromString(votable, 'text/xml');
             
             var tabledata = xml.querySelector('TABLEDATA');
-            if (!tabledata) return [];
+            if (!tabledata) {
+                console.error('No TABLEDATA found in VOTable');
+                return [];
+            }
             
             var fields = xml.querySelectorAll('FIELD');
             var fieldNames = [];
@@ -1025,17 +1028,25 @@
                 fieldNames.push(f.getAttribute('name') || f.getAttribute('ID') || '');
             });
             
-            // Find column indices
-            var raIdx = fieldNames.findIndex(function(n) { return n.match(/RAJ2000|_RAJ2000/i); });
-            var decIdx = fieldNames.findIndex(function(n) { return n.match(/DEJ2000|_DEJ2000/i); });
-            var pmRaIdx = fieldNames.findIndex(function(n) { return n === 'pmRA'; });
-            var pmDeIdx = fieldNames.findIndex(function(n) { return n === 'pmDE'; });
+            console.log('VOTable fields:', fieldNames);
+            
+            // Find column indices - more flexible matching
+            var raIdx = fieldNames.findIndex(function(n) { return n.match(/RAJ2000|_RAJ2000|RA_ICRS/i); });
+            var decIdx = fieldNames.findIndex(function(n) { return n.match(/DEJ2000|_DEJ2000|DE_ICRS/i); });
+            var pmRaIdx = fieldNames.findIndex(function(n) { return n.match(/^pmRA$/i); });
+            var pmDeIdx = fieldNames.findIndex(function(n) { return n.match(/^pmDE$/i); });
             var idIdx = fieldNames.findIndex(function(n) { return n.match(/^(ID|Seq|CXOONCJ)$/); });
             
-            if (raIdx === -1 || decIdx === -1) return [];
+            console.log('Column indices - RA:', raIdx, 'Dec:', decIdx, 'pmRA:', pmRaIdx, 'pmDE:', pmDeIdx, 'ID:', idIdx);
+            
+            if (raIdx === -1 || decIdx === -1) {
+                console.error('Could not find RA/Dec columns');
+                return [];
+            }
             
             var rows = tabledata.querySelectorAll('TR');
             var data = [];
+            var pmCount = 0;
             
             rows.forEach(function(row) {
                 var cells = row.querySelectorAll('TD');
@@ -1046,12 +1057,24 @@
                 
                 if (isNaN(ra) || isNaN(dec)) return;
                 
-                var pmRA = pmRaIdx >= 0 ? parseFloat(cells[pmRaIdx].textContent) || 0 : 0;
-                var pmDE = pmDeIdx >= 0 ? parseFloat(cells[pmDeIdx].textContent) || 0 : 0;
+                var pmRA = pmRaIdx >= 0 ? parseFloat(cells[pmRaIdx].textContent) : 0;
+                var pmDE = pmDeIdx >= 0 ? parseFloat(cells[pmDeIdx].textContent) : 0;
+                
+                // Handle NaN
+                if (isNaN(pmRA)) pmRA = 0;
+                if (isNaN(pmDE)) pmDE = 0;
+                
+                if (pmRA !== 0 || pmDE !== 0) pmCount++;
+                
                 var id = idIdx >= 0 ? cells[idIdx].textContent.trim() : '';
                 
                 data.push({ ra: ra, dec: dec, pmRA: pmRA, pmDE: pmDE, id: id });
             });
+            
+            console.log('Parsed', data.length, 'sources,', pmCount, 'with PM data');
+            if (data.length > 0) {
+                console.log('Sample source:', data[0]);
+            }
             
             return data;
         }
@@ -1073,6 +1096,8 @@
         }
         
         function addPMArrows() {
+            console.log('addPMArrows called, catalogData length:', catalogData.length);
+            
             if (catalogData.length === 0) {
                 showToast('Load catalog first', 'error');
                 return;
@@ -1090,10 +1115,12 @@
             var scale = parseFloat(document.getElementById('pm-scale').value) || 50;
             var timeYr = parseFloat(document.getElementById('pm-time').value) || 1000;
             
+            console.log('PM arrow params - scale:', scale, 'timeYr:', timeYr);
+            
             catalogOverlay = A.graphicOverlay({ color: '#ff6b4a', lineWidth: 1.5 });
             
             var arrowCount = 0;
-            catalogData.forEach(function(src) {
+            catalogData.forEach(function(src, idx) {
                 if (src.pmRA !== 0 || src.pmDE !== 0) {
                     var pmRaDeg = (src.pmRA / 3600000) * timeYr * scale;
                     var pmDeDeg = (src.pmDE / 3600000) * timeYr * scale;
@@ -1102,11 +1129,16 @@
                     var endRa = src.ra + pmRaDeg / cosDec;
                     var endDec = src.dec + pmDeDeg;
                     
+                    if (idx < 3) {
+                        console.log('Arrow', idx, ':', src.ra, src.dec, '->', endRa, endDec, 'pm:', src.pmRA, src.pmDE);
+                    }
+                    
                     catalogOverlay.add(A.polyline([
                         [src.ra, src.dec],
                         [endRa, endDec]
                     ], { color: '#ff6b4a', lineWidth: 1.5 }));
                     
+                    // Draw arrowhead
                     var arrowLen = 0.003 * scale / 50;
                     var angle = Math.atan2(pmDeDeg, pmRaDeg / cosDec);
                     var headAngle1 = angle + 2.5;
@@ -1123,6 +1155,7 @@
             });
             
             aladin.addOverlay(catalogOverlay);
+            console.log('Added', arrowCount, 'arrows');
             showToast('Added ' + arrowCount + ' PM arrows', 'success');
         }
         
