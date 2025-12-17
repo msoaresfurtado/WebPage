@@ -239,4 +239,57 @@
         </div>
 
         <div class="callout">
-            <p><strong>Applying for the <a href="https://www.stsci.edu/stsci-research/fellowships/nasa-hubble-fellowship-program/" target="_blank">NASA Hubble Fellowship Program</a> or the <a href="https://www.hsfoun
+            <p><strong>Applying for the <a href="https://www.stsci.edu/stsci-research/fellowships/nasa-hubble-fellowship-program/" target="_blank">NASA Hubble Fellowship Program</a> or the <a href="https://www.hsfoundation.org/programs/science/51-pegasi-b-fellowship/" target="_blank">51 Peg b Fellowship</a>?</strong> UW—Madison is a fantastic place to bring these prestigious awards. UW—Madison, in partnership with the interdisciplinary <a href="https://wicor.wisc.edu/" target="_blank">WiCOR</a> initiative, offers an exceptional environment to advance the pioneering research supported by these prestigious fellowships.</p>
+            <p>If you're considering applying, feel free to reach out to discuss potential synergies or hosting opportunities.</p>
+        </div>
+
+        <!-- Footer will be loaded here -->
+        <div id="footer-container"></div>
+    </div>
+
+    <script>
+        // Load the header component
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-container').innerHTML = data;
+                // Set current page indicator
+                const currentNav = document.getElementById('nav-team');
+                if (currentNav) currentNav.classList.add('current');
+            })
+            .catch(error => {
+                // Fallback header if fetch fails
+                document.getElementById('header-container').innerHTML = `
+                    <nav class="header">
+                        <a href="https://msoaresfurtado.github.io/WebPage">Home</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html" class="current">Team</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Tools.html">Tools</a>
+                    </nav>
+                `;
+            });
+
+        // Load the footer component
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-container').innerHTML = data;
+            })
+            .catch(error => {
+                // Fallback footer if fetch fails
+                document.getElementById('footer-container').innerHTML = `
+                    <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #20578A; text-align:center; font-size:13px; color:#555;">
+                        <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#20578A;">mmsoares@wisc.edu</a> ⊕ Updated 12/2025</div>
+                        <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy & Physics</div>
+                    </footer>
+                `;
+            });
+    </script>
+</body>
+
+</html>
