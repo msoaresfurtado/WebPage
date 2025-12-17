@@ -186,6 +186,34 @@
             font-size: 0.65rem;
         }
         
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
         input:focus, select:focus {
             outline: none;
             border-color: var(--accent-primary);
@@ -569,23 +597,31 @@
                     <span class="panel-toggle">▼</span>
                 </div>
                 <div class="panel-content">
+                    <div class="input-group">
+                        <label>Image Contrast</label>
+                        <input type="range" id="contrast-slider" min="0" max="1" step="0.05" value="1" style="width:100%;">
+                    </div>
+                    <div class="divider"></div>
                     <button class="btn-catalog" onclick="loadKimCatalog()">Load Kim+2019 (PM)</button>
+                    <div id="kim-pm-controls" style="display:none; margin-top:0.4rem; padding:0.4rem; background:var(--bg-primary); border-radius:3px;">
+                        <div class="coord-row">
+                            <div class="input-group">
+                                <label>Arrow Scale</label>
+                                <input type="number" id="pm-scale" value="50" min="1" max="500" step="10">
+                            </div>
+                            <div class="input-group">
+                                <label>Time (yr)</label>
+                                <input type="number" id="pm-time" value="100" min="10" max="10000" step="50">
+                            </div>
+                        </div>
+                        <button class="btn-pm" id="btn-pm-arrows" onclick="addPMArrows()">Add PM Arrows</button>
+                        <button class="btn-secondary btn-spacing" onclick="clearPMArrows()">Clear PM Arrows</button>
+                    </div>
                     <button class="btn-coup btn-spacing" onclick="loadCOUPCatalog()">Load COUP (X-ray)</button>
-                    <button class="btn-pm btn-spacing" id="btn-pm-arrows" onclick="addPMArrows()" disabled>Add PM Arrows</button>
                     <div class="catalog-info" id="catalog-info">
                         Kim+2019: J/AJ/157/109 · COUP: J/ApJS/160/319
                     </div>
-                    <div class="coord-row" style="margin-top: 0.4rem;">
-                        <div class="input-group">
-                            <label>Arrow Scale</label>
-                            <input type="number" id="pm-scale" value="50" min="1" max="500" step="10">
-                        </div>
-                        <div class="input-group">
-                            <label>Time (yr)</label>
-                            <input type="number" id="pm-time" value="1000" min="100" max="10000" step="100">
-                        </div>
-                    </div>
-                    <button class="btn-secondary" onclick="clearCatalog()">Clear Catalog</button>
+                    <button class="btn-secondary btn-spacing" onclick="clearCatalog()">Clear All Catalogs</button>
                 </div>
             </div>
             
@@ -632,7 +668,8 @@
                 <div class="panel-content">
                     <div class="input-group">
                         <label>Object Identifier</label>
-                        <input type="text" id="simbad-id" placeholder="COUP 691, HD 37061, M42...">
+                        <input type="text" id="simbad-id" list="past-objects" placeholder="COUP 691, HD 37061, M42..." autocomplete="off">
+                        <datalist id="past-objects"></datalist>
                     </div>
                     <div class="color-picker-row">
                         <span class="color-picker-label">Color:</span>
@@ -773,9 +810,11 @@
         var currentFITSLayer = null;
         var currentFITSUrl = null;
         var catalogOverlay = null;
-        var catalogSources = null;
-        var catalogData = [];
-        var currentCatalogType = null;
+        var kimCatalogSources = null;
+        var coupCatalogSources = null;
+        var kimData = [];
+        var coupData = [];
+        var pastObjects = JSON.parse(localStorage.getItem('oncPastObjects') || '[]');
         
         var selectedColors = {
             simbad: '#4a9eff',
@@ -786,12 +825,12 @@
         var JWST_FITS_URL = 'https://github.com/msoaresfurtado/WebPage/raw/main/tools/jwst_onc.fits';
         
         var ROMAN_WFI_DETECTORS = [
-            [-0.335, +0.18], [-0.335, +0.03], [-0.335, -0.10],
-            [-0.200, +0.11], [-0.200, -0.03], [-0.200, -0.16],
-            [-0.065, +0.09], [-0.065, -0.06], [-0.065, -0.19],
-            [+0.065, +0.09], [+0.065, -0.06], [+0.065, -0.19],
-            [+0.200, +0.11], [+0.200, -0.03], [+0.200, -0.16],
-            [+0.335, +0.18], [+0.335, +0.03], [+0.335, -0.10]
+            [+0.335, -0.18], [+0.335, -0.03], [+0.335, +0.10],
+            [+0.200, -0.11], [+0.200, +0.03], [+0.200, +0.16],
+            [+0.065, -0.09], [+0.065, +0.06], [+0.065, +0.19],
+            [-0.065, -0.09], [-0.065, +0.06], [-0.065, +0.19],
+            [-0.200, -0.11], [-0.200, +0.03], [-0.200, +0.16],
+            [-0.335, -0.18], [-0.335, -0.03], [-0.335, +0.10]
         ];
         
         var ROMAN_DET_SIZE = 0.11;
@@ -816,8 +855,33 @@
                 }
             });
             
+            // Contrast slider
+            document.getElementById('contrast-slider').addEventListener('input', function(e) {
+                var val = parseFloat(e.target.value);
+                aladin.getBaseImageLayer().setOpacity(val);
+            });
+            
+            // Populate past objects datalist
+            updatePastObjectsDatalist();
+            
             showToast('Viewer initialized · Centered on ONC', 'success');
         });
+        
+        function updatePastObjectsDatalist() {
+            var datalist = document.getElementById('past-objects');
+            datalist.innerHTML = pastObjects.map(function(obj) {
+                return '<option value="' + obj + '">';
+            }).join('');
+        }
+        
+        function addToPastObjects(name) {
+            if (!pastObjects.includes(name)) {
+                pastObjects.unshift(name);
+                if (pastObjects.length > 20) pastObjects.pop(); // Keep max 20
+                localStorage.setItem('oncPastObjects', JSON.stringify(pastObjects));
+                updatePastObjectsDatalist();
+            }
+        }
         
         function togglePanel(panelId) {
             document.getElementById(panelId).classList.toggle('collapsed');
@@ -927,9 +991,13 @@
         
         function loadKimCatalog() {
             showLoading(true, 'Loading Kim+2019 catalog...');
-            clearCatalog();
             
-            currentCatalogType = 'kim';
+            // Clear only Kim catalog if exists
+            if (kimCatalogSources) {
+                try { aladin.removeLayers([kimCatalogSources]); } catch(e) {}
+                kimCatalogSources = null;
+            }
+            kimData = [];
             
             // Direct VizieR query - unlimited sources
             var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?' +
@@ -948,17 +1016,16 @@
                     var data = parseVOTable(votable);
                     if (data.length === 0) {
                         showLoading(false);
-                        showToast('No sources found', 'error');
+                        showToast('No Kim+2019 sources found', 'error');
                         return;
                     }
                     
-                    catalogData = data;
-                    plotCatalogSources(data, '#4afff4', 'circle', 'Kim+2019');
+                    kimData = data;
+                    kimCatalogSources = plotCatalogSources(data, '#4afff4', 'circle', 'Kim+2019');
                     
                     showLoading(false);
-                    document.getElementById('catalog-info').textContent = 
-                        'Kim+2019 · ' + data.length + ' sources loaded';
-                    document.getElementById('btn-pm-arrows').disabled = false;
+                    updateCatalogInfo();
+                    document.getElementById('kim-pm-controls').style.display = 'block';
                     showToast('Loaded ' + data.length + ' Kim+2019 sources', 'success');
                 })
                 .catch(function(error) {
@@ -970,9 +1037,13 @@
         
         function loadCOUPCatalog() {
             showLoading(true, 'Loading COUP catalog...');
-            clearCatalog();
             
-            currentCatalogType = 'coup';
+            // Clear only COUP catalog if exists
+            if (coupCatalogSources) {
+                try { aladin.removeLayers([coupCatalogSources]); } catch(e) {}
+                coupCatalogSources = null;
+            }
+            coupData = [];
             
             var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?' +
                 '-source=J/ApJS/160/319/coup' +
@@ -990,19 +1061,17 @@
                     var data = parseVOTable(votable);
                     if (data.length === 0) {
                         showLoading(false);
-                        showToast('No sources found', 'error');
+                        showToast('No COUP sources found', 'error');
                         return;
                     }
                     
                     // COUP has no PM data
                     data.forEach(function(d) { d.pmRA = 0; d.pmDE = 0; });
-                    catalogData = data;
-                    plotCatalogSources(data, '#ff9f4a', 'square', 'COUP');
+                    coupData = data;
+                    coupCatalogSources = plotCatalogSources(data, '#ff9f4a', 'square', 'COUP');
                     
                     showLoading(false);
-                    document.getElementById('catalog-info').textContent = 
-                        'COUP · ' + data.length + ' X-ray sources loaded';
-                    document.getElementById('btn-pm-arrows').disabled = true;
+                    updateCatalogInfo();
                     showToast('Loaded ' + data.length + ' COUP sources', 'success');
                 })
                 .catch(function(error) {
@@ -1010,6 +1079,18 @@
                     showToast('Error: ' + error.message, 'error');
                     console.error('COUP catalog error:', error);
                 });
+        }
+        
+        function updateCatalogInfo() {
+            var parts = [];
+            if (kimData.length > 0) parts.push('Kim: ' + kimData.length);
+            if (coupData.length > 0) parts.push('COUP: ' + coupData.length);
+            
+            if (parts.length === 0) {
+                document.getElementById('catalog-info').textContent = 'No catalogs loaded';
+            } else {
+                document.getElementById('catalog-info').textContent = parts.join(' · ') + ' sources';
+            }
         }
         
         function parseVOTable(votable) {
@@ -1080,7 +1161,7 @@
         }
         
         function plotCatalogSources(data, color, shape, name) {
-            catalogSources = A.catalog({ 
+            var cat = A.catalog({ 
                 name: name, 
                 sourceSize: 10, 
                 color: color, 
@@ -1091,25 +1172,23 @@
                 return A.source(d.ra, d.dec, { name: d.id || name + ' source', pmRA: d.pmRA, pmDE: d.pmDE });
             });
             
-            catalogSources.addSources(aladinSources);
-            aladin.addCatalog(catalogSources);
+            cat.addSources(aladinSources);
+            aladin.addCatalog(cat);
+            return cat;
         }
         
         function addPMArrows() {
-            console.log('addPMArrows called, catalogData length:', catalogData.length);
+            console.log('addPMArrows called, kimData length:', kimData.length);
             
-            if (catalogData.length === 0) {
-                showToast('Load catalog first', 'error');
+            if (kimData.length === 0) {
+                showToast('Load Kim+2019 catalog first', 'error');
                 return;
             }
             
-            if (currentCatalogType !== 'kim') {
-                showToast('PM arrows only for Kim+2019', 'error');
-                return;
-            }
-            
+            // Remove existing overlay
             if (catalogOverlay) {
                 try { aladin.removeLayer(catalogOverlay); } catch(e) {}
+                catalogOverlay = null;
             }
             
             var scale = parseFloat(document.getElementById('pm-scale').value) || 50;
@@ -1117,62 +1196,103 @@
             
             console.log('PM arrow params - scale:', scale, 'timeYr:', timeYr);
             
-            catalogOverlay = A.graphicOverlay({ color: '#ff6b4a', lineWidth: 1.5 });
+            // Create new overlay
+            catalogOverlay = A.graphicOverlay({ color: '#ff6b4a', lineWidth: 2 });
+            aladin.addOverlay(catalogOverlay);
             
             var arrowCount = 0;
-            catalogData.forEach(function(src, idx) {
-                if (src.pmRA !== 0 || src.pmDE !== 0) {
-                    var pmRaDeg = (src.pmRA / 3600000) * timeYr * scale;
-                    var pmDeDeg = (src.pmDE / 3600000) * timeYr * scale;
+            var sampleLogged = 0;
+            
+            kimData.forEach(function(src) {
+                // Check if has PM data
+                if (src.pmRA === 0 && src.pmDE === 0) return;
+                
+                // Convert PM from mas/yr to degrees, scaled for visibility
+                // mas/yr * (1 deg / 3,600,000 mas) * years * scale
+                var pmRaDeg = src.pmRA * timeYr * scale / 3600000;
+                var pmDeDeg = src.pmDE * timeYr * scale / 3600000;
+                
+                // Correct RA for cos(dec)
+                var cosDec = Math.cos(src.dec * Math.PI / 180);
+                
+                var endRa = src.ra + pmRaDeg / cosDec;
+                var endDec = src.dec + pmDeDeg;
+                
+                // Log first few arrows for debugging
+                if (sampleLogged < 5) {
+                    console.log('Arrow ' + sampleLogged + ': (' + src.ra.toFixed(4) + ', ' + src.dec.toFixed(4) + ') -> (' + 
+                        endRa.toFixed(4) + ', ' + endDec.toFixed(4) + ') pmRA=' + src.pmRA + ' pmDE=' + src.pmDE);
+                    sampleLogged++;
+                }
+                
+                // Draw the main arrow line
+                try {
+                    var line = A.polyline([[src.ra, src.dec], [endRa, endDec]], {
+                        color: '#ff6b4a',
+                        lineWidth: 2
+                    });
+                    catalogOverlay.add(line);
                     
-                    var cosDec = Math.cos(src.dec * Math.PI / 180);
-                    var endRa = src.ra + pmRaDeg / cosDec;
-                    var endDec = src.dec + pmDeDeg;
+                    // Draw arrowhead (two short lines at ~25 degree angles)
+                    var arrowSize = Math.sqrt(pmRaDeg*pmRaDeg + pmDeDeg*pmDeDeg) * 0.3;
+                    if (arrowSize < 0.001) arrowSize = 0.001;
                     
-                    if (idx < 3) {
-                        console.log('Arrow', idx, ':', src.ra, src.dec, '->', endRa, endDec, 'pm:', src.pmRA, src.pmDE);
-                    }
-                    
-                    catalogOverlay.add(A.polyline([
-                        [src.ra, src.dec],
-                        [endRa, endDec]
-                    ], { color: '#ff6b4a', lineWidth: 1.5 }));
-                    
-                    // Draw arrowhead
-                    var arrowLen = 0.003 * scale / 50;
                     var angle = Math.atan2(pmDeDeg, pmRaDeg / cosDec);
-                    var headAngle1 = angle + 2.5;
-                    var headAngle2 = angle - 2.5;
+                    var head1Angle = angle + Math.PI - 0.4;  // ~23 degrees back
+                    var head2Angle = angle + Math.PI + 0.4;
                     
-                    catalogOverlay.add(A.polyline([
-                        [endRa + arrowLen * Math.cos(headAngle1) / cosDec, endDec + arrowLen * Math.sin(headAngle1)],
-                        [endRa, endDec],
-                        [endRa + arrowLen * Math.cos(headAngle2) / cosDec, endDec + arrowLen * Math.sin(headAngle2)]
-                    ], { color: '#ff6b4a', lineWidth: 1.5 }));
+                    var head1Ra = endRa + arrowSize * Math.cos(head1Angle) / cosDec;
+                    var head1Dec = endDec + arrowSize * Math.sin(head1Angle);
+                    var head2Ra = endRa + arrowSize * Math.cos(head2Angle) / cosDec;
+                    var head2Dec = endDec + arrowSize * Math.sin(head2Angle);
+                    
+                    catalogOverlay.add(A.polyline([[endRa, endDec], [head1Ra, head1Dec]], {color: '#ff6b4a', lineWidth: 2}));
+                    catalogOverlay.add(A.polyline([[endRa, endDec], [head2Ra, head2Dec]], {color: '#ff6b4a', lineWidth: 2}));
                     
                     arrowCount++;
+                } catch(e) {
+                    console.error('Error drawing arrow:', e);
                 }
             });
             
-            aladin.addOverlay(catalogOverlay);
-            console.log('Added', arrowCount, 'arrows');
-            showToast('Added ' + arrowCount + ' PM arrows', 'success');
+            console.log('Total arrows drawn:', arrowCount);
+            
+            if (arrowCount === 0) {
+                showToast('No PM data found in catalog', 'error');
+            } else {
+                showToast('Added ' + arrowCount + ' PM arrows', 'success');
+            }
+        }
+        
+        function clearPMArrows() {
+            if (catalogOverlay) {
+                try { aladin.removeLayer(catalogOverlay); } catch(e) {}
+                catalogOverlay = null;
+                showToast('PM arrows cleared', 'success');
+            } else {
+                showToast('No PM arrows to clear', 'error');
+            }
         }
         
         function clearCatalog() {
-            if (catalogSources) {
-                try { aladin.removeLayers([catalogSources]); } catch(e) {}
-                catalogSources = null;
+            if (kimCatalogSources) {
+                try { aladin.removeLayers([kimCatalogSources]); } catch(e) {}
+                kimCatalogSources = null;
+            }
+            if (coupCatalogSources) {
+                try { aladin.removeLayers([coupCatalogSources]); } catch(e) {}
+                coupCatalogSources = null;
             }
             if (catalogOverlay) {
                 try { aladin.removeLayer(catalogOverlay); } catch(e) {}
                 catalogOverlay = null;
             }
-            catalogData = [];
-            currentCatalogType = null;
+            kimData = [];
+            coupData = [];
             document.getElementById('catalog-info').textContent = 
                 'Kim+2019: J/AJ/157/109 · COUP: J/ApJS/160/319';
-            document.getElementById('btn-pm-arrows').disabled = true;
+            document.getElementById('kim-pm-controls').style.display = 'none';
+            showToast('All catalogs cleared', 'success');
         }
         
         // ==================== Footprints ====================
@@ -1335,6 +1455,7 @@
                         type: 'catalog'
                     });
                     aladin.gotoRaDec(result.ra, result.dec);
+                    addToPastObjects(id);
                     document.getElementById('simbad-id').value = '';
                     showToast('Added ' + result.name, 'success');
                 } else {
