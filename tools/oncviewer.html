@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONC FITS Viewer</title>
+    
+    <!-- Aladin Lite -->
+    <link rel="stylesheet" href="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.min.css" />
+    <script type="text/javascript" src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --accent-primary: #ff6b4a;
+            --accent-secondary: #4a9eff;
+            --accent-glow: rgba(255, 107, 74, 0.3);
+            --text-primary: #e8e8ec;
+            --text-secondary: #8888a0;
+            --border-color: #2a2a3a;
+            --success: #4aff9f;
+            --warning: #ffd24a;
+            --roman-color: #ff4adc;
+            --jwst-color: #ffd24a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(2px 2px at 160px 120px, rgba(255,255,255,0.4), transparent);
+            background-size: 400px 200px;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+        
+        .app-container {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+            gap: 1px;
+            background: var(--border-color);
+        }
+        
+        header {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            padding: 0.4rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .logo-icon {
+            width: 22px; height: 22px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+        }
+        
+        .logo h1 {
+            font-family: 'Source Serif 4', serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        
+        .logo-highlight { color: var(--accent-primary); }
+        
+        .header-info {
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .sidebar {
+            background: var(--bg-secondary);
+            padding: 0.6rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        
+        .panel {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            padding: 0.4rem 0.6rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .panel-header:hover { background: var(--bg-tertiary); }
+        
+        .panel-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        
+        .panel-header-dot {
+            width: 4px; height: 4px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+        }
+        
+        .panel-toggle {
+            font-size: 0.55rem;
+            transition: transform 0.2s ease;
+        }
+        
+        .panel.collapsed .panel-toggle { transform: rotate(-90deg); }
+        .panel.collapsed .panel-content { display: none; }
+        
+        .panel-content { padding: 0.55rem; }
+        
+        .input-group { margin-bottom: 0.55rem; }
+        
+        label {
+            display: block;
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.4rem 0.5rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+        
+        input::placeholder { color: var(--text-secondary); opacity: 0.5; }
+        
+        .coord-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+        .coord-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.3rem; }
+        
+        button {
+            width: 100%;
+            padding: 0.4rem 0.6rem;
+            background: linear-gradient(135deg, var(--accent-primary), #ff8a6b);
+            border: none;
+            border-radius: 3px;
+            color: var(--bg-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            margin-top: 0.4rem;
+        }
+        
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px var(--accent-glow);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--accent-secondary);
+            color: var(--accent-secondary);
+        }
+        
+        .btn-roman { background: linear-gradient(135deg, var(--roman-color), #ff7ae8); }
+        .btn-jwst { background: linear-gradient(135deg, var(--jwst-color), #ffe066); }
+        .btn-spacing { margin-top: 0.3rem; }
+        
+        .main-content {
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #aladin-container {
+            flex: 1;
+            min-height: 500px;
+            position: relative;
+        }
+        
+        .status-bar {
+            padding: 0.35rem 0.75rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        
+        .status-dot {
+            width: 4px; height: 4px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .source-list {
+            max-height: 90px;
+            overflow-y: auto;
+            margin-top: 0.4rem;
+        }
+        
+        .source-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0.4rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            margin-bottom: 0.2rem;
+            font-size: 0.55rem;
+            border-left: 2px solid var(--accent-secondary);
+        }
+        
+        .source-name { color: var(--text-primary); font-weight: 500; }
+        .source-coords { color: var(--text-secondary); font-size: 0.5rem; }
+        
+        .remove-btn {
+            width: auto;
+            padding: 0.1rem 0.3rem;
+            margin: 0;
+            font-size: 0.45rem;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .remove-btn:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+        
+        .divider { height: 1px; background: var(--border-color); margin: 0.4rem 0; }
+        .info-text { font-size: 0.5rem; color: var(--text-secondary); line-height: 1.4; }
+        
+        .color-picker-row {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+            margin-top: 0.3rem;
+        }
+        
+        .color-picker-label {
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-right: 0.3rem;
+        }
+        
+        .color-swatch {
+            width: 16px; height: 16px;
+            border-radius: 3px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .color-swatch:hover, .color-swatch.active {
+            border-color: var(--text-primary);
+            transform: scale(1.15);
+        }
+        
+        .color-swatch-orange { background: #ff6b4a; }
+        .color-swatch-blue { background: #4a9eff; }
+        .color-swatch-green { background: #4aff9f; }
+        .color-swatch-yellow { background: #ffd24a; }
+        .color-swatch-pink { background: #ff4adc; }
+        .color-swatch-cyan { background: #4afff4; }
+        .color-swatch-red { background: #ff4a4a; }
+        
+        .toast {
+            position: fixed;
+            bottom: 45px; right: 20px;
+            padding: 0.45rem 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.6rem;
+            color: var(--text-primary);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-success { border-left: 3px solid var(--success); }
+        .toast-error { border-left: 3px solid var(--accent-primary); }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+        
+        .file-input-wrapper { position: relative; }
+        
+        .file-input-hidden {
+            position: absolute;
+            opacity: 0;
+            width: 100%; height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-display {
+            padding: 0.4rem 0.5rem;
+            background: var(--bg-primary);
+            border: 1px dashed var(--border-color);
+            border-radius: 3px;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        
+        .file-input-wrapper:hover .file-input-display {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 10, 15, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .spinner {
+            width: 28px; height: 28px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .loading-text {
+            margin-top: 0.6rem;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+        
+        .fits-status {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.45rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            font-size: 0.55rem;
+            margin-bottom: 0.45rem;
+        }
+        
+        .fits-status-icon {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--text-secondary);
+        }
+        
+        .fits-status.loaded .fits-status-icon { background: var(--success); }
+        
+        .fits-status-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .footprint-list {
+            max-height: 70px;
+            overflow-y: auto;
+            margin-top: 0.3rem;
+        }
+        
+        .footprint-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.25rem 0.4rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            margin-bottom: 0.2rem;
+            font-size: 0.5rem;
+        }
+        
+        .footprint-item-roman { border-left: 2px solid var(--roman-color); }
+        .footprint-item-jwst { border-left: 2px solid var(--jwst-color); }
+        
+        .footprint-remove-btn {
+            width: auto;
+            padding: 0.08rem 0.25rem;
+            margin: 0;
+            font-size: 0.4rem;
+        }
+        
+        .source-count {
+            font-size: 0.55rem;
+            color: var(--accent-secondary);
+            margin-bottom: 0.3rem;
+        }
+        
+        .footer {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            padding: 0.3rem 1rem;
+            text-align: center;
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .footer a {
+            color: var(--accent-secondary);
+            text-decoration: none;
+        }
+        
+        .footer a:hover { color: var(--accent-primary); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">✦</div>
+                <h1>ONC <span class="logo-highlight">FITS</span> Viewer</h1>
+            </div>
+            <div class="header-info">Orion Nebula Cluster</div>
+        </header>
+        
+        <aside class="sidebar">
+            <!-- FITS Image Panel -->
+            <div class="panel" id="panel-fits">
+                <div class="panel-header" onclick="togglePanel('panel-fits')">
+                    <div class="panel-header-left">
+                        <div class="panel-header-dot"></div>
+                        <span>FITS Image</span>
+                    </div>
+                    <span class="panel-toggle">▼</span>
+                </div>
+                <div class="panel-content">
+                    <div class="fits-status" id="fits-status">
+                        <div class="fits-status-icon"></div>
+                        <span class="fits-status-name" id="fits-name">No FITS loaded</span>
+                    </div>
+                    <div class="input-group">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="fits-file" class="file-input-hidden" accept=".fits,.fit,.fts">
+                            <div class="file-input-display" id="file-input-label">Drop FITS or click to browse</div>
+                        </div>
+                    </div>
+                    <button class="btn-secondary" onclick="clearFITS()">Clear FITS</button>
+                </div>
+            </div>
+            
+            <!-- Instrument Footprints Panel -->
+            <div class="panel" id="panel-footprints">
+                <div class="panel-header" onclick="togglePanel('panel-footprints')">
+                    <div class="panel-header-left">
+                        <div class="panel-header-dot"></div>
+                        <span>Instrument Footprints</span>
+                    </div>
+                    <span class="panel-toggle">▼</span>
+                </div>
+                <div class="panel-content">
+                    <div class="coord-row-3">
+                        <div class="input-group">
+                            <label>RA (deg)</label>
+                            <input type="text" id="footprint-ra" placeholder="83.82">
+                        </div>
+                        <div class="input-group">
+                            <label>Dec (deg)</label>
+                            <input type="text" id="footprint-dec" placeholder="-5.39">
+                        </div>
+                        <div class="input-group">
+                            <label>PA (deg)</label>
+                            <input type="text" id="footprint-pa" placeholder="0">
+                        </div>
+                    </div>
+                    <button class="btn-roman" onclick="addRomanFootprint()">Add Roman WFI</button>
+                    <button class="btn-jwst btn-spacing" onclick="addJWSTFootprint()">Add JWST NIRCam</button>
+                    <div class="footprint-list" id="footprint-list"></div>
+                    <button class="btn-secondary" onclick="clearFootprints()">Clear Footprints</button>
+                </div>
+            </div>
+            
+            <!-- Object Lookup Panel -->
+            <div class="panel" id="panel-simbad">
+                <div class="panel-header" onclick="togglePanel('panel-simbad')">
+                    <div class="panel-header-left">
+                        <div class="panel-header-dot"></div>
+                        <span>Object Lookup</span>
+                    </div>
+                    <span class="panel-toggle">▼</span>
+                </div>
+                <div class="panel-content">
+                    <div class="input-group">
+                        <label>Object Identifier</label>
+                        <input type="text" id="simbad-id" placeholder="COUP 691, HD 37061, M42...">
+                    </div>
+                    <div class="color-picker-row">
+                        <span class="color-picker-label">Color:</span>
+                        <div class="color-swatch color-swatch-blue active" data-color="#4a9eff" data-panel="simbad"></div>
+                        <div class="color-swatch color-swatch-orange" data-color="#ff6b4a" data-panel="simbad"></div>
+                        <div class="color-swatch color-swatch-green" data-color="#4aff9f" data-panel="simbad"></div>
+                        <div class="color-swatch color-swatch-yellow" data-color="#ffd24a" data-panel="simbad"></div>
+                        <div class="color-swatch color-swatch-pink" data-color="#ff4adc" data-panel="simbad"></div>
+                        <div class="color-swatch color-swatch-cyan" data-color="#4afff4" data-panel="simbad"></div>
+                        <div class="color-swatch color-swatch-red" data-color="#ff4a4a" data-panel="simbad"></div>
+                    </div>
+                    <button onclick="addSimbadSource()">Lookup Object</button>
+                </div>
+            </div>
+            
+            <!-- Manual Coordinates Panel -->
+            <div class="panel collapsed" id="panel-manual">
+                <div class="panel-header" onclick="togglePanel('panel-manual')">
+                    <div class="panel-header-left">
+                        <div class="panel-header-dot"></div>
+                        <span>Manual Coordinates</span>
+                    </div>
+                    <span class="panel-toggle">▼</span>
+                </div>
+                <div class="panel-content">
+                    <div class="coord-row">
+                        <div class="input-group">
+                            <label>RA (deg)</label>
+                            <input type="text" id="ra-input" placeholder="83.8221">
+                        </div>
+                        <div class="input-group">
+                            <label>Dec (deg)</label>
+                            <input type="text" id="dec-input" placeholder="-5.3911">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Source Label</label>
+                        <input type="text" id="source-label" placeholder="Custom name">
+                    </div>
+                    <div class="color-picker-row">
+                        <span class="color-picker-label">Color:</span>
+                        <div class="color-swatch color-swatch-orange active" data-color="#ff6b4a" data-panel="manual"></div>
+                        <div class="color-swatch color-swatch-blue" data-color="#4a9eff" data-panel="manual"></div>
+                        <div class="color-swatch color-swatch-green" data-color="#4aff9f" data-panel="manual"></div>
+                        <div class="color-swatch color-swatch-yellow" data-color="#ffd24a" data-panel="manual"></div>
+                        <div class="color-swatch color-swatch-pink" data-color="#ff4adc" data-panel="manual"></div>
+                        <div class="color-swatch color-swatch-cyan" data-color="#4afff4" data-panel="manual"></div>
+                        <div class="color-swatch color-swatch-red" data-color="#ff4a4a" data-panel="manual"></div>
+                    </div>
+                    <button onclick="addManualSource()">Add Source</button>
+                </div>
+            </div>
+            
+            <!-- Bulk Source Upload Panel -->
+            <div class="panel collapsed" id="panel-bulk">
+                <div class="panel-header" onclick="togglePanel('panel-bulk')">
+                    <div class="panel-header-left">
+                        <div class="panel-header-dot"></div>
+                        <span>Bulk Upload</span>
+                    </div>
+                    <span class="panel-toggle">▼</span>
+                </div>
+                <div class="panel-content">
+                    <div class="input-group">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="csv-file" class="file-input-hidden" accept=".csv,.txt">
+                            <div class="file-input-display" id="csv-input-label">Upload CSV</div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>CSV Format</label>
+                        <select id="csv-format">
+                            <option value="simbad">Object IDs (COUP, HD...)</option>
+                            <option value="radec">RA, Dec (degrees)</option>
+                            <option value="radec_name">RA, Dec, Name</option>
+                        </select>
+                    </div>
+                    <div class="color-picker-row">
+                        <span class="color-picker-label">Color:</span>
+                        <div class="color-swatch color-swatch-green active" data-color="#4aff9f" data-panel="bulk"></div>
+                        <div class="color-swatch color-swatch-orange" data-color="#ff6b4a" data-panel="bulk"></div>
+                        <div class="color-swatch color-swatch-blue" data-color="#4a9eff" data-panel="bulk"></div>
+                        <div class="color-swatch color-swatch-yellow" data-color="#ffd24a" data-panel="bulk"></div>
+                        <div class="color-swatch color-swatch-pink" data-color="#ff4adc" data-panel="bulk"></div>
+                        <div class="color-swatch color-swatch-cyan" data-color="#4afff4" data-panel="bulk"></div>
+                        <div class="color-swatch color-swatch-red" data-color="#ff4a4a" data-panel="bulk"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sources List Panel -->
+            <div class="panel" id="panel-sources">
+                <div class="panel-header" onclick="togglePanel('panel-sources')">
+                    <div class="panel-header-left">
+                        <div class="panel-header-dot"></div>
+                        <span>Plotted Sources</span>
+                    </div>
+                    <span class="panel-toggle">▼</span>
+                </div>
+                <div class="panel-content">
+                    <div class="source-count" id="source-count">0 sources plotted</div>
+                    <div id="source-list" class="source-list">
+                        <p class="info-text">No sources added yet.</p>
+                    </div>
+                    <button class="btn-secondary" onclick="clearAllSources()">Clear Sources</button>
+                    <button class="btn-secondary btn-spacing" onclick="exportSources()">Export CSV</button>
+                </div>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            <div id="aladin-container">
+                <div class="loading-overlay" id="loading-overlay">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading...</div>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Aladin Lite v3</span>
+                </div>
+                <div class="coords-display" id="cursor-coords">RA: --.------ deg | Dec: --.------ deg</div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            Created by <a href="https://msoaresfurtado.com" target="_blank">Melinda Soares-Furtado</a>
+        </footer>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        var aladin;
+        var sources = [];
+        var footprints = [];
+        var currentFITSLayer = null;
+        var currentFITSUrl = null;
+        
+        var selectedColors = {
+            simbad: '#4a9eff',
+            manual: '#ff6b4a',
+            bulk: '#4aff9f'
+        };
+        
+        // Roman WFI 18 detector positions
+        // Layout: 6 columns x 3 rows, but with STAGGERED rows
+        // Outer columns (1,6) are shifted UP (north)
+        // Middle columns (2,5) are in between
+        // Inner columns (3,4) are shifted DOWN (south)
+        // This creates the distinctive WFI footprint shape
+        //
+        // Derived from the DS9 region file - positions are [dx, dy] in degrees
+        // dx = offset in RA direction (west negative, east positive)
+        // dy = offset in Dec direction (south negative, north positive)
+        
+        var ROMAN_WFI_DETECTORS = [
+            // Column 1 (westmost) - shifted UP
+            [-0.335, +0.18],   // row 1 (top)
+            [-0.335, +0.03],   // row 2 (middle)
+            [-0.335, -0.10],   // row 3 (bottom)
+            
+            // Column 2 - middle position
+            [-0.200, +0.11],   // row 1
+            [-0.200, -0.03],   // row 2
+            [-0.200, -0.16],   // row 3
+            
+            // Column 3 - shifted DOWN
+            [-0.065, +0.09],   // row 1
+            [-0.065, -0.06],   // row 2
+            [-0.065, -0.19],   // row 3
+            
+            // Column 4 - shifted DOWN (mirror of column 3)
+            [+0.065, +0.09],   // row 1
+            [+0.065, -0.06],   // row 2
+            [+0.065, -0.19],   // row 3
+            
+            // Column 5 - middle position (mirror of column 2)
+            [+0.200, +0.11],   // row 1
+            [+0.200, -0.03],   // row 2
+            [+0.200, -0.16],   // row 3
+            
+            // Column 6 (eastmost) - shifted UP (mirror of column 1)
+            [+0.335, +0.18],   // row 1
+            [+0.335, +0.03],   // row 2
+            [+0.335, -0.10]    // row 3
+        ];
+        
+        var ROMAN_DET_SIZE = 0.11; // detector size in degrees (~6.6 arcmin)
+        
+        // Initialize Aladin
+        A.init.then(function() {
+            aladin = A.aladin('#aladin-container', {
+                survey: 'P/2MASS/color',
+                fov: 0.5,
+                target: '83.8187 -5.3897',
+                cooFrame: 'J2000',
+                showCooGridControl: true,
+                showSimbadPointerControl: true,
+                showCooGrid: false,
+                reticleColor: '#ff6b4a',
+                reticleSize: 22
+            });
+            
+            aladin.on('mouseMove', function(coords) {
+                if (coords) {
+                    document.getElementById('cursor-coords').textContent = 
+                        'RA: ' + coords.ra.toFixed(6) + ' deg | Dec: ' + coords.dec.toFixed(6) + ' deg';
+                }
+            });
+            
+            showToast('Viewer initialized · Centered on ONC', 'success');
+        });
+        
+        function togglePanel(panelId) {
+            document.getElementById(panelId).classList.toggle('collapsed');
+        }
+        
+        document.querySelectorAll('.color-swatch').forEach(function(swatch) {
+            swatch.addEventListener('click', function() {
+                var panel = swatch.dataset.panel;
+                document.querySelectorAll('.color-swatch[data-panel="' + panel + '"]').forEach(function(s) {
+                    s.classList.remove('active');
+                });
+                swatch.classList.add('active');
+                selectedColors[panel] = swatch.dataset.color;
+            });
+        });
+        
+        // ==================== FITS ====================
+        
+        function clearFITS() {
+            if (currentFITSLayer) {
+                try { aladin.setOverlayImageLayer(null); } catch(e) {}
+                try { if (currentFITSLayer.remove) currentFITSLayer.remove(); } catch(e) {}
+                
+                if (currentFITSUrl) {
+                    URL.revokeObjectURL(currentFITSUrl);
+                    currentFITSUrl = null;
+                }
+                
+                currentFITSLayer = null;
+                document.getElementById('fits-name').textContent = 'No FITS loaded';
+                document.getElementById('fits-status').classList.remove('loaded');
+                document.getElementById('file-input-label').textContent = 'Drop FITS or click to browse';
+                document.getElementById('fits-file').value = '';
+                
+                showToast('FITS cleared', 'success');
+            } else {
+                showToast('No FITS to clear', 'error');
+            }
+        }
+        
+        document.getElementById('fits-file').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            
+            if (currentFITSLayer) {
+                try { aladin.setOverlayImageLayer(null); } catch(e) {}
+                if (currentFITSUrl) URL.revokeObjectURL(currentFITSUrl);
+            }
+            
+            showLoading(true, 'Loading FITS...');
+            
+            try {
+                currentFITSUrl = URL.createObjectURL(file);
+                
+                currentFITSLayer = aladin.createImageFITS(currentFITSUrl, { 
+                    name: file.name, 
+                    opacity: 1.0 
+                }, function(ra, dec, fov) {
+                    if (ra && dec) {
+                        aladin.gotoRaDec(ra, dec);
+                        if (fov) aladin.setFoV(fov * 1.2);
+                    }
+                    showLoading(false);
+                });
+                
+                aladin.setOverlayImageLayer(currentFITSLayer);
+                document.getElementById('file-input-label').textContent = file.name;
+                document.getElementById('fits-name').textContent = file.name;
+                document.getElementById('fits-status').classList.add('loaded');
+                showToast('Loaded ' + file.name, 'success');
+            } catch (error) {
+                showLoading(false);
+                showToast('Error loading FITS', 'error');
+            }
+        });
+        
+        // ==================== Footprints ====================
+        
+        function rotatePoint(x, y, paDeg) {
+            // PA is East of North
+            var rad = -paDeg * Math.PI / 180;
+            return {
+                x: x * Math.cos(rad) - y * Math.sin(rad),
+                y: x * Math.sin(rad) + y * Math.cos(rad)
+            };
+        }
+        
+        function offsetToRaDec(ra, dec, dx, dy) {
+            var cosDec = Math.cos(dec * Math.PI / 180);
+            return [ra + dx / cosDec, dec + dy];
+        }
+        
+        function createDetectorPoly(ra, dec, centerDx, centerDy, size, pa) {
+            var hs = size / 2;
+            var corners = [
+                {x: centerDx - hs, y: centerDy - hs},
+                {x: centerDx + hs, y: centerDy - hs},
+                {x: centerDx + hs, y: centerDy + hs},
+                {x: centerDx - hs, y: centerDy + hs}
+            ];
+            
+            var coords = corners.map(function(c) {
+                var rot = rotatePoint(c.x, c.y, pa);
+                return offsetToRaDec(ra, dec, rot.x, rot.y);
+            });
+            coords.push(coords[0]);
+            return coords;
+        }
+        
+        function addRomanFootprint() {
+            var ra = parseFloat(document.getElementById('footprint-ra').value);
+            var dec = parseFloat(document.getElementById('footprint-dec').value);
+            var pa = parseFloat(document.getElementById('footprint-pa').value) || 0;
+            
+            if (isNaN(ra) || isNaN(dec)) {
+                showToast('Enter valid RA and Dec', 'error');
+                return;
+            }
+            
+            var overlay = A.graphicOverlay({ color: '#ff4adc', lineWidth: 2 });
+            aladin.addOverlay(overlay);
+            
+            // Draw each of the 18 detectors
+            ROMAN_WFI_DETECTORS.forEach(function(det) {
+                var poly = createDetectorPoly(ra, dec, det[0], det[1], ROMAN_DET_SIZE, pa);
+                overlay.add(A.polyline(poly, {color: '#ff4adc', lineWidth: 2}));
+            });
+            
+            footprints.push({ id: Date.now(), type: 'roman', ra: ra, dec: dec, pa: pa, overlay: overlay });
+            updateFootprintList();
+            aladin.gotoRaDec(ra, dec);
+            aladin.setFoV(0.9);
+            showToast('Roman WFI added (PA=' + pa + '°)', 'success');
+        }
+        
+        function addJWSTFootprint() {
+            var ra = parseFloat(document.getElementById('footprint-ra').value);
+            var dec = parseFloat(document.getElementById('footprint-dec').value);
+            var pa = parseFloat(document.getElementById('footprint-pa').value) || 0;
+            
+            if (isNaN(ra) || isNaN(dec)) {
+                showToast('Enter valid RA and Dec', 'error');
+                return;
+            }
+            
+            var overlay = A.graphicOverlay({ color: '#ffd24a', lineWidth: 2 });
+            aladin.addOverlay(overlay);
+            
+            var modSize = 0.037;
+            var gap = 0.012;
+            
+            [-1, 1].forEach(function(side) {
+                var dx = side * (modSize / 2 + gap);
+                var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
+                overlay.add(A.polyline(poly, {color: '#ffd24a', lineWidth: 2}));
+            });
+            
+            footprints.push({ id: Date.now(), type: 'jwst', ra: ra, dec: dec, pa: pa, overlay: overlay });
+            updateFootprintList();
+            aladin.gotoRaDec(ra, dec);
+            aladin.setFoV(0.15);
+            showToast('JWST NIRCam added (PA=' + pa + '°)', 'success');
+        }
+        
+        function removeFootprint(id) {
+            var fp = footprints.find(function(f) { return f.id === id; });
+            if (fp) aladin.removeLayer(fp.overlay);
+            footprints = footprints.filter(function(f) { return f.id !== id; });
+            updateFootprintList();
+        }
+        
+        function clearFootprints() {
+            footprints.forEach(function(fp) { aladin.removeLayer(fp.overlay); });
+            footprints = [];
+            updateFootprintList();
+            showToast('Footprints cleared', 'success');
+        }
+        
+        function updateFootprintList() {
+            var el = document.getElementById('footprint-list');
+            if (!footprints.length) { el.innerHTML = ''; return; }
+            el.innerHTML = footprints.map(function(fp) {
+                var cls = fp.type === 'roman' ? 'footprint-item-roman' : 'footprint-item-jwst';
+                return '<div class="footprint-item ' + cls + '"><span>' + 
+                    (fp.type === 'roman' ? 'Roman' : 'JWST') + ' PA=' + fp.pa + '°</span>' +
+                    '<button class="remove-btn footprint-remove-btn" onclick="removeFootprint(' + fp.id + ')">✕</button></div>';
+            }).join('');
+        }
+        
+        // ==================== Object Resolution ====================
+        
+        function resolveObject(identifier, callback) {
+            var url = 'https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-ox/SNV?' + encodeURIComponent(identifier);
+            
+            fetch(url)
+                .then(function(r) { return r.text(); })
+                .then(function(text) {
+                    var parser = new DOMParser();
+                    var xml = parser.parseFromString(text, 'text/xml');
+                    var resolvers = xml.querySelectorAll('Resolver');
+                    
+                    for (var i = 0; i < resolvers.length; i++) {
+                        var r = resolvers[i];
+                        var jra = r.querySelector('jradeg');
+                        var jde = r.querySelector('jdedeg');
+                        var oname = r.querySelector('oname');
+                        
+                        if (jra && jde) {
+                            var ra = parseFloat(jra.textContent);
+                            var dec = parseFloat(jde.textContent);
+                            if (!isNaN(ra) && !isNaN(dec)) {
+                                callback({ name: oname ? oname.textContent.trim() : identifier, ra: ra, dec: dec });
+                                return;
+                            }
+                        }
+                    }
+                    callback(null);
+                })
+                .catch(function() { callback(null); });
+        }
+        
+        function addSimbadSource() {
+            var id = document.getElementById('simbad-id').value.trim();
+            if (!id) { showToast('Enter an identifier', 'error'); return; }
+            
+            showLoading(true, 'Resolving ' + id + '...');
+            
+            resolveObject(id, function(result) {
+                showLoading(false);
+                if (result) {
+                    addSourceToMap({
+                        name: result.name,
+                        ra: result.ra,
+                        dec: result.dec,
+                        color: selectedColors.simbad,
+                        type: 'catalog'
+                    });
+                    aladin.gotoRaDec(result.ra, result.dec);
+                    document.getElementById('simbad-id').value = '';
+                    showToast('Added ' + result.name, 'success');
+                } else {
+                    showToast('Not found. Try alternate names.', 'error');
+                }
+            });
+        }
+        
+        // ==================== Sources ====================
+        
+        function addManualSource() {
+            var ra = parseFloat(document.getElementById('ra-input').value);
+            var dec = parseFloat(document.getElementById('dec-input').value);
+            var label = document.getElementById('source-label').value.trim() || ('Source ' + (sources.length + 1));
+            
+            if (isNaN(ra) || isNaN(dec) || ra < 0 || ra > 360 || dec < -90 || dec > 90) {
+                showToast('Enter valid coordinates', 'error');
+                return;
+            }
+            
+            addSourceToMap({ name: label, ra: ra, dec: dec, color: selectedColors.manual, type: 'manual' });
+            document.getElementById('ra-input').value = '';
+            document.getElementById('dec-input').value = '';
+            document.getElementById('source-label').value = '';
+            showToast('Added ' + label, 'success');
+        }
+        
+        function addSourceToMap(source, updateUI) {
+            if (updateUI === undefined) updateUI = true;
+            source.id = Date.now() + Math.random();
+            sources.push(source);
+            
+            var cat = A.catalog({ name: source.name, sourceSize: 18, color: source.color, shape: 'circle' });
+            cat.addSources([A.source(source.ra, source.dec, { name: source.name })]);
+            aladin.addCatalog(cat);
+            source.catalog = cat;
+            
+            if (updateUI) {
+                updateSourceList();
+                updateSourceCount();
+            }
+        }
+        
+        function updateSourceCount() {
+            document.getElementById('source-count').textContent = sources.length + ' sources plotted';
+        }
+        
+        function updateSourceList() {
+            var el = document.getElementById('source-list');
+            if (!sources.length) {
+                el.innerHTML = '<p class="info-text">No sources added yet.</p>';
+                return;
+            }
+            
+            var display = sources.slice(-12);
+            var hidden = sources.length - display.length;
+            var html = hidden > 0 ? '<p class="info-text">+' + hidden + ' more</p>' : '';
+            
+            html += display.map(function(s) {
+                var name = s.name.length > 18 ? s.name.substring(0, 18) + '...' : s.name;
+                return '<div class="source-item"><div><div class="source-name"><span style="color:' + s.color + '">●</span> ' + 
+                    name + '</div><div class="source-coords">' + s.ra.toFixed(4) + '°, ' + s.dec.toFixed(4) + '°</div></div>' +
+                    '<button class="remove-btn" onclick="removeSource(' + s.id + ')">✕</button></div>';
+            }).join('');
+            
+            el.innerHTML = html;
+        }
+        
+        function removeSource(id) {
+            var s = sources.find(function(x) { return x.id === id; });
+            if (s && s.catalog) aladin.removeLayers([s.catalog]);
+            sources = sources.filter(function(x) { return x.id !== id; });
+            updateSourceList();
+            updateSourceCount();
+        }
+        
+        function clearAllSources() {
+            sources.forEach(function(s) { if (s.catalog) aladin.removeLayers([s.catalog]); });
+            sources = [];
+            updateSourceList();
+            updateSourceCount();
+            showToast('Sources cleared', 'success');
+        }
+        
+        function exportSources() {
+            if (!sources.length) { showToast('No sources', 'error'); return; }
+            var csv = 'name,ra,dec,type\n' + sources.map(function(s) {
+                return '"' + s.name + '",' + s.ra + ',' + s.dec + ',' + s.type;
+            }).join('\n');
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+            a.download = 'onc_sources.csv';
+            a.click();
+            showToast('Exported', 'success');
+        }
+        
+        // ==================== CSV ====================
+        
+        document.getElementById('csv-file').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            
+            var format = document.getElementById('csv-format').value;
+            showLoading(true, 'Processing...');
+            
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                var lines = ev.target.result.trim().split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
+                var first = lines[0].toLowerCase();
+                if (first.includes('source') || first.includes('ra') || first.includes('id') || first.includes('name')) {
+                    lines = lines.slice(1);
+                }
+                
+                if (format === 'simbad') {
+                    processSimbadCSV(lines);
+                } else {
+                    processCoordCSV(lines, format);
+                    showLoading(false);
+                }
+                document.getElementById('csv-input-label').textContent = file.name;
+            };
+            reader.readAsText(file);
+        });
+        
+        function processSimbadCSV(entries) {
+            showLoading(true, 'Querying ' + entries.length + ' sources...');
+            var success = 0, fail = 0, i = 0;
+            
+            function next() {
+                if (i >= entries.length) {
+                    updateSourceList();
+                    updateSourceCount();
+                    showLoading(false);
+                    showToast('Added ' + success + (fail ? ' (' + fail + ' failed)' : ''), 'success');
+                    return;
+                }
+                
+                var id = entries[i].replace(/['"]/g, '').trim();
+                i++;
+                if (!id) { next(); return; }
+                
+                resolveObject(id, function(result) {
+                    if (result) {
+                        addSourceToMap({ name: result.name, ra: result.ra, dec: result.dec, color: selectedColors.bulk, type: 'catalog' }, false);
+                        success++;
+                    } else { fail++; }
+                    setTimeout(next, 120);
+                });
+            }
+            next();
+        }
+        
+        function processCoordCSV(entries, format) {
+            var count = 0;
+            entries.forEach(function(line) {
+                var parts = line.split(/[,\t;]/).map(function(p) { return p.trim().replace(/['"]/g, ''); });
+                if (parts.length < 2) return;
+                var ra = parseFloat(parts[0]), dec = parseFloat(parts[1]);
+                if (isNaN(ra) || isNaN(dec)) return;
+                var name = format === 'radec_name' && parts[2] ? parts[2] : 'Source ' + (sources.length + 1);
+                addSourceToMap({ name: name, ra: ra, dec: dec, color: selectedColors.bulk, type: 'csv' }, false);
+                count++;
+            });
+            updateSourceList();
+            updateSourceCount();
+            showToast('Added ' + count + ' sources', 'success');
+        }
+        
+        // ==================== Utils ====================
+        
+        function showLoading(show, text) {
+            var el = document.getElementById('loading-overlay');
+            el.querySelector('.loading-text').textContent = text || 'Loading...';
+            if (show) el.classList.add('active');
+            else el.classList.remove('active');
+        }
+        
+        function showToast(msg, type) {
+            var t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast toast-' + (type || 'success') + ' show';
+            setTimeout(function() { t.classList.remove('show'); }, 3000);
+        }
+    </script>
+</body>
+</html>
