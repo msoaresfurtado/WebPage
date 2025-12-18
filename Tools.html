@@ -95,36 +95,36 @@
             border-bottom: 1px solid var(--border-light);
         }
 
-        /* Tool Cards */
+        /* Tool Cards - Compact */
         .tools-grid {
             display: grid;
-            gap: 22px;
+            gap: 14px;
         }
 
         .tool-card {
             display: grid;
-            grid-template-columns: 120px 1fr;
-            gap: 20px;
-            padding: 24px;
+            grid-template-columns: 70px 1fr auto;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 18px;
             background: var(--bg-subtle);
-            border-radius: 8px;
-            border-left: 4px solid var(--accent-color);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-color);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .tool-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
         }
 
         .tool-icon {
-            width: 120px;
-            height: 120px;
+            width: 70px;
+            height: 70px;
             border: 2px solid var(--accent-color);
             border-radius: 50%;
             background-size: cover;
             background-position: center;
-            box-shadow: 0 0 0 2px var(--text-color);
             flex-shrink: 0;
         }
 
@@ -136,12 +136,16 @@
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/R_Coronae_Australis_region.jpg/800px-R_Coronae_Australis_region.jpg');
         }
 
+        .icon-chrono {
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Pleiades_large.jpg/800px-Pleiades_large.jpg');
+        }
+
         .tool-content h3 {
             font-family: 'Crimson Pro', serif;
-            font-size: 1.3em;
+            font-size: 1.15em;
             font-weight: 600;
             color: var(--accent-color);
-            margin: 0 0 8px 0;
+            margin: 0 0 4px 0;
         }
 
         .tool-content h3 a {
@@ -153,18 +157,20 @@
         }
 
         .tool-content p {
-            margin: 0 0 12px 0;
-            font-size: 0.95em;
+            margin: 0;
+            font-size: 0.9em;
+            color: var(--text-muted);
         }
 
         .tool-link {
             display: inline-block;
-            padding: 8px 18px;
+            padding: 6px 14px;
             background-color: var(--accent-color);
             color: white;
-            border-radius: 5px;
+            border-radius: 4px;
             font-weight: 600;
-            font-size: 0.9em;
+            font-size: 0.85em;
+            white-space: nowrap;
             transition: all 0.2s ease;
         }
 
@@ -172,17 +178,16 @@
             background-color: var(--highlight-color);
             color: white;
             text-decoration: none;
-            transform: translateY(-1px);
         }
 
         /* Access Notice */
         .access-notice {
             background: linear-gradient(135deg, #f0f4f8 0%, #e8eef3 100%);
             border-radius: 8px;
-            padding: 16px 20px;
-            margin: 0 0 30px 0;
+            padding: 14px 18px;
+            margin: 0 0 24px 0;
             border: 1px solid var(--border-light);
-            font-size: 0.9em;
+            font-size: 0.88em;
             color: var(--text-muted);
         }
 
@@ -193,12 +198,20 @@
         /* Responsive */
         @media only screen and (max-width: 768px) {
             .tool-card {
-                grid-template-columns: 1fr;
-                text-align: center;
+                grid-template-columns: 60px 1fr;
+                grid-template-rows: auto auto;
             }
 
             .tool-icon {
-                margin: 0 auto;
+                width: 60px;
+                height: 60px;
+                grid-row: span 2;
+            }
+
+            .tool-link {
+                grid-column: 2;
+                justify-self: start;
+                margin-top: 8px;
             }
 
             .header {
@@ -225,14 +238,24 @@
         </div>
 
         <div class="tools-grid">
+            <!-- ChronoStar -->
+            <article class="tool-card">
+                <div class="tool-icon icon-chrono"></div>
+                <div class="tool-content">
+                    <h3><a href="https://msoaresfurtado.github.io/chronostar/">ChronoStar</a></h3>
+                    <p>Stellar age analysis via youth indicators (Li, Prot, R'HK, X-ray), kinematics, CMD position, and comoving companion search.</p>
+                </div>
+                <a href="https://msoaresfurtado.github.io/chronostar/" class="tool-link">Launch →</a>
+            </article>
+
             <!-- ONC Viewer -->
             <article class="tool-card">
                 <div class="tool-icon icon-onc"></div>
                 <div class="tool-content">
                     <h3><a href="https://msoaresfurtado.com/tools/oncviewer.html">ONC Viewer</a></h3>
                     <p>Source identification and centroid matching for ONC survey design and data analyses.</p>
-                    <a href="https://msoaresfurtado.com/tools/oncviewer.html" class="tool-link">Launch ONC Viewer →</a>
                 </div>
+                <a href="https://msoaresfurtado.com/tools/oncviewer.html" class="tool-link">Launch →</a>
             </article>
 
             <!-- CRA Viewer -->
@@ -241,8 +264,8 @@
                 <div class="tool-content">
                     <h3><a href="https://msoaresfurtado.com/tools/craviewer.html">CRA Viewer</a></h3>
                     <p>Source identification and centroid matching for CrA survey design and data analyses.</p>
-                    <a href="https://msoaresfurtado.com/tools/craviewer.html" class="tool-link">Launch CRA Viewer →</a>
                 </div>
+                <a href="https://msoaresfurtado.com/tools/craviewer.html" class="tool-link">Launch →</a>
             </article>
         </div>
 
