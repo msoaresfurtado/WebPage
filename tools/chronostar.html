@@ -105,16 +105,16 @@ DATA SOURCES:
 
         header {
             text-align: center;
-            margin-bottom: 3rem;
-            padding: 2rem 0;
+            margin-bottom: 1.5rem;
+            padding: 1.25rem 0;
             border-bottom: 1px solid var(--border-color);
         }
 
         h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 600;
             letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -123,7 +123,7 @@ DATA SOURCES:
 
         .subtitle {
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 300;
         }
 
@@ -144,15 +144,15 @@ DATA SOURCES:
 
         .search-section {
             background: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
             border: 1px solid var(--border-color);
         }
 
         .input-group {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
             align-items: flex-end;
         }
@@ -164,10 +164,10 @@ DATA SOURCES:
 
         .input-field label {
             display: block;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 500;
             color: var(--text-secondary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.35rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
@@ -175,12 +175,12 @@ DATA SOURCES:
         .input-field input,
         .input-field select {
             width: 100%;
-            padding: 0.875rem 1rem;
-            font-size: 1rem;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.95rem;
             font-family: 'IBM Plex Mono', monospace;
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 6px;
             color: var(--text-primary);
             transition: all 0.2s ease;
         }
@@ -197,16 +197,16 @@ DATA SOURCES:
         }
 
         .btn {
-            padding: 0.875rem 2rem;
-            font-size: 1rem;
+            padding: 0.65rem 1.5rem;
+            font-size: 0.95rem;
             font-weight: 500;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         .btn-primary {
@@ -245,12 +245,12 @@ DATA SOURCES:
         }
 
         .status-bar {
-            margin-top: 1.5rem;
-            padding: 1rem;
+            margin-top: 1rem;
+            padding: 0.75rem;
             background: var(--bg-tertiary);
-            border-radius: 8px;
+            border-radius: 6px;
             font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             display: none;
         }
 
@@ -280,10 +280,26 @@ DATA SOURCES:
 
         .results-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 420px;
             gap: 1rem;
             margin-bottom: 1rem;
-            align-items: start;  /* Add this line */
+            align-items: stretch;
+        }
+
+        .results-grid > .panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .results-grid > .panel > .panel-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .results-grid > .panel > .panel-body #aladin-lite-div {
+            flex: 1;
+            min-height: 300px;
         }
 
         @media (max-width: 1000px) {
@@ -330,7 +346,7 @@ DATA SOURCES:
 
         .target-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 0.5rem;
         }
 
@@ -359,8 +375,8 @@ DATA SOURCES:
         }
 
         .plot-container {
-            width: 500px;
-            height: 100%;
+            width: 100%;
+            height: 500px;
             background: var(--bg-primary);
             border-radius: 8px;
         }
@@ -375,8 +391,13 @@ DATA SOURCES:
 
 
         .galactic-plot-container {
-            width: 600px;
-            height: 100%;
+            width: 100%;
+            height: 265px;
+        }
+
+        .toomre-plot-container {
+            width: 100%;
+            height: 320px;
         }
 
         .data-table-wrapper {
@@ -696,7 +717,8 @@ DATA SOURCES:
 
         #aladin-lite-div {
             width: 100%;
-            height: 490px;
+            height: 100%;
+            min-height: 350px;
             border-radius: 8px;
             overflow: hidden;
         }
@@ -721,33 +743,35 @@ DATA SOURCES:
         .external-links {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-top: 1rem;
+            gap: 0.4rem;
+            margin-top: 0.75rem;
+            margin-bottom: 0.5rem;
         }
 
         .external-link {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            gap: 0.35rem;
+            padding: 0.35rem 0.6rem;
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
+            border-radius: 4px;
+            color: var(--text-secondary);
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             transition: all 0.2s ease;
         }
 
         .external-link:hover {
             background: var(--border-color);
             border-color: var(--accent-cyan);
+            color: var(--text-primary);
         }
 
         .external-link svg {
-            width: 16px;
-            height: 16px;
-            opacity: 0.8;
+            width: 12px;
+            height: 12px;
+            opacity: 0.7;
         }
 
         footer {
@@ -782,17 +806,24 @@ DATA SOURCES:
             flex-direction: column;
         }
 
-        .youth-cmd-container .cmd-panel {
+        .youth-cmd-container .cmd-column {
             flex: 0 0 auto;
             width: 420px;
             max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .youth-cmd-container .cmd-panel {
+            flex: 0 0 auto;
         }
 
         @media (max-width: 1100px) {
             .youth-cmd-container {
                 flex-direction: column;
             }
-            .youth-cmd-container .cmd-panel {
+            .youth-cmd-container .cmd-column {
                 width: 100%;
             }
         }
@@ -805,10 +836,30 @@ DATA SOURCES:
         .action-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
+            gap: 0.35rem;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
             border-top: 1px solid var(--border-color);
+        }
+
+        .action-buttons .btn-small {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.75rem;
+            gap: 0.3rem;
+            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: var(--accent-blue);
+        }
+
+        .action-buttons .btn-small:hover:not(:disabled) {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: var(--accent-blue);
+        }
+
+        .action-buttons .btn-small svg {
+            width: 12px;
+            height: 12px;
         }
 
         .exoplanet-alert {
@@ -1037,58 +1088,84 @@ DATA SOURCES:
                                 </div>
                             </div>
                         </div>
+                        <!-- Gyrochronology Plot -->
+                        <div class="panel full-width-panel" id="gyro-panel" style="margin-bottom: 1rem; display: none;">
+                            <div class="panel-header">
+                                <span class="panel-title">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    Gyrochronology: P<sub>rot</sub> vs T<sub>eff</sub>
+                                </span>
+                                <button class="btn btn-secondary btn-small" onclick="downloadGyroPlot()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    PNG
+                                </button>
+                            </div>
+                            <div class="panel-body">
+                                <div class="gyro-plot-container" id="gyro-plot"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="panel cmd-panel">
-                    <div class="panel-header">
-                        <span class="panel-title">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 3v18h18"></path>
-                                <circle cx="9" cy="9" r="2"></circle>
-                                <circle cx="19" cy="5" r="2"></circle>
-                                <circle cx="14" cy="14" r="2"></circle>
-                            </svg>
-                            CMD
-                        </span>
-                        <button class="btn btn-secondary btn-small" onclick="downloadPlot()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            PNG
-                        </button>
+                <div class="cmd-column">
+                    <div class="panel cmd-panel">
+                        <div class="panel-header">
+                            <span class="panel-title">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 3v18h18"></path>
+                                    <circle cx="9" cy="9" r="2"></circle>
+                                    <circle cx="19" cy="5" r="2"></circle>
+                                    <circle cx="14" cy="14" r="2"></circle>
+                                </svg>
+                                CMD
+                            </span>
+                            <button class="btn btn-secondary btn-small" onclick="downloadPlot()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                PNG
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <div class="cmd-plot-container" id="cmd-plot"></div>
+                        </div>
                     </div>
-                    <div class="panel-body">
-                        <div class="cmd-plot-container" id="cmd-plot"></div>
+
+                    <!-- Toomre Diagram -->
+                    <div class="panel" id="toomre-panel" style="display: none;">
+                        <div class="panel-header">
+                            <span class="panel-title">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v6l4 2"></path>
+                                </svg>
+                                Toomre Diagram
+                            </span>
+                            <button class="btn btn-secondary btn-small" onclick="downloadToomrePlot()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                PNG
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <div class="toomre-plot-container" id="toomre-plot"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Gyrochronology Plot -->
-            <div class="panel full-width-panel" id="gyro-panel" style="margin-bottom: 1rem; display: none;">
-                <div class="panel-header">
-                    <span class="panel-title">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        Gyrochronology: P<sub>rot</sub> vs T<sub>eff</sub>
-                    </span>
-                    <button class="btn btn-secondary btn-small" onclick="downloadGyroPlot()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        PNG
-                    </button>
-                </div>
-                <div class="panel-body">
-                    <div class="gyro-plot-container" id="gyro-plot"></div>
-                </div>
-            </div>
 
             <!-- Data Table -->
             <div class="panel full-width-panel" id="comoving-panel" style="display: none;">
@@ -1234,7 +1311,7 @@ DATA SOURCES:
             'TOI 5882': { aliasOf: 'TOI-5882' },
             'TOI5882': { aliasOf: 'TOI-5882' }
         };
-        
+
        // Convert RA/Dec to Galactic coordinates
         function equatorialToGalactic(ra, dec) {
             const deg2rad = Math.PI / 180;
@@ -1331,20 +1408,20 @@ DATA SOURCES:
                     }
                 ],
                 xaxis: {
-                    title: { text: 'Galactic Longitude l (°)', font: { size: 14 } },
+                    title: { text: 'Galactic Longitude l (°)', font: { size: 12 } },
                     range: [180, -180],
                     dtick: 60,
-                    gridcolor: 'rgba(100, 100, 100, 0.3)',
-                    zerolinecolor: 'rgba(150, 130, 100, 0.5)',
-                    tickfont: { size: 11 }
+                    showgrid: false,
+                    zeroline: false,
+                    tickfont: { size: 10 }
                 },
                 yaxis: {
-                    title: { text: 'Galactic Latitude b (°)', font: { size: 14 } },
+                    title: { text: 'Galactic Latitude b (°)', font: { size: 12 } },
                     range: [-90, 90],
                     dtick: 30,
-                    gridcolor: 'rgba(100, 100, 100, 0.3)',
-                    zerolinecolor: 'rgba(150, 130, 100, 0.5)',
-                    tickfont: { size: 11 },
+                    showgrid: false,
+                    zeroline: false,
+                    tickfont: { size: 10 },
                     scaleanchor: 'x',
                     scaleratio: 0.5
                 },
@@ -1366,6 +1443,229 @@ DATA SOURCES:
                 width: 1000,
                 height: 400,
                 filename: `GaiaDR3_${targetData?.source_id}_galactic`
+            });
+        }
+
+        // Compute U, V, W velocities with respect to LSR
+        // Using the standard matrix method from Johnson & Soderblom (1987)
+        function computeUVW(ra, dec, pmra, pmdec, parallax, rv) {
+            // Solar motion with respect to LSR (Schönrich et al. 2010)
+            const U_sun = 11.1;   // km/s
+            const V_sun = 12.24;  // km/s
+            const W_sun = 7.25;   // km/s
+
+            // Convert to radians
+            const alpha = ra * Math.PI / 180;
+            const delta = dec * Math.PI / 180;
+
+            // Distance in pc
+            const dist = 1000 / parallax;
+
+            // Convert proper motions from mas/yr to km/s
+            // v = 4.74047 * mu [arcsec/yr] * d [pc] = 4.74047 * mu [mas/yr] * d [pc] / 1000
+            const k = 4.74047 / 1000;  // Factor for mas/yr
+            const vra = k * pmra * dist;
+            const vdec = k * pmdec * dist;
+
+            // Transformation matrix T (equatorial to galactic)
+            // From Murray (1989), epoch J2000
+            const T11 = -0.0548755604;
+            const T12 = -0.8734370902;
+            const T13 = -0.4838350155;
+            const T21 = +0.4941094279;
+            const T22 = -0.4448296300;
+            const T23 = +0.7469822445;
+            const T31 = -0.8676661490;
+            const T32 = -0.1980763734;
+            const T33 = +0.4559837762;
+
+            // Position-dependent rotation matrix A
+            const cosra = Math.cos(alpha);
+            const sinra = Math.sin(alpha);
+            const cosdec = Math.cos(delta);
+            const sindec = Math.sin(delta);
+
+            // A transforms (vra, vdec, vr) to (vx, vy, vz) equatorial
+            const A11 = -sinra;
+            const A12 = -sindec * cosra;
+            const A13 = cosdec * cosra;
+            const A21 = cosra;
+            const A22 = -sindec * sinra;
+            const A23 = cosdec * sinra;
+            const A31 = 0;
+            const A32 = cosdec;
+            const A33 = sindec;
+
+            // Combined matrix B = T * A
+            const B11 = T11*A11 + T12*A21 + T13*A31;
+            const B12 = T11*A12 + T12*A22 + T13*A32;
+            const B13 = T11*A13 + T12*A23 + T13*A33;
+            const B21 = T21*A11 + T22*A21 + T23*A31;
+            const B22 = T21*A12 + T22*A22 + T23*A32;
+            const B23 = T21*A13 + T22*A23 + T23*A33;
+            const B31 = T31*A11 + T32*A21 + T33*A31;
+            const B32 = T31*A12 + T32*A22 + T33*A32;
+            const B33 = T31*A13 + T32*A23 + T33*A33;
+
+            // Heliocentric UVW
+            const U_helio = B11*vra + B12*vdec + B13*rv;
+            const V_helio = B21*vra + B22*vdec + B23*rv;
+            const W_helio = B31*vra + B32*vdec + B33*rv;
+
+            // LSR velocities
+            const U = U_helio + U_sun;
+            const V = V_helio + V_sun;
+            const W = W_helio + W_sun;
+
+            return { U, V, W };
+        }
+
+        // Display Toomre diagram
+        function displayToomreDiagram(targetData) {
+            const panel = document.getElementById('toomre-panel');
+
+            if (!targetData.radial_velocity || !targetData.pmra || !targetData.pmdec || !targetData.parallax) {
+                console.log('Toomre: Missing data - RV:', targetData.radial_velocity, 'pmra:', targetData.pmra, 'pmdec:', targetData.pmdec, 'plx:', targetData.parallax);
+                panel.style.display = 'none';
+                return;
+            }
+
+            const uvw = computeUVW(
+                targetData.ra,
+                targetData.dec,
+                targetData.pmra,
+                targetData.pmdec,
+                targetData.parallax,
+                targetData.radial_velocity
+            );
+
+            // Check for NaN
+            if (isNaN(uvw.U) || isNaN(uvw.V) || isNaN(uvw.W)) {
+                console.log('Toomre: UVW calculation returned NaN');
+                panel.style.display = 'none';
+                return;
+            }
+
+            console.log('Toomre UVW (LSR): U=' + uvw.U.toFixed(1) + ', V=' + uvw.V.toFixed(1) + ', W=' + uvw.W.toFixed(1));
+
+            panel.style.display = 'block';
+            const container = document.getElementById('toomre-plot');
+
+            // Calculate sqrt(U^2 + W^2) for y-axis
+            const UW = Math.sqrt(uvw.U * uvw.U + uvw.W * uvw.W);
+            const vtot = Math.sqrt(uvw.U * uvw.U + uvw.V * uvw.V + uvw.W * uvw.W);
+
+            console.log('Toomre plot: V=' + uvw.V.toFixed(1) + ', sqrt(U²+W²)=' + UW.toFixed(1) + ', vtot=' + vtot.toFixed(1));
+
+            // Create traces array
+            const traces = [];
+
+            // Thin disk shaded region (inside 85 km/s - typical thin disk boundary)
+            const thinDiskX = [], thinDiskY = [];
+            for (let a = 0; a <= Math.PI; a += 0.02) {
+                thinDiskX.push(-85 * Math.cos(a));
+                thinDiskY.push(85 * Math.sin(a));
+            }
+            // Close the shape along the x-axis
+            thinDiskX.push(85);
+            thinDiskY.push(0);
+            thinDiskX.push(-85);
+            thinDiskY.push(0);
+
+            traces.push({
+                x: thinDiskX,
+                y: thinDiskY,
+                fill: 'toself',
+                fillcolor: 'rgba(34, 197, 94, 0.15)',
+                line: { color: 'rgba(34, 197, 94, 0.4)', width: 1.5, dash: 'dash' },
+                mode: 'lines',
+                name: 'Thin disk',
+                hoverinfo: 'name',
+                showlegend: true
+            });
+
+            // Velocity contours (dashed semicircles at 100 and 180 km/s)
+            [100, 180].forEach(r => {
+                const xpts = [], ypts = [];
+                for (let a = 0; a <= Math.PI; a += 0.05) {
+                    xpts.push(-r * Math.cos(a));
+                    ypts.push(r * Math.sin(a));
+                }
+                traces.push({
+                    x: xpts, y: ypts,
+                    mode: 'lines',
+                    line: { color: 'rgba(80,80,80,0.5)', width: 1, dash: 'dash' },
+                    hoverinfo: 'skip',
+                    showlegend: false
+                });
+            });
+
+            // Target star marker
+            const targetTrace = {
+                x: [uvw.V],
+                y: [UW],
+                mode: 'markers',
+                type: 'scatter',
+                name: targetData._resolvedName || 'Target',
+                showlegend: true,
+                marker: {
+                    size: 14,
+                    color: '#ef4444',
+                    symbol: 'star',
+                    line: { color: '#000000', width: 1 }
+                },
+                hovertemplate: '<b>' + (targetData._resolvedName || 'Target') + '</b><br>' +
+                    'U = ' + uvw.U.toFixed(1) + ' km/s<br>' +
+                    'V = ' + uvw.V.toFixed(1) + ' km/s<br>' +
+                    'W = ' + uvw.W.toFixed(1) + ' km/s<br>' +
+                    'v_tot = ' + vtot.toFixed(1) + ' km/s<extra></extra>'
+            };
+            traces.push(targetTrace);
+            console.log('Toomre target trace:', JSON.stringify({x: targetTrace.x, y: targetTrace.y}));
+
+            // Dynamic axis range to ensure target is visible
+            const xMin = Math.min(-160, uvw.V - 20);
+            const xMax = Math.max(60, uvw.V + 20);
+            const yMax = Math.max(160, UW + 20);
+
+            const layout = {
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff',
+                font: { color: '#1a1a2e', family: 'IBM Plex Sans' },
+                xaxis: {
+                    title: 'V [km/s]',
+                    range: [xMin, xMax],
+                    gridcolor: 'rgba(100,100,100,0.2)',
+                    zerolinecolor: 'rgba(100,100,100,0.3)',
+                    dtick: 50
+                },
+                yaxis: {
+                    title: '(U² + W²)^½ [km/s]',
+                    range: [0, yMax],
+                    gridcolor: 'rgba(100,100,100,0.2)',
+                    dtick: 50
+                },
+                showlegend: true,
+                legend: {
+                    x: 0.02,
+                    y: 0.98,
+                    bgcolor: 'rgba(255,255,255,0.8)',
+                    bordercolor: 'rgba(0,0,0,0.1)',
+                    borderwidth: 1,
+                    font: { size: 10 }
+                },
+                margin: { t: 20, r: 20, b: 50, l: 60 }
+            };
+
+            Plotly.newPlot(container, traces, layout, { responsive: true });
+        }
+
+        function downloadToomrePlot() {
+            Plotly.downloadImage('toomre-plot', {
+                format: 'png',
+                width: 600,
+                height: 500,
+                filename: `GaiaDR3_${targetData?.source_id}_toomre`
             });
         }
 
@@ -2618,8 +2918,13 @@ DATA SOURCES:
             vizierYouthData = { ewli: [], prot: [], rhk: [], lx: [] };
             document.getElementById('comoving-panel').style.display = 'none';
             document.getElementById('gyro-panel').style.display = 'none';
+            document.getElementById('toomre-panel').style.display = 'none';
             document.getElementById('tess-info-container').innerHTML = '';
             document.getElementById('exoplanet-alert').innerHTML = '';
+            document.getElementById('li-values').innerHTML = '';
+            document.getElementById('rotation-results').innerHTML = '';
+            document.getElementById('rhk-results').innerHTML = '';
+            document.getElementById('lx-results').innerHTML = '';
 
             try {
                 updateProgress([{ text: 'Resolving target identifier...', status: 'active' }]);
@@ -2667,6 +2972,9 @@ DATA SOURCES:
 
                 // Display Galactic map
                 displayGalacticMap(targetData.ra, targetData.dec);
+
+                // Display Toomre diagram (if RV available)
+                displayToomreDiagram(targetData);
 
                 // Display CMD (target only)
                 displayCMD([], targetData);
