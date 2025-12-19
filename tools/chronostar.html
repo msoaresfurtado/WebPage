@@ -920,30 +920,6 @@ DATA SOURCES:
                 </button>
             </div>
 
-            <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()">
-                <svg class="toggle-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-                Advanced Options
-                <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.25rem;">▼</span>
-            </div>
-
-            <div class="advanced-options" id="advanced-options">
-                <div class="small-inputs">
-                    <div class="input-field">
-                        <label for="velocity-limit">Velocity Limit (km/s)</label>
-                        <input type="number" id="velocity-limit" value="5.0" step="0.5" />
-                    </div>
-                    <div class="input-field">
-                        <label for="search-radius">Search Radius (pc)</label>
-                        <input type="number" id="search-radius" value="5" step="5" />
-                    </div>
-                    <div class="input-field">
-                        <label for="rv-cut">RV Cut (km/s)</label>
-                        <input type="number" id="rv-cut" value="5.0" step="0.5" />
-                    </div>
-                </div>
-            </div>
 
             <div class="status-bar" id="status-bar">
                 <span class="status-text" id="status-text"></span>
@@ -998,11 +974,33 @@ DATA SOURCES:
                                 </svg>
                                 Comoving Search
                             </button>
-                        </div>
-                        <div id="tess-info-container"></div>
-                        <div id="exoplanet-alert"></div>
+                          </div>
+                          <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()" style="margin-top: 0.75rem;">
+                              <svg class="toggle-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                  <polyline points="6 9 12 15 18 9"></polyline>
+                              </svg>
+                              Comoving Search Options
+                          </div>
+                          <div class="advanced-options" id="advanced-options">
+                              <div class="small-inputs">
+                                  <div class="input-field">
+                                      <label for="velocity-limit">Velocity Limit (km/s)</label>
+                                      <input type="number" id="velocity-limit" value="5.0" step="0.5" />
+                                  </div>
+                                  <div class="input-field">
+                                      <label for="search-radius">Search Radius (pc)</label>
+                                      <input type="number" id="search-radius" value="5" step="5" />
+                                  </div>
+                                  <div class="input-field">
+                                      <label for="rv-cut">RV Cut (km/s)</label>
+                                      <input type="number" id="rv-cut" value="5.0" step="0.5" />
+                                  </div>
+                              </div>
+                          </div>
+                          <div id="tess-info-container"></div>                        <div id="exoplanet-alert"></div>
                     </div>
                 </div>
+
 
                 <div class="panel">
                     <div class="panel-header">
@@ -1413,7 +1411,7 @@ DATA SOURCES:
                     dtick: 60,
                     showgrid: false,
                     zeroline: false,
-                    tickfont: { size: 10 }
+                    showticklabels: false
                 },
                 yaxis: {
                     title: { text: 'Galactic Latitude b (°)', font: { size: 12 } },
@@ -1421,7 +1419,7 @@ DATA SOURCES:
                     dtick: 30,
                     showgrid: false,
                     zeroline: false,
-                    tickfont: { size: 10 },
+                    showticklabels: false,
                     scaleanchor: 'x',
                     scaleratio: 0.5
                 },
