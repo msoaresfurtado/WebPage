@@ -1211,7 +1211,21 @@ DATA SOURCES:
             `).join('');
         }
 
-        // Convert RA/Dec to Galactic coordinates
+        // Manual youth indicator data for targets not yet in VizieR catalogs
+         const manualYouthData = {
+             'TOI-188': {
+                 ewli: [{
+                     value: 133, // 0.133 Å = 133 mÅ
+                     error: 24,  // 0.024 Å = 24 mÅ
+                     source: 'Carmichael+2021',
+                     url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1'
+                 }]
+             },
+             'TOI 188': { aliasOf: 'TOI-188' },
+             'TOI188': { aliasOf: 'TOI-188' }
+         };
+
+       // Convert RA/Dec to Galactic coordinates
         function equatorialToGalactic(ra, dec) {
             const deg2rad = Math.PI / 180;
             const rad2deg = 180 / Math.PI;
@@ -1928,6 +1942,33 @@ DATA SOURCES:
             return results;
         }
 
+        function getManualYouthData(targetData) {
+            const results = { ewli: [], prot: [], rhk: [], lx: [] };
+            if (!targetData?._resolvedName) return results;
+
+            const name = targetData._resolvedName;
+            let entry = manualYouthData[name];
+
+            // Try normalized versions (TOI-188, TOI 188, TOI188)
+            if (!entry) {
+                const normalized = name.replace(/[-\s]+/g, '-').toUpperCase();
+                const key = Object.keys(manualYouthData).find(k =>
+                    k.replace(/[-\s]+/g, '-').toUpperCase() === normalized
+                );
+                if (key) entry = manualYouthData[key];
+            }
+
+            // Handle aliases
+            if (entry?.aliasOf) entry = manualYouthData[entry.aliasOf];
+
+            if (entry) {
+                ['ewli', 'prot', 'rhk', 'lx'].forEach(type => {
+                    if (entry[type]) results[type].push(...entry[type]);
+                });
+            }
+            return results;
+        }
+
         // Search all youth indicators (on demand)
         async function searchYouthIndicators() {
             if (!targetData) return;
@@ -2062,46 +2103,51 @@ DATA SOURCES:
         }
 
         function displayYouthIndicators(data) {
-            function vizierLink(catalog, label) {
-                if (catalog) {
-                    return `<a href="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=${catalog}" target="_blank" class="source">${label}</a>`;
-                }
-                return `<span class="source">${label}</span>`;
-            }
+            // Merge manual data with VizieR data
+            const manualData = getManualYouthData(targetData);
+            const mergedData = {
+                ewli: [...manualData.ewli, ...data.ewli],
+                prot: [...manualData.prot, ...data.prot],
+                rhk: [...manualData.rhk, ...data.rhk],
+                lx: [...manualData.lx, ...data.lx]
+            };
 
-            // Lithium
-            let liHTML = data.ewli.length > 0 ? data.ewli.map(m => `
-                <div class="youth-item">
-                    <span class="value li-color">${m.value.toFixed(1)} mÅ</span>
-                    ${vizierLink(m.catalog, m.source)}
-                </div>
-            `).join('') : '<div class="no-data">No measurements found</div>';
+            // Lithium - updated to show errors and handle URL links
+            let liHTML = mergedData.ewli.length > 0 ? mergedData.ewli.map(m => {
+                const errorStr = m.error ? ` ± ${m.error.toFixed(0)}` : '';
+                const sourceLink = m.url
+                    ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>`
+                    : vizierLink(m.catalog, m.source);
+                return `<div class="youth-item">
+                    <span class="value li-color">${m.value.toFixed(1)}${errorStr} mÅ</span>
+                    ${sourceLink}
+                </div>`;
+            }).join('') : '<div class="no-data">No measurements found</div>';
             document.getElementById('li-values').innerHTML = liHTML;
 
-            // Rotation (combine with auto-search results)
-            const allProt = [...(data.prot || [])];
-            let rotHTML = allProt.length > 0 ? allProt.map(m => `
+            // Rotation
+            let rotHTML = mergedData.prot.length > 0 ? mergedData.prot.map(m => `
                 <div class="youth-item">
                     <span class="value prot-color">${m.value.toFixed(3)} d</span>
-                    ${vizierLink(m.catalog, m.source)}
+                    ${m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source)}
                 </div>
             `).join('') : '<div class="no-data">No measurements found</div>';
             document.getElementById('rotation-results').innerHTML = rotHTML;
 
             // R'HK
-            let rhkHTML = data.rhk.length > 0 ? data.rhk.map(m => `
+            let rhkHTML = mergedData.rhk.length > 0 ? mergedData.rhk.map(m => `
                 <div class="youth-item">
                     <span class="value rhk-color">${m.value.toFixed(3)}</span>
-                    ${vizierLink(m.catalog, m.source)}
+                    ${m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source)}
                 </div>
             `).join('') : '<div class="no-data">No measurements found</div>';
             document.getElementById('rhk-results').innerHTML = rhkHTML;
 
             // X-ray
-            let lxHTML = data.lx.length > 0 ? data.lx.map(m => `
+            let lxHTML = mergedData.lx.length > 0 ? mergedData.lx.map(m => `
                 <div class="youth-item">
                     <span class="value lx-color">${m.value.toFixed(2)}</span>
-                    ${vizierLink(m.catalog, m.source)}
+                    ${m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source)}
                 </div>
             `).join('') : '<div class="no-data">No measurements found</div>';
             document.getElementById('lx-results').innerHTML = lxHTML;
