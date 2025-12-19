@@ -1212,19 +1212,29 @@ DATA SOURCES:
         }
 
         // Manual youth indicator data for targets not yet in VizieR catalogs
-         const manualYouthData = {
-             'TOI-188': {
-                 ewli: [{
-                     value: 133, // 0.133 Å = 133 mÅ
-                     error: 24,  // 0.024 Å = 24 mÅ
-                     source: 'Carmichael+2021',
-                     url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1'
-                 }]
-             },
-             'TOI 188': { aliasOf: 'TOI-188' },
-             'TOI188': { aliasOf: 'TOI-188' }
-         };
-
+        const manualYouthData = {
+            'TOI-188': {
+                ewli: [{
+                    value: 133,
+                    error: 24,
+                    source: 'Carmichael+2021',
+                    url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1'
+                }]
+            },
+            'TOI 188': { aliasOf: 'TOI-188' },
+            'TOI188': { aliasOf: 'TOI-188' },
+            'TOI-5882': {
+                ewli: [{
+                    value: 71.2,
+                    error: 6.9,
+                    source: 'Vowell+2025',
+                    url: 'https://arxiv.org/abs/2501.09795'
+                }]
+            },
+            'TOI 5882': { aliasOf: 'TOI-5882' },
+            'TOI5882': { aliasOf: 'TOI-5882' }
+        };
+        
        // Convert RA/Dec to Galactic coordinates
         function equatorialToGalactic(ra, dec) {
             const deg2rad = Math.PI / 180;
