@@ -2947,7 +2947,7 @@ DATA SOURCES:
 
                const targetResult = await queryGaia(targetQuery);
                if (!targetResult.data || targetResult.data.length === 0) {
-                   throw new Error(`No source found: ${gaiaId}. This source likely does not have a Gaia ID on Simbad.`);
+                   throw new Error(`No source found. This source likely does not have a Gaia ID on Simbad.`);
                }
                 targetData = resolvedName ? { _resolvedName: resolvedName } : {};
                 const cols = targetResult.metadata.map(m => m.name);
