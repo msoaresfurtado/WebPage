@@ -909,7 +909,7 @@ DATA SOURCES:
             <div class="input-group">
                 <div class="input-field">
                     <label for="target-id">Target (Gaia DR3 ID or SIMBAD Name)</label>
-                    <input type="text" id="target-id" placeholder="e.g., 2007420940415412352, TOI 188, HD 63433, TOI-5882" />
+                    <input type="text" id="target-id" placeholder="e.g., 2007420940415412352, TOI 811, HD 63433, TOI-5882" />
                 </div>
                 <button class="btn btn-primary" id="search-btn" onclick="runSearch()">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1288,7 +1288,7 @@ DATA SOURCES:
 
         // Manual youth indicator data for targets not yet in VizieR catalogs
         const manualYouthData = {
-            'TOI-188': {
+            'TOI-811': {
                 ewli: [{
                     value: 133,
                     error: 24,
@@ -1296,8 +1296,8 @@ DATA SOURCES:
                     url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1'
                 }]
             },
-            'TOI 188': { aliasOf: 'TOI-188' },
-            'TOI188': { aliasOf: 'TOI-188' },
+            'TOI 811': { aliasOf: 'TOI-811' },
+            'TOI811': { aliasOf: 'TOI-811' },
             'TOI-5882': {
                 ewli: [{
                     value: 71.2,
@@ -2257,7 +2257,7 @@ DATA SOURCES:
             const name = targetData._resolvedName;
             let entry = manualYouthData[name];
 
-            // Try normalized versions (TOI-188, TOI 188, TOI188)
+            // Try normalized versions (TOI-811, TOI 811, TOI811)
             if (!entry) {
                 const normalized = name.replace(/[-\s]+/g, '-').toUpperCase();
                 const key = Object.keys(manualYouthData).find(k =>
