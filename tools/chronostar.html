@@ -2555,12 +2555,13 @@ DATA SOURCES:
                          return c * 180.0 / Math.PI;  // Returns degrees
                      }
 
+            
                      const angSep = angularSeparation(targetData.ra, targetData.dec, star.ra, star.dec);
+                     const angSepRad = angSep * Math.PI / 180;  // <-- ADD THIS LINE
                      const sep3d = Math.sqrt(
                          starDist * starDist + targetDist * targetDist - 
                          2 * starDist * targetDist * Math.cos(angSepRad)
                      );
-
                     if (sep3d > searchRadius) continue;
 
                     const voff = computeVelocityDiff(star, targetData);
