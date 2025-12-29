@@ -2545,6 +2545,7 @@ DATA SOURCES:
                     star.sep_3d = sep3d;
                     star.voff = voff;
                     star.spt = getSpectralType(star.bp_rp);
+                    star.rv_pred = computePredictedRV(star, targetData);
 
                     candidates.push(star);
                 }
@@ -2576,6 +2577,56 @@ DATA SOURCES:
             const dist = 1000 / star.parallax;
             return Math.sqrt(dpmra * dpmra + dpmdec * dpmdec) * 4.74 * dist / 1000;
         }
+
+        // Compute predicted RV for a comoving candidate
+        // Assumes candidate has same space velocity as target, projects onto candidate's line of sight
+        function computePredictedRV(candidateStar, targetStar) {
+            // If target has no RV, can't predict
+            if (targetStar.radial_velocity == null) return null;
+
+            // Convert positions to radians
+            const raT = targetStar.ra * Math.PI / 180;
+            const decT = targetStar.dec * Math.PI / 180;
+            const raC = candidateStar.ra * Math.PI / 180;
+            const decC = candidateStar.dec * Math.PI / 180;
+
+            // Target distance in pc
+            const distT = 1000 / targetStar.parallax;
+
+            // Target's velocity components in its local frame (v_ra, v_dec, v_r)
+            const k = 4.74047; // km/s per mas/yr at 1 kpc
+            const vRaT = k * targetStar.pmra * distT / 1000;  // pmra in mas/yr
+            const vDecT = k * targetStar.pmdec * distT / 1000;
+            const vRadT = targetStar.radial_velocity;
+
+            // Convert target's velocity to Cartesian (equatorial)
+            const cosRaT = Math.cos(raT);
+            const sinRaT = Math.sin(raT);
+            const cosDecT = Math.cos(decT);
+            const sinDecT = Math.sin(decT);
+
+            // Cartesian velocity components (equatorial frame)
+            const vx = -sinRaT * vRaT - sinDecT * cosRaT * vDecT + cosDecT * cosRaT * vRadT;
+            const vy = cosRaT * vRaT - sinDecT * sinRaT * vDecT + cosDecT * sinRaT * vRadT;
+            const vz = cosDecT * vDecT + sinDecT * vRadT;
+
+            // Project this velocity onto the radial direction of the candidate
+            const cosRaC = Math.cos(raC);
+            const sinRaC = Math.sin(raC);
+            const cosDecC = Math.cos(decC);
+            const sinDecC = Math.sin(decC);
+
+            // Radial unit vector for candidate
+            const pCx = cosDecC * cosRaC;
+            const pCy = cosDecC * sinRaC;
+            const pCz = sinDecC;
+
+            // Predicted RV = velocity dot radial direction
+            const rvPred = vx * pCx + vy * pCy + vz * pCz;
+
+            return rvPred;
+        }
+
 
         function getSpectralType(bprp) {
             if (bprp == null || isNaN(bprp)) return 'N/A';
