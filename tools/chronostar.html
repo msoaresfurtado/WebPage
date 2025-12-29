@@ -1312,7 +1312,7 @@ DATA SOURCES:
 
        // Convert RA/Dec to Galactic coordinates
         function equatorialToGalactic(ra, dec) {
-            const deg2rad = Math.PI / 180;
+            const deg2rad = Math.PI / 180.0;
             const rad2deg = 180 / Math.PI;
 
             // J2000 North Galactic Pole
@@ -2413,8 +2413,13 @@ DATA SOURCES:
 
             return results;
         }
-
-        function displayYouthIndicators(data) {
+      function vizierLink(catalog, source) {
+          if (!catalog) return `<span class="source">${source}</span>`;
+          return `<a href="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=${catalog}" target="_blank" class="source">${source}</a>`;
+      }
+ 
+          
+       function displayYouthIndicators(data) {
             // Merge manual data with VizieR data
             const manualData = getManualYouthData(targetData);
             const mergedData = {
@@ -2535,20 +2540,26 @@ DATA SOURCES:
 
                     const starDist = 1000 / star.parallax;
 
-                    const dra = (star.ra - targetData.ra) * Math.cos(targetData.dec * Math.PI / 180);
-                    const ddec = star.dec - targetData.dec;
-                    const angSep = Math.sqrt(dra * dra + ddec * ddec);
+                     function angularSeparation(ra1, dec1, ra2, dec2) {
+                         const deg2rad = Math.PI / 180.0;
+                         const ra1r = ra1 * deg2rad;
+                         const dec1r = dec1 * deg2rad;
+                         const ra2r = ra2 * deg2rad;
+                         const dec2r = dec2 * deg2rad;
+                         
+                         const sdlat = Math.sin((dec2r - dec1r) / 2);
+                         const sdlon = Math.sin((ra2r - ra1r) / 2);
+                         const a = sdlat * sdlat + Math.cos(dec1r) * Math.cos(dec2r) * sdlon * sdlon;
+                         const c = 2 * Math.asin(Math.sqrt(a));
+                         
+                         return c * 180.0 / Math.PI;  // Returns degrees
+                     }
 
                      const angSepRad = angSep * Math.PI / 180;
                      const sep3d = Math.sqrt(
                          starDist * starDist + targetDist * targetDist - 
                          2 * starDist * targetDist * Math.cos(angSepRad)
                      );
-
-                    const sep3d = Math.sqrt(
-                        Math.pow(starDist - targetDist, 2) +
-                        Math.pow(angSep * Math.PI / 180 * targetDist, 2)
-                    );
 
                     if (sep3d > searchRadius) continue;
 
@@ -2924,43 +2935,44 @@ DATA SOURCES:
             const tbody = document.getElementById('results-tbody');
             document.getElementById('candidate-count').textContent = `${candidates.length} stars`;
 
-            tbody.innerHTML = candidates.map(c => `
-                <tr class="${c.sep_3d < 0.001 ? 'target-row' : ''}">
-                    <td>${c.index}</td>
-                    <td>${c.source_id}</td>
-                    <td>${c.ra?.toFixed(5) || ''}</td>
-                    <td>${c.dec?.toFixed(5) || ''}</td>
-                    <td>${c.phot_g_mean_mag?.toFixed(3) || ''}</td>
-                    <td>${c.bp_rp?.toFixed(3) || ''}</td>
-                    <td>${c.voff?.toFixed(2) || ''}</td>
-                    <td>${c.sep_deg?.toFixed(5) || ''}</td>
-                    <td>${c.sep_3d?.toFixed(4) || ''}</td>
-                    <td>${c.rv_pred?.toFixed(2) || ''}</td>
-                    <td>${c.radial_velocity?.toFixed(2) || ''}</td>
-                    <td>${c.spt}</td>
-                    <td>${c.ruwe?.toFixed(2) || ''}</td>
-                </tr>
-            `).join('');
-        }
 
-        function downloadCSV() {
-            if (searchResults.length === 0) return;
-            const headers = ['Index', 'Gaia_DR3_source_id', 'RA', 'Dec', 'Gmag', 'Bp-Rp', 'Voff_km_s', 'Sep_deg', 'Sep3D_pc', 'SpT', 'RUWE'];
-            const rows = searchResults.map(c => [
-                c.index, 
-                c.source_id, 
-                c.ra?.toFixed(9),  // Full Gaia precision
-                c.dec?.toFixed(9), 
-                c.phot_g_mean_mag?.toFixed(4), 
-                c.bp_rp?.toFixed(4), 
-                c.voff?.toFixed(4), 
-                c.sep_deg?.toFixed(7), 
-                c.sep_3d?.toFixed(5), 
-                c.rv_pred?.toFixed(3),
-                c.radial_velocity?.toFixed(3),
-                c.spt, 
-                c.ruwe?.toFixed(3)
-            ].join(','));
+         tbody.innerHTML = candidates.map(c => `
+             <tr class="${c.sep_3d < 0.001 ? 'target-row' : ''}">
+                 <td>${c.index}</td>
+                 <td>${c.source_id}</td>
+                 <td>${c.ra?.toFixed(7) || ''}</td>
+                 <td>${c.dec?.toFixed(7) || ''}</td>
+                 <td>${c.phot_g_mean_mag?.toFixed(4) || ''}</td>
+                 <td>${c.bp_rp?.toFixed(4) || ''}</td>
+                 <td>${c.voff?.toFixed(3) || ''}</td>
+                 <td>${c.sep_deg?.toFixed(6) || ''}</td>
+                 <td>${c.sep_3d?.toFixed(4) || ''}</td>
+                 <td>${c.rv_pred?.toFixed(2) || ''}</td>
+                 <td>${c.radial_velocity?.toFixed(2) || ''}</td>
+                 <td>${c.spt}</td>
+                 <td>${c.ruwe?.toFixed(2) || ''}</td>
+             </tr>
+         `).join('');
+        }
+         function downloadCSV() {
+             if (searchResults.length === 0) return;
+             // Updated headers to match data
+             const headers = ['Index', 'Gaia_DR3_source_id', 'RA', 'Dec', 'Gmag', 'Bp-Rp', 'Voff_km_s', 'Sep_deg', 'Sep3D_pc', 'RV_pred', 'RV_obs', 'SpT', 'RUWE'];
+             const rows = searchResults.map(c => [
+                 c.index, 
+                 c.source_id, 
+                 c.ra?.toFixed(9),
+                 c.dec?.toFixed(9), 
+                 c.phot_g_mean_mag?.toFixed(4), 
+                 c.bp_rp?.toFixed(4), 
+                 c.voff?.toFixed(4), 
+                 c.sep_deg?.toFixed(7), 
+                 c.sep_3d?.toFixed(5), 
+                 c.rv_pred?.toFixed(3),
+                 c.radial_velocity?.toFixed(3),
+                 c.spt, 
+                 c.ruwe?.toFixed(3)
+             ].join(','));
             const csv = [headers.join(','), ...rows].join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
