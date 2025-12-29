@@ -1706,17 +1706,21 @@ DATA SOURCES:
                 FORMAT: 'json',
                 QUERY: vizierQuery
             });
-
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: params
             });
-
+            
             if (!response.ok) throw new Error('Gaia query failed');
-
-            const data = await response.json();
-
+            
+            // Get response as text first, then convert large integers to strings
+            // to preserve precision for Gaia source_ids (19 digits)
+            let text = await response.text();
+            text = text.replace(/([:\[,]\s*)(\d{16,})(\s*[,\}\]])/g, '$1"$2"$3');
+            const data = JSON.parse(text);
+           
             if (data.metadata) {
                 const reverseMapping = {};
                 for (const [esa, viz] of Object.entries(colMapping)) {
@@ -2520,10 +2524,13 @@ DATA SOURCES:
                 const neighborCols = neighborResult.metadata.map(m => m.name);
                 const candidates = [];
 
-                for (const nrow of neighborResult.data) {
-                    const star = {};
-                    neighborCols.forEach((col, i) => { star[col.toLowerCase()] = nrow[i]; });
-
+               for (const nrow of neighborResult.data) {
+                   const star = {};
+                   neighborCols.forEach((col, i) => {
+                       const colName = col.toLowerCase();
+                       star[colName] = (colName === 'source_id') ? String(nrow[i]) : nrow[i];
+                   });
+                   
                     if (!star.parallax || star.parallax <= 0) continue;
 
                     const starDist = 1000 / star.parallax;
