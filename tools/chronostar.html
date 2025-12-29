@@ -2538,6 +2538,13 @@ DATA SOURCES:
                     const dra = (star.ra - targetData.ra) * Math.cos(targetData.dec * Math.PI / 180);
                     const ddec = star.dec - targetData.dec;
                     const angSep = Math.sqrt(dra * dra + ddec * ddec);
+
+                     const angSepRad = angSep * Math.PI / 180;
+                     const sep3d = Math.sqrt(
+                         starDist * starDist + targetDist * targetDist - 
+                         2 * starDist * targetDist * Math.cos(angSepRad)
+                     );
+
                     const sep3d = Math.sqrt(
                         Math.pow(starDist - targetDist, 2) +
                         Math.pow(angSep * Math.PI / 180 * targetDist, 2)
@@ -2582,7 +2589,7 @@ DATA SOURCES:
             const dpmra = star.pmra - target.pmra;
             const dpmdec = star.pmdec - target.pmdec;
             const dist = 1000 / star.parallax;
-            return Math.sqrt(dpmra * dpmra + dpmdec * dpmdec) * 4.74 * dist / 1000;
+            return Math.sqrt(dpmra * dpmra + dpmdec * dpmdec) * 4.74047 * dist / 1000;
         }
 
         // Compute predicted RV for a comoving candidate
@@ -2926,10 +2933,10 @@ DATA SOURCES:
                     <td>${c.phot_g_mean_mag?.toFixed(3) || ''}</td>
                     <td>${c.bp_rp?.toFixed(3) || ''}</td>
                     <td>${c.voff?.toFixed(2) || ''}</td>
-                    <td>${c.sep_deg?.toFixed(4) || ''}</td>
-                    <td>${c.sep_3d?.toFixed(3) || ''}</td>
-                    <td>${c.rv_pred?.toFixed(1) || ''}</td>
-                    <td>${c.radial_velocity?.toFixed(1) || ''}</td>
+                    <td>${c.sep_deg?.toFixed(5) || ''}</td>
+                    <td>${c.sep_3d?.toFixed(4) || ''}</td>
+                    <td>${c.rv_pred?.toFixed(2) || ''}</td>
+                    <td>${c.radial_velocity?.toFixed(2) || ''}</td>
                     <td>${c.spt}</td>
                     <td>${c.ruwe?.toFixed(2) || ''}</td>
                 </tr>
@@ -2939,7 +2946,21 @@ DATA SOURCES:
         function downloadCSV() {
             if (searchResults.length === 0) return;
             const headers = ['Index', 'Gaia_DR3_source_id', 'RA', 'Dec', 'Gmag', 'Bp-Rp', 'Voff_km_s', 'Sep_deg', 'Sep3D_pc', 'SpT', 'RUWE'];
-            const rows = searchResults.map(c => [c.index, c.source_id, c.ra?.toFixed(7), c.dec?.toFixed(7), c.phot_g_mean_mag?.toFixed(3), c.bp_rp?.toFixed(3), c.voff?.toFixed(3), c.sep_deg?.toFixed(5), c.sep_3d?.toFixed(4), c.spt, c.ruwe?.toFixed(3)].join(','));
+            const rows = searchResults.map(c => [
+                c.index, 
+                c.source_id, 
+                c.ra?.toFixed(9),  // Full Gaia precision
+                c.dec?.toFixed(9), 
+                c.phot_g_mean_mag?.toFixed(4), 
+                c.bp_rp?.toFixed(4), 
+                c.voff?.toFixed(4), 
+                c.sep_deg?.toFixed(7), 
+                c.sep_3d?.toFixed(5), 
+                c.rv_pred?.toFixed(3),
+                c.radial_velocity?.toFixed(3),
+                c.spt, 
+                c.ruwe?.toFixed(3)
+            ].join(','));
             const csv = [headers.join(','), ...rows].join('\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
