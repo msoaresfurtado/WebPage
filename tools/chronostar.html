@@ -2588,8 +2588,8 @@ DATA SOURCES:
         function computeVelocityDiff(star, target) {
             const dpmra = star.pmra - target.pmra;
             const dpmdec = star.pmdec - target.pmdec;
-            const dist = 1000 / star.parallax;
-            return Math.sqrt(dpmra * dpmra + dpmdec * dpmdec) * 4.74047 * dist / 1000;
+            const dist = 1000.0 / star.parallax;
+            return Math.sqrt(dpmra * dpmra + dpmdec * dpmdec) * 4.74047 * dist / 1000.0;
         }
 
         // Compute predicted RV for a comoving candidate
