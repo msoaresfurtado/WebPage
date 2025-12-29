@@ -2528,6 +2528,20 @@ DATA SOURCES:
 
                 const neighborCols = neighborResult.metadata.map(m => m.name);
                 const candidates = [];
+               function angularSeparation(ra1, dec1, ra2, dec2) {
+                   const deg2rad = Math.PI / 180.0;
+                   const ra1r = ra1 * deg2rad;
+                   const dec1r = dec1 * deg2rad;
+                   const ra2r = ra2 * deg2rad;
+                   const dec2r = dec2 * deg2rad;
+                   
+                   const sdlat = Math.sin((dec2r - dec1r) / 2);
+                   const sdlon = Math.sin((ra2r - ra1r) / 2);
+                   const a = sdlat * sdlat + Math.cos(dec1r) * Math.cos(dec2r) * sdlon * sdlon;
+                   const c = 2 * Math.asin(Math.sqrt(a));
+                   
+                   return c * 180.0 / Math.PI;  // Returns degrees
+               }
 
                for (const nrow of neighborResult.data) {
                    const star = {};
@@ -2539,22 +2553,6 @@ DATA SOURCES:
                     if (!star.parallax || star.parallax <= 0) continue;
 
                     const starDist = 1000 / star.parallax;
-
-                     function angularSeparation(ra1, dec1, ra2, dec2) {
-                         const deg2rad = Math.PI / 180.0;
-                         const ra1r = ra1 * deg2rad;
-                         const dec1r = dec1 * deg2rad;
-                         const ra2r = ra2 * deg2rad;
-                         const dec2r = dec2 * deg2rad;
-                         
-                         const sdlat = Math.sin((dec2r - dec1r) / 2);
-                         const sdlon = Math.sin((ra2r - ra1r) / 2);
-                         const a = sdlat * sdlat + Math.cos(dec1r) * Math.cos(dec2r) * sdlon * sdlon;
-                         const c = 2 * Math.asin(Math.sqrt(a));
-                         
-                         return c * 180.0 / Math.PI;  // Returns degrees
-                     }
-
             
                      const angSep = angularSeparation(targetData.ra, targetData.dec, star.ra, star.dec);
                      const angSepRad = angSep * Math.PI / 180;  // <-- ADD THIS LINE
