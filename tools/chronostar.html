@@ -1,3103 +1,506 @@
-<!DOCTYPE html>
-<!--
-================================================================================
-CHRONOSTAR - DEVELOPMENT NOTES & CHANGE LOG
-================================================================================
-
-CHANGE LOG:
------------
-v2.1 (Current):
-1. CMD isochrones now use REAL PARSEC data (100 Myr and 1 Gyr, [M/H]=0)
-   - Data from PARSEC v1.2S + COLIBRI (CMD 3.7)
-   - Gaia DR2 photometric system (Weiler 2018 passbands)
-   - Source files: parsec100MyrMH0.dat, parsec1GyrMH0.dat
-2. Removed x=0 and y=0 zeroline emphasis in CMD plot
-3. Default search radius changed from 10 pc to 5 pc
-4. "Advanced Options" redesigned as clearer dropdown with arrow indicator
-5. Galactic coordinate plot uses Gaia DR3 MW edge-on image as background
-   - Image: https://raw.githubusercontent.com/msoaresfurtado/WebPage/main/tools/MW_edgeon_edr3_unannotate.jpg
-
-FUTURE CHANGES TO IMPLEMENT:
-----------------------------
-- [Add notes here for next iteration]
-
-DATA SOURCES:
--------------
-- PARSEC isochrones: http://stev.oapd.inaf.it/cmd
-- Gaia DR3: VizieR I/355/gaiadr3
-- Youth indicators: Various VizieR catalogs
-- Li catalogs include: J/A+A/504/829/cbssb (Gonzalez+2009)
-
-================================================================================
--->
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChronoStar - Stellar Age Analysis</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.min.css" />
-    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-    <script type="text/javascript" src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
-    <style>
-        :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-tertiary: #1f2937;
-            --text-primary: #f0f4f8;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --accent-blue: #3b82f6;
-            --accent-cyan: #22d3ee;
-            --accent-purple: #a78bfa;
-            --accent-orange: #fb923c;
-            --accent-green: #4ade80;
-            --accent-red: #f87171;
-            --border-color: #374151;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.8), transparent),
-                radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.5), transparent),
-                radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.6), transparent),
-                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
-                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.7), transparent),
-                radial-gradient(1.5px 1.5px at 160px 120px, rgba(34,211,238,0.9), transparent),
-                radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.5), transparent),
-                radial-gradient(1px 1px at 250px 180px, rgba(255,255,255,0.6), transparent),
-                radial-gradient(1px 1px at 300px 90px, rgba(255,255,255,0.4), transparent),
-                radial-gradient(1.5px 1.5px at 350px 140px, rgba(167,139,250,0.8), transparent);
-            background-size: 400px 200px;
-            pointer-events: none;
-            z-index: -1;
-            opacity: 0.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            padding: 1.25rem 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.25rem;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            font-weight: 300;
-        }
-
-        .subtitle a, .header-attribution a {
-            color: var(--accent-cyan);
-            text-decoration: none;
-        }
-
-        .header-attribution {
-            margin-top: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .header-attribution a {
-            color: var(--accent-purple);
-        }
-
-        .search-section {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .input-group {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-            align-items: flex-end;
-        }
-
-        .input-field {
-            flex: 1;
-            min-width: 380px;
-        }
-
-        .input-field label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 0.35rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .input-field input,
-        .input-field select {
-            width: 100%;
-            padding: 0.65rem 0.85rem;
-            font-size: 0.95rem;
-            font-family: 'IBM Plex Mono', monospace;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-            transition: all 0.2s ease;
-        }
-
-        .input-field input:focus,
-        .input-field select:focus {
-            outline: none;
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
-        }
-
-        .input-field input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .btn {
-            padding: 0.65rem 1.5rem;
-            font-size: 0.95rem;
-            font-weight: 500;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--border-color);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-        }
-
-        .status-bar {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            background: var(--bg-tertiary);
-            border-radius: 6px;
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.8rem;
-            display: none;
-        }
-
-        .status-bar.visible {
-            display: block;
-        }
-
-        .status-bar .status-text {
-            color: var(--accent-cyan);
-        }
-
-        .status-bar.error .status-text {
-            color: var(--error);
-        }
-
-        .status-bar.success .status-text {
-            color: var(--success);
-        }
-
-        .results-section {
-            display: none;
-        }
-
-        .results-section.visible {
-            display: block;
-        }
-
-        .results-grid {
-            display: grid;
-            grid-template-columns: 1fr 420px;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            align-items: stretch;
-        }
-
-        .results-grid > .panel {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .results-grid > .panel > .panel-body {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .results-grid > .panel > .panel-body #aladin-lite-div {
-            flex: 1;
-            min-height: 300px;
-        }
-
-        @media (max-width: 1000px) {
-            .results-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .panel {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 0.75rem 1rem;
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .panel-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .panel-title .icon {
-            width: 18px;
-            height: 18px;
-            opacity: 0.8;
-        }
-
-        .panel-body {
-            padding: 0.75rem;
-        }
-
-        .target-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 0.5rem;
-        }
-
-        .info-item {
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-tertiary);
-            border-radius: 6px;
-        }
-
-        .info-item .label {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            margin-bottom: 0.15rem;
-        }
-
-        .info-item .value {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 0.9rem;
-            color: var(--text-primary);
-        }
-
-        .info-item .value.highlight {
-            color: var(--accent-cyan);
-        }
-
-        .plot-container {
-            width: 100%;
-            height: 500px;
-            background: var(--bg-primary);
-            border-radius: 8px;
-        }
-
-
-        .cmd-plot-container {
-            width: 100%;
-            max-width: 420px;
-            height: 600px;
-            margin: 0 auto;
-        }
-
-
-        .galactic-plot-container {
-            width: 100%;
-            height: 265px;
-        }
-
-        .toomre-plot-container {
-            width: 100%;
-            height: 320px;
-        }
-
-        .data-table-wrapper {
-            max-height: 400px;
-            overflow: auto;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .data-table th {
-            position: sticky;
-            top: 0;
-            background: var(--bg-tertiary);
-            padding: 0.75rem 1rem;
-            text-align: left;
-            font-weight: 500;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        .data-table td {
-            padding: 0.625rem 1rem;
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        .data-table tr:hover td {
-            background: var(--bg-tertiary);
-        }
-
-        .data-table .target-row {
-            background: rgba(34, 211, 238, 0.1);
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 0.125rem 0.5rem;
-            font-size: 0.75rem;
-            border-radius: 4px;
-            font-weight: 500;
-        }
-
-        .badge-success {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success);
-        }
-
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.2);
-            color: var(--warning);
-        }
-
-        .badge-info {
-            background: rgba(59, 130, 246, 0.2);
-            color: var(--accent-blue);
-        }
-
-        .full-width-panel {
-            grid-column: 1 / -1;
-        }
-
-        .download-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .youth-indicators-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .youth-indicator-panel {
-            padding: 0.75rem;
-            border-radius: 8px;
-            border-left: 3px solid;
-        }
-
-        .youth-indicator-panel.li-panel {
-            background: rgba(251, 146, 60, 0.1);
-            border-left-color: var(--accent-orange);
-        }
-
-        .youth-indicator-panel.prot-panel {
-            background: rgba(34, 197, 94, 0.1);
-            border-left-color: var(--accent-green);
-        }
-
-        .youth-indicator-panel.rhk-panel {
-            background: rgba(168, 85, 247, 0.1);
-            border-left-color: var(--accent-purple);
-        }
-
-        .youth-indicator-panel.lx-panel {
-            background: rgba(34, 211, 238, 0.1);
-            border-left-color: var(--accent-cyan);
-        }
-
-        .youth-indicator-panel h4 {
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .youth-indicator-panel.li-panel h4 { color: var(--accent-orange); }
-        .youth-indicator-panel.prot-panel h4 { color: var(--accent-green); }
-        .youth-indicator-panel.rhk-panel h4 { color: var(--accent-purple); }
-        .youth-indicator-panel.lx-panel h4 { color: var(--accent-cyan); }
-
-        .youth-indicator-values {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .youth-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-tertiary);
-            border-radius: 6px;
-            font-size: 0.85rem;
-        }
-
-        .youth-item .value {
-            font-family: 'IBM Plex Mono', monospace;
-            font-weight: 500;
-        }
-
-        .youth-item .value.li-color { color: var(--accent-orange); }
-        .youth-item .value.prot-color { color: var(--accent-green); }
-        .youth-item .value.rhk-color { color: var(--accent-purple); }
-        .youth-item .value.lx-color { color: var(--accent-cyan); }
-
-        .youth-item .source {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            max-width: 130px;
-            text-align: right;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .youth-item a.source {
-            color: var(--accent-cyan);
-            text-decoration: none;
-        }
-
-        .youth-item a.source:hover {
-            color: var(--text-primary);
-            text-decoration: underline;
-        }
-
-        .youth-item .error {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-        }
-
-        .youth-item .catalog-id {
-            font-size: 0.65rem;
-            color: var(--text-secondary);
-            background: rgba(255,255,255,0.1);
-            padding: 0.1rem 0.3rem;
-            border-radius: 3px;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .no-data {
-            color: var(--text-muted);
-            font-style: italic;
-            padding: 0.5rem;
-            text-align: center;
-        }
-
-        .walking-loader {
-            position: relative;
-            height: 28px;
-            margin-bottom: 0.25rem;
-            overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .walking-loader.active {
-            opacity: 1;
-        }
-
-        .walking-emoji {
-            position: absolute;
-            font-size: 1.4rem;
-            top: 50%;
-            transform: translateY(-50%);
-            animation: flyAcross 25s linear infinite;
-        }
-
-        .walking-emoji::after {
-            content: '· · ✦';
-            position: absolute;
-            right: 100%;
-            bottom: -2px;
-            margin-right: 2px;
-            font-size: 0.7rem;
-            opacity: 0.5;
-            animation: trailFade 25s linear infinite;
-            white-space: nowrap;
-            letter-spacing: 3px;
-            color: var(--accent-cyan);
-        }
-
-        @keyframes flyAcross {
-            0% { left: -8%; transform: translateY(-50%) scaleX(1); }
-            48% { left: 100%; transform: translateY(-50%) scaleX(1); }
-            50% { left: 100%; transform: translateY(-50%) scaleX(-1); }
-            98% { left: -8%; transform: translateY(-50%) scaleX(-1); }
-            100% { left: -8%; transform: translateY(-50%) scaleX(1); }
-        }
-
-        @keyframes trailFade {
-            0%, 48% { opacity: 0.4; }
-            49%, 51% { opacity: 0; }
-            52%, 98% { opacity: 0.4; }
-            99%, 100% { opacity: 0; }
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid transparent;
-            border-top-color: currentColor;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .progress-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-        }
-
-        .progress-step {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .progress-step .check { color: var(--success); }
-        .progress-step .pending { color: var(--text-muted); }
-        .progress-step .active { color: var(--accent-cyan); }
-
-        .advanced-toggle {
-            margin-top: 1rem;
-            padding: 0.6rem 1rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-        }
-
-        .advanced-toggle:hover {
-            color: var(--text-primary);
-            border-color: var(--accent-cyan);
-        }
-
-        .advanced-toggle .toggle-arrow {
-            transition: transform 0.3s ease;
-        }
-
-        .advanced-toggle.expanded .toggle-arrow {
-            transform: rotate(180deg);
-        }
-
-        .advanced-options {
-            display: none;
-            margin-top: 1rem;
-            padding: 1rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-        }
-
-        .advanced-options.visible {
-            display: block;
-        }
-
-        .small-inputs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-        }
-
-        .small-inputs .input-field {
-            min-width: auto;
-        }
-
-        #aladin-lite-div {
-            width: 100%;
-            height: 100%;
-            min-height: 350px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .aladin-fov-info {
-            margin-top: 0.75rem;
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-tertiary);
-            border-radius: 6px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .aladin-fov-info .fov-value {
-            color: var(--accent-cyan);
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .external-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-            margin-top: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .external-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.35rem 0.6rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        .external-link:hover {
-            background: var(--border-color);
-            border-color: var(--accent-cyan);
-            color: var(--text-primary);
-        }
-
-        .external-link svg {
-            width: 12px;
-            height: 12px;
-            opacity: 0.7;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            border-top: 1px solid var(--border-color);
-            margin-top: 3rem;
-        }
-
-        footer a {
-            color: var(--accent-cyan);
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        .youth-cmd-container {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            align-items: flex-start;
-        }
-
-        .youth-cmd-container .left-panels {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .youth-cmd-container .cmd-column {
-            flex: 0 0 auto;
-            width: 420px;
-            max-width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .youth-cmd-container .cmd-panel {
-            flex: 0 0 auto;
-        }
-
-        @media (max-width: 1100px) {
-            .youth-cmd-container {
-                flex-direction: column;
-            }
-            .youth-cmd-container .cmd-column {
-                width: 100%;
-            }
-        }
-        .gyro-plot-container {
-            max-width: 800px;
-            height: 450px;
-            margin: 0 auto;
-        }
-
-        .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.35rem;
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .action-buttons .btn-small {
-            padding: 0.35rem 0.6rem;
-            font-size: 0.75rem;
-            gap: 0.3rem;
-            border-radius: 4px;
-            background: rgba(59, 130, 246, 0.15);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: var(--accent-blue);
-        }
-
-        .action-buttons .btn-small:hover:not(:disabled) {
-            background: rgba(59, 130, 246, 0.25);
-            border-color: var(--accent-blue);
-        }
-
-        .action-buttons .btn-small svg {
-            width: 12px;
-            height: 12px;
-        }
-
-        .exoplanet-alert {
-            background: rgba(251, 191, 36, 0.15);
-            border: 1px solid var(--accent-orange);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 0.75rem;
-        }
-
-        .exoplanet-alert-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--accent-orange);
-            font-weight: 600;
-        }
-
-        .tess-info {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid var(--accent-blue);
-            border-radius: 6px;
-            padding: 0.75rem;
-            margin-top: 0.5rem;
-        }
-
-        .tess-info-header {
-            color: var(--accent-blue);
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 0.25rem;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Convergent Point RV + Identifier Resolver</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 20px; line-height: 1.35; }
+    h1 { font-size: 20px; margin: 0 0 14px; }
+    h2 { font-size: 16px; margin: 18px 0 10px; }
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 10px; }
+    .card { border: 1px solid rgba(127,127,127,0.35); border-radius: 10px; padding: 14px; background: rgba(127,127,127,0.06); }
+    .row { display: grid; grid-template-columns: 170px 1fr; gap: 10px; align-items: center; margin: 8px 0; }
+    label { font-size: 13px; opacity: 0.9; }
+    input, textarea, select, button {
+      width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid rgba(127,127,127,0.35); background: transparent; font: inherit;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    button { cursor: pointer; }
+    .muted { opacity: 0.7; font-size: 12px; }
+    .out { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 13px; white-space: pre-wrap; }
+    .col-6 { grid-column: span 6; }
+    .col-12 { grid-column: span 12; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(127,127,127,0.35); font-size: 12px; opacity: 0.85; }
+    .err { color: #c0392b; }
+    .ok { color: #2ecc71; }
+    @media (max-width: 900px) { .col-6 { grid-column: span 12; } .row { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>ChronoStar</h1>
-            <p class="subtitle">Stellar age analysis via youth indicators, kinematics, & CMD position </p>
-        </header>
+  <h1>Convergent Point RV Predictor + Identifier Resolver</h1>
 
-        <section class="search-section">
-            <div class="walking-loader" id="walking-loader">
-                <span class="walking-emoji">🛰️</span>
-            </div>
-            <div class="input-group">
-                <div class="input-field">
-                    <label for="target-id">Target (Gaia DR3 ID or SIMBAD Name)</label>
-                    <input type="text" id="target-id" placeholder="e.g., 2007420940415412352, TOI 811, HD 63433, TOI-5882" />
-                </div>
-                <button class="btn btn-primary" id="search-btn" onclick="runSearch()">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                    </svg>
-                    Search
-                </button>
-            </div>
+  <div class="grid">
+    <div class="card col-6">
+      <h2>Convergent point RV</h2>
 
+      <div class="row">
+        <label for="raDeg">Star RA (deg)</label>
+        <input id="raDeg" type="number" step="any" value="120.0" />
+      </div>
+      <div class="row">
+        <label for="decDeg">Star Dec (deg)</label>
+        <input id="decDeg" type="number" step="any" value="10.0" />
+      </div>
 
-            <div class="status-bar" id="status-bar">
-                <span class="status-text" id="status-text"></span>
-                <div class="progress-steps" id="progress-steps"></div>
-            </div>
-        </section>
+      <div class="row">
+        <label for="parallaxMas">Parallax (mas)</label>
+        <input id="parallaxMas" type="number" step="any" value="10.0" />
+      </div>
+      <div class="row">
+        <label for="distancePc">Distance (pc) (optional)</label>
+        <input id="distancePc" type="number" step="any" placeholder="Overrides parallax if set" />
+      </div>
 
-        <section class="results-section" id="results-section">
-            <!-- Target Info and Sky View -->
-            <div class="results-grid">
-                <div class="panel">
-                    <div class="panel-header">
-                        <span class="panel-title">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                            Target Star
-                        </span>
-                    </div>
-                    <div class="panel-body">
-                        <div class="target-info" id="target-info"></div>
-                        <div class="external-links" id="external-links"></div>
-                        <div class="action-buttons" id="action-buttons">
-                            <button class="btn btn-secondary btn-small" id="btn-tess" onclick="searchTESSSectors()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M12 6v6l4 2"></path>
-                                </svg>
-                                TESS Sectors
-                            </button>
-                            <button class="btn btn-secondary btn-small" id="btn-exoplanet" onclick="checkExoplanetArchive()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                                Check Exoplanets
-                            </button>
-                            <button class="btn btn-secondary btn-small" id="btn-youth" onclick="searchYouthIndicators()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2v20M2 12h20"></path>
-                                </svg>
-                                Youth Indicators
-                            </button>
-                            <button class="btn btn-secondary btn-small" id="btn-comoving" onclick="runComovingSearch()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <circle cx="4" cy="4" r="2"></circle>
-                                    <circle cx="20" cy="4" r="2"></circle>
-                                    <circle cx="4" cy="20" r="2"></circle>
-                                    <circle cx="20" cy="20" r="2"></circle>
-                                </svg>
-                                Comoving Search
-                            </button>
-                          </div>
-                          <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()" style="margin-top: 0.75rem;">
-                              <svg class="toggle-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                  <polyline points="6 9 12 15 18 9"></polyline>
-                              </svg>
-                              Comoving Search Options
-                          </div>
-                          <div class="advanced-options" id="advanced-options">
-                              <div class="small-inputs">
-                                  <div class="input-field">
-                                      <label for="velocity-limit">Velocity Limit (km/s)</label>
-                                      <input type="number" id="velocity-limit" value="5.0" step="0.5" />
-                                  </div>
-                                  <div class="input-field">
-                                      <label for="search-radius">Search Radius (pc)</label>
-                                      <input type="number" id="search-radius" value="5" step="5" />
-                                  </div>
-                                  <div class="input-field">
-                                      <label for="rv-cut">RV Cut (km/s)</label>
-                                      <input type="number" id="rv-cut" value="5.0" step="0.5" />
-                                  </div>
-                              </div>
-                          </div>
-                          <div id="tess-info-container"></div>                        <div id="exoplanet-alert"></div>
-                    </div>
-                </div>
+      <div class="row">
+        <label for="pmRaMasYr">pmRA* (mas/yr) (optional)</label>
+        <input id="pmRaMasYr" type="number" step="any" value="40.0" />
+      </div>
+      <div class="row">
+        <label for="pmDecMasYr">pmDec (mas/yr) (optional)</label>
+        <input id="pmDecMasYr" type="number" step="any" value="-15.0" />
+      </div>
 
+      <hr style="border:none;border-top:1px solid rgba(127,127,127,0.25);margin:14px 0;"/>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <span class="panel-title">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                            </svg>
-                            Sky View
-                        </span>
-                    </div>
-                    <div class="panel-body">
-                        <div id="aladin-lite-div"></div>
-                        <div class="aladin-fov-info" id="aladin-fov-info">
-                            Field of view: <span class="fov-value" id="fov-value">--</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div class="row">
+        <label for="cpRaDeg">CP RA (deg)</label>
+        <input id="cpRaDeg" type="number" step="any" value="90.0" />
+      </div>
+      <div class="row">
+        <label for="cpDecDeg">CP Dec (deg)</label>
+        <input id="cpDecDeg" type="number" step="any" value="20.0" />
+      </div>
 
-            <!-- Galactic + Youth Indicators + CMD -->
-            <div class="youth-cmd-container">
-                <div class="left-panels">
-                    <!-- Galactic Position Map -->
-                    <div class="panel" style="margin-bottom: 1rem;">
-                        <div class="panel-header">
-                            <span class="panel-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <ellipse cx="12" cy="12" rx="10" ry="4"></ellipse>
-                                    <path d="M12 2v20"></path>
-                                </svg>
-                                Galactic Position
-                            </span>
-                            <button class="btn btn-secondary btn-small" onclick="downloadGalacticPlot()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                PNG
-                            </button>
-                        </div>
-                        <div class="panel-body">
-                            <div class="galactic-plot-container" id="galactic-plot"></div>
-                        </div>
-                    </div>
+      <div class="row">
+        <label for="speedMode">Group speed mode</label>
+        <select id="speedMode">
+          <option value="known" selected>Known group speed (V)</option>
+          <option value="fromMu">Infer V from muTowards</option>
+        </select>
+      </div>
 
-                    <!-- Youth Indicators -->
-                    <div class="panel">
-                        <div class="panel-header">
-                            <span class="panel-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2v20M2 12h20"></path>
-                                </svg>
-                                Youth Indicators
-                            </span>
-                        </div>
-                        <div class="panel-body">
-                            <div class="youth-indicators-grid" id="youth-indicators-grid">
-                                <div class="youth-indicator-panel li-panel">
-                                    <h4>EW(Li) - Lithium</h4>
-                                    <div class="youth-indicator-values" id="li-values">
-                                        <div class="no-data">Click "Youth Indicators" above to search</div>
-                                    </div>
-                                </div>
-                                <div class="youth-indicator-panel prot-panel">
-                                    <h4>P<sub>rot</sub> - Rotation</h4>
-                                    <div class="youth-indicator-values" id="rotation-results">
-                                        <div class="no-data">Searching automatically...</div>
-                                    </div>
-                                </div>
-                                <div class="youth-indicator-panel rhk-panel">
-                                    <h4>log(R'<sub>HK</sub>) - Activity</h4>
-                                    <div class="youth-indicator-values" id="rhk-results">
-                                        <div class="no-data">Click "Youth Indicators" above to search</div>
-                                    </div>
-                                </div>
-                                <div class="youth-indicator-panel lx-panel">
-                                    <h4>log(L<sub>X</sub>) - X-ray</h4>
-                                    <div class="youth-indicator-values" id="lx-results">
-                                        <div class="no-data">Click "Youth Indicators" above to search</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Gyrochronology Plot -->
-                        <div class="panel full-width-panel" id="gyro-panel" style="margin-bottom: 1rem; display: none;">
-                            <div class="panel-header">
-                                <span class="panel-title">
-                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                    Gyrochronology: P<sub>rot</sub> vs T<sub>eff</sub>
-                                </span>
-                                <button class="btn btn-secondary btn-small" onclick="downloadGyroPlot()">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                        <polyline points="7 10 12 15 17 10"></polyline>
-                                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                                    </svg>
-                                    PNG
-                                </button>
-                            </div>
-                            <div class="panel-body">
-                                <div class="gyro-plot-container" id="gyro-plot"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <div class="row" id="rowGroupSpeed">
+        <label for="groupSpeedKmS">Group speed V (km/s)</label>
+        <input id="groupSpeedKmS" type="number" step="any" value="20.0" />
+      </div>
 
-                <div class="cmd-column">
-                    <div class="panel cmd-panel">
-                        <div class="panel-header">
-                            <span class="panel-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 3v18h18"></path>
-                                    <circle cx="9" cy="9" r="2"></circle>
-                                    <circle cx="19" cy="5" r="2"></circle>
-                                    <circle cx="14" cy="14" r="2"></circle>
-                                </svg>
-                                CMD
-                            </span>
-                            <button class="btn btn-secondary btn-small" onclick="downloadPlot()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                PNG
-                            </button>
-                        </div>
-                        <div class="panel-body">
-                            <div class="cmd-plot-container" id="cmd-plot"></div>
-                        </div>
-                    </div>
+      <div class="row" id="rowMuTowards" style="display:none;">
+        <label for="muTowardsMasYr">muTowards (mas/yr)</label>
+        <input id="muTowardsMasYr" type="number" step="any" value="25.0" />
+      </div>
 
-                    <!-- Toomre Diagram -->
-                    <div class="panel" id="toomre-panel" style="display: none;">
-                        <div class="panel-header">
-                            <span class="panel-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M12 6v6l4 2"></path>
-                                </svg>
-                                Toomre Diagram
-                            </span>
-                            <button class="btn btn-secondary btn-small" onclick="downloadToomrePlot()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                PNG
-                            </button>
-                        </div>
-                        <div class="panel-body">
-                            <div class="toomre-plot-container" id="toomre-plot"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <div class="row">
+        <label for="rvObservedKmS">Observed RV (km/s) (optional)</label>
+        <input id="rvObservedKmS" type="number" step="any" placeholder="e.g. 15.2" value="15.2" />
+      </div>
 
+      <div class="row">
+        <div></div>
+        <button id="btnCompute">Compute</button>
+      </div>
 
-            <!-- Data Table -->
-            <div class="panel full-width-panel" id="comoving-panel" style="display: none;">
-                <div class="panel-header">
-                    <span class="panel-title">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                            <path d="M3 9h18M9 21V9"></path>
-                        </svg>
-                        Comoving Candidates
-                        <span class="badge badge-info" id="candidate-count">0 stars</span>
-                    </span>
-                    <button class="btn btn-secondary btn-small" onclick="downloadCSV()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        CSV
-                    </button>
-                </div>
-                <div class="panel-body">
-                    <div class="data-table-wrapper">
-                        <table class="data-table" id="results-table">
-                            <thead>
-                                <tr>
-                                    <th>Index</th>
-                                    <th>Gaia DR3 ID</th>
-                                    <th>RA</th>
-                                    <th>Dec</th>
-                                    <th>G mag</th>
-                                    <th>Bp-Rp</th>
-                                    <th>V<sub>off</sub> (km/s)</th>
-                                    <th>Sep (°)</th>
-                                    <th>Sep 3D (pc)</th>
-                                    <th>RV<sub>pred</sub></th>
-                                    <th>RV<sub>obs</sub></th>
-                                    <th>SpT</th>
-                                    <th>RUWE</th>
-                                </tr>
-                            </thead>
-                            <tbody id="results-tbody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
+      <div class="muted">
+        Predicted RV uses: <span class="pill">RV = V cos(λ)</span>. If inferring V from muTowards: <span class="pill">V = (4.74047 μ d)/sin(λ)</span>.
+      </div>
 
-      <footer>
-          <p> Made for the <a href="https://msoaresfurtado.com" target="_blank">Soares-Furtado Research Group</a>, UW-Madison</p>
-          <p style="margin-top: 0.5rem;">Comoving search via <a href="https://github.com/adamkraus/Comove" target="_blank">FriendFinder</a> | Please cite: <a href="https://ui.adsabs.harvard.edu/abs/2021AJ....161..171T" target="_blank">Tofflemire et al. (2021)</a></p>
-          <p style="margin-top: 0.5rem; color: var(--text-muted);">Data from <a href="https://vizier.cds.unistra.fr/viz-bin/VizieR-3?-source=I/355/gaiadr3" target="_blank">Gaia DR3</a>, <a href="https://simbad.cds.unistra.fr/" target="_blank">SIMBAD</a>, <a href="https://vizier.cds.unistra.fr/" target="_blank">VizieR</a> | Isochrones from <a href="http://stev.oapd.inaf.it/cmd" target="_blank">PARSEC</a></p>
-          <p style="margin-top: 0.5rem; color: var(--text-muted);">Built with <a href="https://plotly.com/javascript/" target="_blank">Plotly.js</a> and <a href="https://aladin.cds.unistra.fr/AladinLite/" target="_blank">Aladin Lite</a> | All queries run client-side in JavaScript</p>
-      </footer>
+      <div id="rvOutput" class="out" style="margin-top:10px;"></div>
+    </div>
 
-    <script>
-        // Global state
-        let searchResults = [];
-        let targetData = null;
-        let rotationPeriods = {};
-        let vizierYouthData = { ewli: [], prot: [], rhk: [], lx: [] };
-        let aladinViewer = null;
-        let ticInfo = null;
+    <div class="card col-6">
+      <h2>Identifier resolution</h2>
 
-        // Reference data
-        const sptMapping = [
-            { bprp: -0.037, spt: 'A0' },
-            { bprp: 0.377, spt: 'F0' },
-            { bprp: 0.782, spt: 'G0' },
-            { bprp: 0.980, spt: 'K0' },
-            { bprp: 1.84, spt: 'M0' },
-            { bprp: 2.50, spt: 'M3' },
-            { bprp: 3.36, spt: 'M5' },
-            { bprp: 4.75, spt: 'M7' }
-        ];
+      <div class="row">
+        <label for="idQuery">Query</label>
+        <input id="idQuery" type="text" value="TOI-04364" />
+      </div>
 
-        // Gyrochronology cluster data
-        const gyroClusterData = {
-            pleiades: {
-                age: 150, label: 'Pleiades (150 Myr)', color: '#3b82f6',
-                teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
-                prot: [0.5, 1.2, 2.0, 3.2, 4.5, 6.0, 7.5, 8.5, 7.0, 4.0, 1.8, 0.6],
-                scatter: [0.2, 0.4, 0.6, 0.9, 1.2, 1.5, 1.8, 2.2, 2.5, 2.0, 1.0, 0.4]
-            },
-            ngc3532: {
-                age: 300, label: 'NGC 3532 (300 Myr)', color: '#eab308',
-                teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
-                prot: [2.0, 3.5, 5.0, 7.0, 8.5, 10.0, 11.0, 11.5, 10.0, 6.5, 3.5, 1.5],
-                scatter: [0.5, 0.7, 0.9, 1.1, 1.4, 1.6, 1.9, 2.2, 2.5, 2.0, 1.3, 0.8]
-            },
-            ngc6811: {
-                age: 1000, label: 'NGC 6811 (1 Gyr)', color: '#f97316',
-                teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
-                prot: [5.0, 8.0, 11.0, 13.5, 15.0, 15.5, 15.0, 14.0, 12.0, 8.0, 4.0, 2.0],
-                scatter: [0.8, 1.0, 1.3, 1.6, 1.9, 2.1, 2.3, 2.6, 3.0, 2.5, 1.5, 1.0]
-            }
-        };
+      <div class="row">
+        <label for="candidates">Candidates (one per line)</label>
+        <textarea id="candidates">TOI-4364
+toi4364
+TOI-4364 b
+TIC 115595346
+KELT-20
+Kepler-1313
+TOI-7032
+TOI-5882</textarea>
+      </div>
 
-        function toggleAdvanced() {
-            document.getElementById('advanced-options').classList.toggle('visible');
-            document.getElementById('advanced-toggle').classList.toggle('expanded');
+      <div class="row">
+        <div></div>
+        <button id="btnResolve">Resolve</button>
+      </div>
+
+      <div class="muted">
+        Sorting prioritizes: exact(raw) → exact(normalized) → prefix → substring → Levenshtein similarity.
+      </div>
+
+      <div id="idOutput" class="out" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card col-12">
+      <h2>Extras: compute muTowards from pmRA/pmDec</h2>
+      <div class="muted">
+        If you provided pmRA* and pmDec above, this computes the component toward the convergent point using the position angle.
+      </div>
+      <div class="row">
+        <div></div>
+        <button id="btnMuTowards">Compute muTowards from pm</button>
+      </div>
+      <div id="muOutput" class="out"></div>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // Math + astro helpers
+    // =========================
+    const K_AU_PER_YR_KM_S = 4.74047;
+
+    function degToRad(deg) { return deg * Math.PI / 180.0; }
+    function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+
+    function angularSeparationRad(a, b) {
+      const ra1 = degToRad(a.raDeg);
+      const dec1 = degToRad(a.decDeg);
+      const ra2 = degToRad(b.raDeg);
+      const dec2 = degToRad(b.decDeg);
+
+      const s1 = Math.sin(dec1), c1 = Math.cos(dec1);
+      const s2 = Math.sin(dec2), c2 = Math.cos(dec2);
+      const dRa = ra2 - ra1;
+
+      const cosSep = clamp(s1 * s2 + c1 * c2 * Math.cos(dRa), -1, 1);
+      return Math.acos(cosSep);
+    }
+
+    // Position angle (east of north) of point b as seen from a, in radians [0,2π)
+    function positionAngleRad(a, b) {
+      const ra1 = degToRad(a.raDeg);
+      const dec1 = degToRad(a.decDeg);
+      const ra2 = degToRad(b.raDeg);
+      const dec2 = degToRad(b.decDeg);
+
+      const dRa = ra2 - ra1;
+      const y = Math.sin(dRa) * Math.cos(dec2);
+      const x = Math.cos(dec1) * Math.sin(dec2) - Math.sin(dec1) * Math.cos(dec2) * Math.cos(dRa);
+
+      let pa = Math.atan2(y, x);
+      if (pa < 0) pa += 2 * Math.PI;
+      return pa;
+    }
+
+    function getDistancePc(star) {
+      if (Number.isFinite(star.distancePc) && star.distancePc > 0) return star.distancePc;
+      if (Number.isFinite(star.parallaxMas) && star.parallaxMas > 0) return 1000.0 / star.parallaxMas;
+      throw new Error("Distance is required: provide distancePc or a positive parallaxMas.");
+    }
+
+    function computePredictedRVConvergent(star, model) {
+      const cp = { raDeg: model.raDeg, decDeg: model.decDeg };
+      const lambda = angularSeparationRad(star, cp);
+      const cosLambda = Math.cos(lambda);
+      const sinLambda = Math.sin(lambda);
+
+      let V;
+      if (model.groupSpeedFromMuTowards && model.groupSpeedFromMuTowards.muTowardsMasYr != null) {
+        if (Math.abs(sinLambda) < 1e-10) {
+          throw new Error("Convergent inversion unstable: sin(lambda) ~ 0 near CP/anti-CP. Provide groupSpeedKmS instead.");
         }
+        const dPc = getDistancePc(star);
+        const muArcsecYr = model.groupSpeedFromMuTowards.muTowardsMasYr / 1000.0;
+        const Vtan = K_AU_PER_YR_KM_S * muArcsecYr * dPc;
+        V = Vtan / sinLambda;
+      } else if (Number.isFinite(model.groupSpeedKmS)) {
+        V = model.groupSpeedKmS;
+      } else {
+        throw new Error("Model must provide either groupSpeedKmS or groupSpeedFromMuTowards.muTowardsMasYr.");
+      }
 
-        function setStatus(message, type = 'info') {
-            const statusBar = document.getElementById('status-bar');
-            const statusText = document.getElementById('status-text');
-            statusBar.classList.add('visible');
-            statusBar.classList.remove('error', 'success');
-            if (type === 'error') statusBar.classList.add('error');
-            if (type === 'success') statusBar.classList.add('success');
-            statusText.innerHTML = message;
+      return V * cosLambda;
+    }
+
+    function computeVelocityOffsetConvergent(rvObservedKmS, star, model) {
+      const rvPred = computePredictedRVConvergent(star, model);
+      return rvObservedKmS - rvPred;
+    }
+
+    function computeMuTowardsConvergentPointMasYr(star, cp) {
+      if (!Number.isFinite(star.pmRaMasYr) || !Number.isFinite(star.pmDecMasYr)) {
+        throw new Error("pmRaMasYr and pmDecMasYr are required to compute muTowards.");
+      }
+      const pa = positionAngleRad(star, cp); // east of north
+      const pmEast = star.pmRaMasYr;
+      const pmNorth = star.pmDecMasYr;
+      return pmNorth * Math.cos(pa) + pmEast * Math.sin(pa);
+    }
+
+    // =========================
+    // Identifier resolver
+    // =========================
+    function normalizeIdentifier(s) {
+      const lower = (s ?? "").trim().toLowerCase();
+      const stripped = lower.replace(/[\s._\-+/():,]/g, "");
+      return stripped.replace(/([a-z])0+(\d)/g, "$1$2");
+    }
+
+    function levenshtein(a, b) {
+      const n = a.length, m = b.length;
+      if (n === 0) return m;
+      if (m === 0) return n;
+
+      const dp = new Array(m + 1);
+      for (let j = 0; j <= m; j++) dp[j] = j;
+
+      for (let i = 1; i <= n; i++) {
+        let prevDiag = dp[0];
+        dp[0] = i;
+        for (let j = 1; j <= m; j++) {
+          const temp = dp[j];
+          const cost = (a[i - 1] === b[j - 1]) ? 0 : 1;
+          dp[j] = Math.min(
+            dp[j] + 1,
+            dp[j - 1] + 1,
+            prevDiag + cost
+          );
+          prevDiag = temp;
         }
+      }
+      return dp[m];
+    }
 
-        function updateProgress(steps) {
-            document.getElementById('progress-steps').innerHTML = steps.map(s => `
-                <div class="progress-step">
-                    <span class="${s.status}">${s.status === 'check' ? '✓' : s.status === 'active' ? '◉' : '○'}</span>
-                    ${s.text}
-                </div>
-            `).join('');
-        }
+    function similarityFromDistance(a, b, dist) {
+      const denom = Math.max(1, Math.max(a.length, b.length));
+      return 1.0 - dist / denom;
+    }
 
-        // Manual youth indicator data for targets not yet in VizieR catalogs
-        const manualYouthData = {
-            'TOI-811': {
-                ewli: [{
-                    value: 133,
-                    error: 24,
-                    source: 'Carmichael+2021',
-                    url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1'
-                }]
-            },
-            'TOI 811': { aliasOf: 'TOI-811' },
-            'TOI811': { aliasOf: 'TOI-811' },
-            'TOI-5882': {
-                ewli: [{
-                    value: 71.2,
-                    error: 6.9,
-                    source: 'Vowell+2025',
-                    url: 'https://arxiv.org/abs/2501.09795'
-                }]
-            },
-            'TOI 5882': { aliasOf: 'TOI-5882' },
-            'TOI5882': { aliasOf: 'TOI-5882' }
-        };
+    function startsWithScore(query, candidate) {
+      if (candidate.startsWith(query) && query.length > 0) {
+        return 0.90 + 0.10 * (query.length / Math.max(1, candidate.length));
+      }
+      return 0;
+    }
 
-       // Convert RA/Dec to Galactic coordinates
-        function equatorialToGalactic(ra, dec) {
-            const deg2rad = Math.PI / 180.0;
-            const rad2deg = 180 / Math.PI;
+    function containsScore(query, candidate) {
+      const idx = candidate.indexOf(query);
+      if (idx >= 0 && query.length > 0) {
+        const posBonus = 1.0 - idx / Math.max(1, candidate.length);
+        return 0.70 + 0.20 * posBonus;
+      }
+      return 0;
+    }
 
-            // J2000 North Galactic Pole
-            const ra_ngp = 192.85948 * deg2rad;
-            const dec_ngp = 27.12825 * deg2rad;
-            const l_ncp = 122.93192 * deg2rad;
+    function resolveIdentifier(query, items) {
+      const qRaw = query ?? "";
+      const qNorm = normalizeIdentifier(qRaw);
 
-            const ra_rad = ra * deg2rad;
-            const dec_rad = dec * deg2rad;
+      const scored = items.map((idRaw) => {
+        const idNorm = normalizeIdentifier(idRaw);
 
-            // Calculate Galactic latitude b
-            const sin_b = Math.sin(dec_ngp) * Math.sin(dec_rad) +
-                          Math.cos(dec_ngp) * Math.cos(dec_rad) * Math.cos(ra_rad - ra_ngp);
-            const b = Math.asin(sin_b) * rad2deg;
+        let score = 0;
+        let reason = "levenshtein";
 
-            // Calculate Galactic longitude l
-            const y = Math.cos(dec_rad) * Math.sin(ra_rad - ra_ngp);
-            const x = Math.cos(dec_ngp) * Math.sin(dec_rad) -
-                      Math.sin(dec_ngp) * Math.cos(dec_rad) * Math.cos(ra_rad - ra_ngp);
-            let l = l_ncp * rad2deg - Math.atan2(y, x) * rad2deg;
-
-            // Normalize l to 0-360
-            while (l < 0) l += 360;
-            while (l >= 360) l -= 360;
-
-            // Convert to -180 to 180 for plotting
-            if (l > 180) l -= 360;
-
-            return { l, b };
-        }
-
-        // Display Galactic coordinate map
-        function displayGalacticMap(ra, dec) {
-            const container = document.getElementById('galactic-plot');
-            const galactic = equatorialToGalactic(ra, dec);
-
-            // Create Milky Way background approximation (Galactic plane dust lane)
-            const mwL = [];
-            const mwB_upper = [];
-            const mwB_lower = [];
-            for (let l = -180; l <= 180; l += 2) {
-                mwL.push(l);
-                // Approximate warp/thickness of MW disk
-                const thickness = 8 + 4 * Math.sin((l + 30) * Math.PI / 180);
-                mwB_upper.push(thickness);
-                mwB_lower.push(-thickness);
+        if (idRaw === qRaw) {
+          score = 1.0;
+          reason = "exact(raw)";
+        } else if (idNorm === qNorm && qNorm.length > 0) {
+          score = 0.98;
+          reason = "exact(normalized)";
+        } else {
+          const prefix = startsWithScore(qNorm, idNorm);
+          if (prefix > 0) {
+            score = prefix;
+            reason = "prefix";
+          } else {
+            const contains = containsScore(qNorm, idNorm);
+            if (contains > 0) {
+              score = contains;
+              reason = "substring";
+            } else {
+              const dist = levenshtein(qNorm, idNorm);
+              score = 0.10 + 0.60 * similarityFromDistance(qNorm, idNorm, dist);
+              reason = "levenshtein";
             }
-
-            const traces = [
-                // Galactic plane line
-                {
-                    x: [-180, 180],
-                    y: [0, 0],
-                    mode: 'lines',
-                    name: 'Galactic Plane',
-                    line: { color: 'rgba(150, 130, 100, 0.5)', width: 1, dash: 'dash' },
-                    hoverinfo: 'name'
-                },
-                // Target
-                {
-                    x: [galactic.l],
-                    y: [galactic.b],
-                    mode: 'markers',
-                    name: targetData?._resolvedName || 'Target',
-                    marker: {
-                        size: 16,
-                        color: '#ef4444',
-                        symbol: 'star',
-                        line: { color: '#000', width: 2 }
-                    },
-                    hovertemplate: `<b>${targetData?._resolvedName || 'Target'}</b><br>l = ${galactic.l.toFixed(2)}°<br>b = ${galactic.b.toFixed(2)}°<extra></extra>`
-                }
-            ];
-
-            const layout = {
-                paper_bgcolor: '#1a1a2e',
-                plot_bgcolor: '#0f0f1a',
-                font: { color: '#f0f4f8', family: 'IBM Plex Sans' },
-                images: [
-                    {
-                        source: 'https://raw.githubusercontent.com/msoaresfurtado/WebPage/main/tools/MW_edgeon_edr3_unannotate.jpg',
-                        xref: 'x',
-                        yref: 'y',
-                        x: 180,
-                        y: 90,
-                        sizex: 360,
-                        sizey: 180,
-                        sizing: 'stretch',
-                        opacity: 0.6,
-                        layer: 'below'
-                    }
-                ],
-                xaxis: {
-                    title: { text: 'Galactic Longitude l (°)', font: { size: 12 } },
-                    range: [180, -180],
-                    dtick: 60,
-                    showgrid: false,
-                    zeroline: false,
-                    showticklabels: false
-                },
-                yaxis: {
-                    title: { text: 'Galactic Latitude b (°)', font: { size: 12 } },
-                    range: [-90, 90],
-                    dtick: 30,
-                    showgrid: false,
-                    zeroline: false,
-                    showticklabels: false,
-                    scaleanchor: 'x',
-                    scaleratio: 0.5
-                },
-                legend: {
-                    x: 0.01,
-                    y: 0.99,
-                    bgcolor: 'rgba(0, 0, 0, 0.5)',
-                    font: { size: 10 }
-                },
-                margin: { t: 20, r: 20, b: 50, l: 60 },
-            };
-
-            Plotly.newPlot(container, traces, layout, { responsive: true });
-        }
-
-        function downloadGalacticPlot() {
-            Plotly.downloadImage('galactic-plot', {
-                format: 'png',
-                width: 1000,
-                height: 400,
-                filename: `GaiaDR3_${targetData?.source_id}_galactic`
-            });
-        }
-
-        // Compute U, V, W velocities with respect to LSR
-        // Using the standard matrix method from Johnson & Soderblom (1987)
-        function computeUVW(ra, dec, pmra, pmdec, parallax, rv) {
-            // Solar motion with respect to LSR (Schönrich et al. 2010)
-            const U_sun = 11.1;   // km/s
-            const V_sun = 12.24;  // km/s
-            const W_sun = 7.25;   // km/s
-
-            // Convert to radians
-            const alpha = ra * Math.PI / 180;
-            const delta = dec * Math.PI / 180;
-
-            // Distance in pc
-            const dist = 1000 / parallax;
-
-            // Convert proper motions from mas/yr to km/s
-            // v = 4.74047 * mu [arcsec/yr] * d [pc] = 4.74047 * mu [mas/yr] * d [pc] / 1000
-            const k = 4.74047 / 1000;  // Factor for mas/yr
-            const vra = k * pmra * dist;
-            const vdec = k * pmdec * dist;
-
-            // Transformation matrix T (equatorial to galactic)
-            // From Murray (1989), epoch J2000
-            const T11 = -0.0548755604;
-            const T12 = -0.8734370902;
-            const T13 = -0.4838350155;
-            const T21 = +0.4941094279;
-            const T22 = -0.4448296300;
-            const T23 = +0.7469822445;
-            const T31 = -0.8676661490;
-            const T32 = -0.1980763734;
-            const T33 = +0.4559837762;
-
-            // Position-dependent rotation matrix A
-            const cosra = Math.cos(alpha);
-            const sinra = Math.sin(alpha);
-            const cosdec = Math.cos(delta);
-            const sindec = Math.sin(delta);
-
-            // A transforms (vra, vdec, vr) to (vx, vy, vz) equatorial
-            const A11 = -sinra;
-            const A12 = -sindec * cosra;
-            const A13 = cosdec * cosra;
-            const A21 = cosra;
-            const A22 = -sindec * sinra;
-            const A23 = cosdec * sinra;
-            const A31 = 0;
-            const A32 = cosdec;
-            const A33 = sindec;
-
-            // Combined matrix B = T * A
-            const B11 = T11*A11 + T12*A21 + T13*A31;
-            const B12 = T11*A12 + T12*A22 + T13*A32;
-            const B13 = T11*A13 + T12*A23 + T13*A33;
-            const B21 = T21*A11 + T22*A21 + T23*A31;
-            const B22 = T21*A12 + T22*A22 + T23*A32;
-            const B23 = T21*A13 + T22*A23 + T23*A33;
-            const B31 = T31*A11 + T32*A21 + T33*A31;
-            const B32 = T31*A12 + T32*A22 + T33*A32;
-            const B33 = T31*A13 + T32*A23 + T33*A33;
-
-            // Heliocentric UVW
-            const U_helio = B11*vra + B12*vdec + B13*rv;
-            const V_helio = B21*vra + B22*vdec + B23*rv;
-            const W_helio = B31*vra + B32*vdec + B33*rv;
-
-            // LSR velocities
-            const U = U_helio + U_sun;
-            const V = V_helio + V_sun;
-            const W = W_helio + W_sun;
-
-            return { U, V, W };
-        }
-
-        // Display Toomre diagram
-        function displayToomreDiagram(targetData) {
-            const panel = document.getElementById('toomre-panel');
-
-            if (!targetData.radial_velocity || !targetData.pmra || !targetData.pmdec || !targetData.parallax) {
-                console.log('Toomre: Missing data - RV:', targetData.radial_velocity, 'pmra:', targetData.pmra, 'pmdec:', targetData.pmdec, 'plx:', targetData.parallax);
-                panel.style.display = 'none';
-                return;
-            }
-
-            const uvw = computeUVW(
-                targetData.ra,
-                targetData.dec,
-                targetData.pmra,
-                targetData.pmdec,
-                targetData.parallax,
-                targetData.radial_velocity
-            );
-
-            // Check for NaN
-            if (isNaN(uvw.U) || isNaN(uvw.V) || isNaN(uvw.W)) {
-                console.log('Toomre: UVW calculation returned NaN');
-                panel.style.display = 'none';
-                return;
-            }
-
-            console.log('Toomre UVW (LSR): U=' + uvw.U.toFixed(1) + ', V=' + uvw.V.toFixed(1) + ', W=' + uvw.W.toFixed(1));
-
-            panel.style.display = 'block';
-            const container = document.getElementById('toomre-plot');
-
-            // Calculate sqrt(U^2 + W^2) for y-axis
-            const UW = Math.sqrt(uvw.U * uvw.U + uvw.W * uvw.W);
-            const vtot = Math.sqrt(uvw.U * uvw.U + uvw.V * uvw.V + uvw.W * uvw.W);
-
-            console.log('Toomre plot: V=' + uvw.V.toFixed(1) + ', sqrt(U²+W²)=' + UW.toFixed(1) + ', vtot=' + vtot.toFixed(1));
-
-            // Create traces array
-            const traces = [];
-
-            // Thin disk shaded region (inside 85 km/s - typical thin disk boundary)
-            const thinDiskX = [], thinDiskY = [];
-            for (let a = 0; a <= Math.PI; a += 0.02) {
-                thinDiskX.push(-85 * Math.cos(a));
-                thinDiskY.push(85 * Math.sin(a));
-            }
-            // Close the shape along the x-axis
-            thinDiskX.push(85);
-            thinDiskY.push(0);
-            thinDiskX.push(-85);
-            thinDiskY.push(0);
-
-            traces.push({
-                x: thinDiskX,
-                y: thinDiskY,
-                fill: 'toself',
-                fillcolor: 'rgba(34, 197, 94, 0.15)',
-                line: { color: 'rgba(34, 197, 94, 0.4)', width: 1.5, dash: 'dash' },
-                mode: 'lines',
-                name: 'Thin disk',
-                hoverinfo: 'name',
-                showlegend: true
-            });
-
-            // Velocity contours (dashed semicircles at 100 and 180 km/s)
-            [100, 180].forEach(r => {
-                const xpts = [], ypts = [];
-                for (let a = 0; a <= Math.PI; a += 0.05) {
-                    xpts.push(-r * Math.cos(a));
-                    ypts.push(r * Math.sin(a));
-                }
-                traces.push({
-                    x: xpts, y: ypts,
-                    mode: 'lines',
-                    line: { color: 'rgba(80,80,80,0.5)', width: 1, dash: 'dash' },
-                    hoverinfo: 'skip',
-                    showlegend: false
-                });
-            });
-
-            // Target star marker
-            const targetTrace = {
-                x: [uvw.V],
-                y: [UW],
-                mode: 'markers',
-                type: 'scatter',
-                name: targetData._resolvedName || 'Target',
-                showlegend: true,
-                marker: {
-                    size: 14,
-                    color: '#ef4444',
-                    symbol: 'star',
-                    line: { color: '#000000', width: 1 }
-                },
-                hovertemplate: '<b>' + (targetData._resolvedName || 'Target') + '</b><br>' +
-                    'U = ' + uvw.U.toFixed(1) + ' km/s<br>' +
-                    'V = ' + uvw.V.toFixed(1) + ' km/s<br>' +
-                    'W = ' + uvw.W.toFixed(1) + ' km/s<br>' +
-                    'v_tot = ' + vtot.toFixed(1) + ' km/s<extra></extra>'
-            };
-            traces.push(targetTrace);
-            console.log('Toomre target trace:', JSON.stringify({x: targetTrace.x, y: targetTrace.y}));
-
-            // Dynamic axis range to ensure target is visible
-            const xMin = Math.min(-160, uvw.V - 20);
-            const xMax = Math.max(60, uvw.V + 20);
-            const yMax = Math.max(160, UW + 20);
-
-            const layout = {
-                paper_bgcolor: '#ffffff',
-                plot_bgcolor: '#ffffff',
-                font: { color: '#1a1a2e', family: 'IBM Plex Sans' },
-                xaxis: {
-                    title: 'V [km/s]',
-                    range: [xMin, xMax],
-                    gridcolor: 'rgba(100,100,100,0.2)',
-                    zerolinecolor: 'rgba(100,100,100,0.3)',
-                    dtick: 50
-                },
-                yaxis: {
-                    title: '(U² + W²)^½ [km/s]',
-                    range: [0, yMax],
-                    gridcolor: 'rgba(100,100,100,0.2)',
-                    dtick: 50
-                },
-                showlegend: true,
-                legend: {
-                    x: 0.02,
-                    y: 0.98,
-                    bgcolor: 'rgba(255,255,255,0.8)',
-                    bordercolor: 'rgba(0,0,0,0.1)',
-                    borderwidth: 1,
-                    font: { size: 10 }
-                },
-                margin: { t: 20, r: 20, b: 50, l: 60 }
-            };
-
-            Plotly.newPlot(container, traces, layout, { responsive: true });
-        }
-
-        function downloadToomrePlot() {
-            Plotly.downloadImage('toomre-plot', {
-                format: 'png',
-                width: 600,
-                height: 500,
-                filename: `GaiaDR3_${targetData?.source_id}_toomre`
-            });
-        }
-
-        // Query Gaia via VizieR
-        async function queryGaia(query) {
-            const url = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
-
-            const colMapping = {
-                'source_id': 'Source',
-                'ra': 'RA_ICRS',
-                'dec': 'DE_ICRS',
-                'parallax': 'Plx',
-                'parallax_error': 'e_Plx',
-                'pmra': 'pmRA',
-                'pmdec': 'pmDE',
-                'radial_velocity': 'RV',
-                'radial_velocity_error': 'e_RV',
-                'phot_g_mean_mag': 'Gmag',
-                'phot_bp_mean_mag': 'BPmag',
-                'phot_rp_mean_mag': 'RPmag',
-                'bp_rp': '"BP-RP"',
-                'ruwe': 'RUWE',
-                'teff_gspphot': 'Teff',
-                'logg_gspphot': 'logg'
-            };
-
-            let vizierQuery = query
-                .replace(/gaiadr3\.gaia_source/gi, '"I/355/gaiadr3"')
-                .replace(/gaiadr3\.astrophysical_parameters/gi, '"I/355/paramp"');
-
-            for (const [esa, viz] of Object.entries(colMapping)) {
-                vizierQuery = vizierQuery.replace(new RegExp(`\\b${esa}\\b`, 'gi'), viz);
-            }
-
-            vizierQuery = vizierQuery.replace(/Source\s*=\s*(\d+)/gi, "Source = '$1'");
-
-            const params = new URLSearchParams({
-                REQUEST: 'doQuery',
-                LANG: 'ADQL',
-                FORMAT: 'json',
-                QUERY: vizierQuery
-            });
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params
-            });
-            
-            if (!response.ok) throw new Error('Gaia query failed');
-            
-            // Get response as text first, then convert large integers to strings
-            // to preserve precision for Gaia source_ids (19 digits)
-            let text = await response.text();
-            text = text.replace(/([:\[,]\s*)(\d{16,})(\s*[,\}\]])/g, '$1"$2"$3');
-            const data = JSON.parse(text);
-           
-            if (data.metadata) {
-                const reverseMapping = {};
-                for (const [esa, viz] of Object.entries(colMapping)) {
-                    reverseMapping[viz.replace(/"/g, '')] = esa;
-                }
-                data.metadata = data.metadata.map(m => ({
-                    ...m,
-                    name: reverseMapping[m.name] || m.name.toLowerCase()
-                }));
-            }
-
-            return data;
-        }
-
-        // Resolve identifier via SIMBAD - FIXED to get exact Gaia ID
-        async function resolveIdentifier(input) {
-            const cleaned = input.trim();
-
-            // Check for Gaia DR3 prefix
-            const gaiaMatch = cleaned.match(/^Gaia\s*DR3\s*(\d+)$/i);
-            if (gaiaMatch) {
-                return { gaiaId: gaiaMatch[1], resolvedName: null, ra: null, dec: null };
-            }
-
-            // Check if raw Gaia source_id
-            if (/^\d{15,25}$/.test(cleaned)) {
-                return { gaiaId: cleaned, resolvedName: null, ra: null, dec: null };
-            }
-
-            // Resolve via SIMBAD TAP
-            const url = 'https://simbad.cds.unistra.fr/simbad/sim-tap/sync';
-
-            // Generate name variants
-            const variants = [cleaned];
-
-            // TOI variants
-            const toiMatch = cleaned.match(/^TOI[-\s]*(\d+\.?\d*)$/i);
-            if (toiMatch) {
-                variants.push(`TOI-${toiMatch[1]}`, `TOI ${toiMatch[1]}`, `TOI${toiMatch[1]}`);
-            }
-
-            // TIC variants
-            const ticMatch = cleaned.match(/^TIC\s*(\d+)$/i);
-            if (ticMatch) {
-                variants.push(`TIC ${ticMatch[1]}`, `TIC${ticMatch[1]}`);
-            }
-
-            // HD variants
-            const hdMatch = cleaned.match(/^HD\s*(\d+)$/i);
-            if (hdMatch) {
-                variants.push(`HD ${hdMatch[1]}`, `HD${hdMatch[1]}`);
-            }
-
-            // KELT variants
-            const keltMatch = cleaned.match(/^KELT[-\s]*(\d+[A-Za-z]?)$/i);
-            if (keltMatch) {
-                variants.push(`KELT-${keltMatch[1]}`, `KELT ${keltMatch[1]}`, `KELT${keltMatch[1]}`);
-            }            for (const variant of variants) {
-                try {
-                    // First get the oidref
-                    const identQuery = `SELECT oidref, id FROM ident WHERE id = '${variant.replace(/'/g, "''")}'`;
-                    const identParams = new URLSearchParams({
-                        REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'json', QUERY: identQuery
-                    });
-
-                    const identResponse = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: identParams
-                    });
-
-                    if (!identResponse.ok) continue;
-                    const identData = await identResponse.json();
-
-                    if (!identData.data || identData.data.length === 0) continue;
-
-                    const oidref = identData.data[0][0];
-
-                    // Get the exact Gaia DR3 identifier from SIMBAD's cross-match
-                    const gaiaQuery = `SELECT id FROM ident WHERE oidref = ${oidref} AND id LIKE 'Gaia DR3 %'`;
-                    const gaiaParams = new URLSearchParams({
-                        REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'json', QUERY: gaiaQuery
-                    });
-
-                    const gaiaResponse = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: gaiaParams
-                    });
-
-                    let gaiaId = null;
-                    if (gaiaResponse.ok) {
-                        const gaiaData = await gaiaResponse.json();
-                        if (gaiaData.data && gaiaData.data.length > 0) {
-                            const gaiaIdStr = gaiaData.data[0][0];
-                            const match = gaiaIdStr.match(/Gaia DR3\s+(\d+)/);
-                            if (match) gaiaId = match[1];
-                        }
-                    }
-
-                    // Get coordinates
-                    const coordQuery = `SELECT ra, dec FROM basic WHERE oid = ${oidref}`;
-                    const coordParams = new URLSearchParams({
-                        REQUEST: 'doQuery', LANG: 'ADQL', FORMAT: 'json', QUERY: coordQuery
-                    });
-
-                    let ra = null, dec = null;
-                    const coordResponse = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: coordParams
-                    });
-
-                    if (coordResponse.ok) {
-                        const coordData = await coordResponse.json();
-                        if (coordData.data && coordData.data.length > 0) {
-                            ra = coordData.data[0][0];
-                            dec = coordData.data[0][1];
-                        }
-                    }
-
-                    if (gaiaId) {
-                        console.log(`Resolved "${variant}" to Gaia DR3 ${gaiaId}`);
-                        return { gaiaId, resolvedName: variant, ra, dec };
-                    }
-
-                    // If no Gaia ID in SIMBAD, do a small cone search to find closest match
-                    if (ra && dec && !gaiaId) {
-                        console.log(`No Gaia ID in SIMBAD for "${variant}", doing cone search at RA=${ra}, Dec=${dec}`);
-                        const coneQuery = `SELECT source_id, ra, dec, parallax, phot_g_mean_mag
-                            FROM gaiadr3.gaia_source
-                            WHERE CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', ${ra}, ${dec}, 0.001)) = 1
-                            AND parallax > 0
-                            ORDER BY phot_g_mean_mag ASC`;
-
-                        const coneResult = await queryGaia(coneQuery);
-                        if (coneResult.data && coneResult.data.length > 0) {
-                            const cols = coneResult.metadata.map(m => m.name);
-                            const srcIdx = cols.indexOf('source_id');
-                            gaiaId = String(coneResult.data[0][srcIdx]);
-                            console.log(`Found closest Gaia source: ${gaiaId}`);
-                            return { gaiaId, resolvedName: variant, ra, dec };
-                        }
-                    }
-                } catch (e) {
-                    console.warn(`SIMBAD query failed for "${variant}":`, e);
-                }
-            }
-
-            return null;
-        }
-
-        // Search for TIC ID and TESS sectors
-
-        function updateTargetInfoWithTIC(ticId, tmag) {
-          // Add TIC ID to target info if not already there
-          const container = document.getElementById('target-info');
-          const existingTIC = container.querySelector('[data-field="tic"]');
-          if (!existingTIC && ticId) {
-              const ticItem = document.createElement('div');
-              ticItem.className = 'info-item';
-              ticItem.setAttribute('data-field', 'tic');
-              ticItem.innerHTML = `
-                  <div class="label">TIC ID</div>
-                  <div class="value highlight">${ticId}</div>
-              `;
-              container.appendChild(ticItem);
           }
         }
 
-        async function searchTESSSectors() {
-            if (!targetData) return;
-
-            const btn = document.getElementById('btn-tess');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading-spinner"></span> Searching...';
-
-            const container = document.getElementById('tess-info-container');
-
-            try {
-                const ra = targetData.ra;
-                const dec = targetData.dec;
-
-                // Query TIC via VizieR for TIC ID and Tmag
-                let ticId = null;
-                let tmag = null;
-
-                try {
-                    const ticUrl = `https://vizier.cds.unistra.fr/viz-bin/conesearch/IV/39/tic82?RA=${ra}&DEC=${dec}&SR=${5/3600}&VERB=3`;
-                    const ticResp = await fetch(ticUrl);
-
-                    if (ticResp.ok) {
-                        const text = await ticResp.text();
-                        const parser = new DOMParser();
-                        const xml = parser.parseFromString(text, 'text/xml');
-
-                        const fields = xml.querySelectorAll('FIELD');
-                        const metadata = Array.from(fields).map(f => f.getAttribute('name') || f.getAttribute('ID'));
-
-                        const trs = xml.querySelectorAll('TABLEDATA TR');
-
-                        if (trs.length > 0) {
-                            const row = Array.from(trs[0].querySelectorAll('TD')).map(td => td.textContent.trim());
-                            const ticIdx = metadata.findIndex(m => m === 'TIC' || m === 'ID');
-                            const tmagIdx = metadata.findIndex(m => m === 'Tmag');
-
-                            ticId = ticIdx >= 0 ? row[ticIdx] : null;
-                            tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
-                        }
-                    }
-                } catch (e) {
-                    console.warn('TIC query failed:', e);
-                }
-
-                if (ticId) {
-                    ticInfo = { tic: ticId, tmag };
-                    updateTargetInfoWithTIC(ticId, tmag);
-                }
-
-                // Query MAST for actual TESS observations using cone search
-                let sectors = [];
-                try {
-                    const mastRequest = {
-                        service: "Mast.Caom.Cone",
-                        params: {
-                            ra: ra,
-                            dec: dec,
-                            radius: 0.001  // ~3.6 arcsec
-                        },
-                        format: "json",
-                        pagesize: 500
-                    };
-
-                    const mastUrl = 'https://mast.stsci.edu/api/v0/invoke';
-                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(mastUrl)}`;
-
-                    const obsResp = await fetch(proxyUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: 'request=' + encodeURIComponent(JSON.stringify(mastRequest))
-                    });
-
-                    if (obsResp.ok) {
-                        const obsData = await obsResp.json();
-                        console.log('MAST observations response:', obsData);
-
-                        if (obsData.data && obsData.data.length > 0) {
-                            // Filter for TESS observations and extract sector numbers
-                            const tessObs = obsData.data.filter(obs =>
-                                obs.obs_collection === 'TESS' ||
-                                (obs.project && obs.project.includes('TESS'))
-                            );
-
-                            const sectorSet = new Set();
-                            for (const obs of tessObs) {
-                                // Extract sector from obs_id or sequence_number
-                                // TESS obs_ids typically contain sector info like "tess-s0020" or "tess2019..."
-                                const obsId = obs.obs_id || '';
-                                const seqNum = obs.sequence_number;
-
-                                // Try to extract sector from obs_id pattern like "tess-s0020-..."
-                                const sectorMatch = obsId.match(/tess.*?-s(\d{4})/i) ||
-                                                   obsId.match(/tess.*?sector(\d+)/i) ||
-                                                   obsId.match(/-s(\d+)-/i);
-                                if (sectorMatch) {
-                                    sectorSet.add(parseInt(sectorMatch[1]));
-                                }
-
-                                // Also check sequence_number which sometimes contains sector
-                                if (seqNum && seqNum > 0 && seqNum < 100) {
-                                    sectorSet.add(seqNum);
-                                }
-                            }
-
-                            sectors = Array.from(sectorSet).filter(s => s > 0 && s < 100).sort((a, b) => a - b);
-                            console.log('Extracted TESS sectors:', sectors);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('MAST observations query failed:', e);
-                }
-
-                // If MAST didn't work, try TESScut API as fallback
-                if (sectors.length === 0 && ticId) {
-                    try {
-                        const tessecutUrl = `https://mast.stsci.edu/tesscut/api/v0.1/sector?ra=${ra}&dec=${dec}`;
-                        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(tessecutUrl)}`;
-
-                        const sectResp = await fetch(proxyUrl);
-                        if (sectResp.ok) {
-                            const sectData = await sectResp.json();
-                            console.log('TESScut sector response:', sectData);
-
-                            if (sectData.results && sectData.results.length > 0) {
-                                sectors = sectData.results
-                                    .map(r => r.sector)
-                                    .filter(s => s > 0)
-                                    .sort((a, b) => a - b);
-                            }
-                        }
-                    } catch (e) {
-                        console.warn('TESScut query failed:', e);
-                    }
-                }
-
-                if (ticInfo) {
-                    ticInfo.sectors = sectors;
-                }
-
-                let html = `<div class="tess-info">
-                    <div class="tess-info-header">TESS Information</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem;">`;
-
-                if (ticId) {
-                    html += `<div><span style="color: var(--text-muted);">TIC ID:</span> <a href="https://exofop.ipac.caltech.edu/tess/target.php?id=${ticId}" target="_blank" style="color: var(--accent-cyan); font-family: 'IBM Plex Mono', monospace;">${ticId}</a></div>
-                        <div><span style="color: var(--text-muted);">T mag:</span> ${tmag?.toFixed(2) || 'N/A'}</div>`;
-                } else {
-                    html += `<div style="grid-column: 1 / -1; color: var(--text-muted);">No TIC match found</div>`;
-                }
-
-                html += `</div>`;
-
-                if (sectors.length > 0) {
-                    html += `<div style="margin-top: 0.5rem; font-size: 0.85rem;">
-                        <span style="color: var(--text-muted);">Observed Sectors (${sectors.length}):</span><br>
-                        <span style="font-family: 'IBM Plex Mono', monospace; color: var(--accent-blue);">${sectors.join(', ')}</span>
-                    </div>`;
-                } else {
-                    html += `<div style="margin-top: 0.5rem; font-size: 0.85rem;">
-                        <span style="color: var(--text-muted);">Sectors:</span>
-                        <a href="https://heasarc.gsfc.nasa.gov/wsgi-scripts/TESS/TESS-point_Web_Tool/TESS-point_Web_Tool/wtv_v2.0.py/?ra=${ra}&dec=${dec}" target="_blank" style="color: var(--accent-cyan); margin-left: 0.5rem;">Check TESS-point →</a>
-                    </div>`;
-                }
-
-                html += '</div>';
-                container.innerHTML = html;
-
-            } catch (e) {
-                console.error('TESS search error:', e);
-                container.innerHTML = `<div class="tess-info"><div class="tess-info-header">TESS Information</div><p style="color: var(--error);">Error: ${e.message}</p></div>`;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> TESS Sectors`;
-            }
-        }
-
-        async function checkExoplanetArchive() {
-            if (!targetData) return;
-
-            const btn = document.getElementById('btn-exoplanet');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading-spinner"></span> Checking...';
-
-            const container = document.getElementById('exoplanet-alert');
-
-            // Helper to fetch with CORS proxy
-            async function fetchWithProxy(url) {
-                // Try direct first, then proxy
-                try {
-                    const resp = await fetch(url);
-                    if (resp.ok) return await resp.json();
-                } catch (e) {
-                    // Try with CORS proxy
-                    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-                    const resp = await fetch(proxyUrl);
-                    if (resp.ok) return await resp.json();
-                }
-                return null;
-            }
-
-            try {
-                let data = [];
-
-                // Method 1: Try Gaia DR3 ID
-                if (data.length === 0 && targetData.source_id) {
-                    const url1 = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,disc_year+FROM+pscomppars+WHERE+gaia_id='Gaia+DR3+${targetData.source_id}'&format=json`;
-                    const result = await fetchWithProxy(url1);
-                    if (result && result.length > 0) data = result;
-                }
-
-                // Method 2: Try by hostname variants
-                if (data.length === 0 && targetData._resolvedName) {
-                    let hostname = targetData._resolvedName.replace(/\s*[b-i]$/i, '').trim();
-
-                    const hostnameVariants = [hostname];
-
-                    const hdMatch = hostname.match(/^HD\s*(\d+)$/i);
-                    if (hdMatch) {
-                        hostnameVariants.push(`HD ${hdMatch[1]}`, `HD${hdMatch[1]}`);
-                    }
-
-                    const keltMatch = hostname.match(/^KELT[-\s]*(\d+)$/i);
-                    if (keltMatch) {
-                        hostnameVariants.push(`KELT-${keltMatch[1]}`, `KELT ${keltMatch[1]}`);
-                    }
-
-                    const waspMatch = hostname.match(/^WASP[-\s]*(\d+)$/i);
-                    if (waspMatch) {
-                        hostnameVariants.push(`WASP-${waspMatch[1]}`, `WASP ${waspMatch[1]}`);
-                    }
-
-                    const hatMatch = hostname.match(/^HAT[-\s]?P?[-\s]*(\d+)$/i);
-                    if (hatMatch) {
-                        hostnameVariants.push(`HAT-P-${hatMatch[1]}`, `HATP-${hatMatch[1]}`);
-                    }
-
-                    const toiMatch = hostname.match(/^TOI[-\s]*(\d+)$/i);
-                    if (toiMatch) {
-                        hostnameVariants.push(`TOI-${toiMatch[1]}`, `TOI ${toiMatch[1]}`);
-                    }
-
-                    for (const variant of hostnameVariants) {
-                        if (data.length > 0) break;
-                        const url2 = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,disc_year+FROM+pscomppars+WHERE+hostname='${encodeURIComponent(variant)}'&format=json`;
-                        const result = await fetchWithProxy(url2);
-                        if (result && result.length > 0) {
-                            data = result;
-                            console.log(`Found exoplanets via hostname: ${variant}`);
-                            break;
-                        }
-                    }
-                }
-
-                // Method 3: Try coordinate search (10 arcsec radius)
-                if (data.length === 0 && targetData.ra && targetData.dec) {
-                    const url3 = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,disc_year,ra,dec+FROM+pscomppars+WHERE+1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${targetData.ra},${targetData.dec},${10/3600}))&format=json`;
-                    const result = await fetchWithProxy(url3);
-                    if (result && result.length > 0) data = result;
-                }
-
-                if (data && data.length > 0) {
-                    const uniquePlanets = [...new Set(data.map(p => p.pl_name))];
-                    const hostname = data[0].hostname;
-
-                    const planetList = uniquePlanets.map(name => {
-                        const p = data.find(pl => pl.pl_name === name);
-                        let details = [];
-                        if (p.pl_orbper) details.push(`P=${p.pl_orbper.toFixed(2)}d`);
-                        if (p.pl_rade) details.push(`R=${p.pl_rade.toFixed(2)}R⊕`);
-                        if (p.disc_year) details.push(`(${p.disc_year})`);
-                        return `<strong>${name}</strong>${details.length > 0 ? ': ' + details.join(', ') : ''}`;
-                    }).join('<br>');
-
-                    container.innerHTML = `
-                        <div class="exoplanet-alert">
-                            <div class="exoplanet-alert-header">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                                Confirmed Exoplanet Host!
-                            </div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">${planetList}</div>
-                            <a href="https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(hostname)}" target="_blank"
-                               style="display: inline-block; margin-top: 0.5rem; font-size: 0.8rem; color: var(--accent-cyan);">
-                                View on NASA Exoplanet Archive →
-                            </a>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = `<div style="padding: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">No confirmed exoplanets found in NASA Exoplanet Archive</div>`;
-                }
-            } catch (e) {
-                console.error('Exoplanet Archive error:', e);
-                container.innerHTML = `<div style="padding: 0.5rem; color: var(--error); font-size: 0.85rem;">Error checking exoplanet archive</div>`;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg> Check Exoplanets`;
-            }
-        }
-
-        // Search rotation periods (automatic)
-        async function searchRotationPeriods(ra, dec) {
-            const results = [];
-            const radius = 10 / 3600;
-
-            const catalogs = [
-                { name: 'J/ApJS/211/24/table1', label: 'McQuillan+2014', periodCol: 'Prot' },
-                { name: 'J/ApJS/244/21/table2', label: 'Santos+2019', periodCol: 'Prot' },
-                { name: 'J/ApJ/879/49/table1', label: 'Curtis+2019', periodCol: 'Prot' },
-                { name: 'J/ApJS/250/20/table1', label: 'Canto Martins+2020', periodCol: 'Prot' },
-                { name: 'J/ApJ/823/16/table2', label: 'Rebull+2016', periodCol: 'Per' },
-                { name: 'J/AJ/158/77/table1', label: 'Douglas+2019', periodCol: 'Prot' },
-                { name: 'J/ApJS/271/51/table1', label: 'Claytor+2024', periodCol: 'Prot' },
-            ];
-
-            for (const cat of catalogs) {
-                try {
-                    const url = `https://vizier.cds.unistra.fr/viz-bin/conesearch/${cat.name}?RA=${ra}&DEC=${dec}&SR=${radius}&VERB=3`;
-                    const response = await fetch(url);
-                    if (!response.ok) continue;
-
-                    const text = await response.text();
-                    const parser = new DOMParser();
-                    const xml = parser.parseFromString(text, 'text/xml');
-
-                    const fields = xml.querySelectorAll('FIELD');
-                    const metadata = Array.from(fields).map(f => ({ name: f.getAttribute('name') || f.getAttribute('ID') }));
-
-                    const trs = xml.querySelectorAll('TABLEDATA TR');
-                    if (trs.length === 0) continue;
-
-                    const row = Array.from(trs[0].querySelectorAll('TD')).map(td => {
-                        const val = td.textContent.trim();
-                        const num = parseFloat(val);
-                        return isNaN(num) ? val : num;
-                    });
-
-                    // Find period column
-                    let periodIdx = metadata.findIndex(m => m.name === cat.periodCol);
-                    if (periodIdx < 0) {
-                        periodIdx = metadata.findIndex(m => /^P(rot|er(iod)?)?$/i.test(m.name));
-                    }
-
-                    if (periodIdx >= 0 && row[periodIdx] != null) {
-                        const period = parseFloat(row[periodIdx]);
-                        if (!isNaN(period) && period > 0.1 && period < 200) {
-                            results.push({
-                                period: period,
-                                source: cat.label,
-                                catalog: cat.name
-                            });
-                            console.log(`✓ Prot from ${cat.label}: ${period.toFixed(2)} d`);
-                        }
-                    }
-                } catch (e) {
-                    // Continue
-                }
-            }
-
-            return results;
-        }
-
-        function getManualYouthData(targetData) {
-            const results = { ewli: [], prot: [], rhk: [], lx: [] };
-            if (!targetData?._resolvedName) return results;
-
-            const name = targetData._resolvedName;
-            let entry = manualYouthData[name];
-
-            // Try normalized versions (TOI-811, TOI 811, TOI811)
-            if (!entry) {
-                const normalized = name.replace(/[-\s]+/g, '-').toUpperCase();
-                const key = Object.keys(manualYouthData).find(k =>
-                    k.replace(/[-\s]+/g, '-').toUpperCase() === normalized
-                );
-                if (key) entry = manualYouthData[key];
-            }
-
-            // Handle aliases
-            if (entry?.aliasOf) entry = manualYouthData[entry.aliasOf];
-
-            if (entry) {
-                ['ewli', 'prot', 'rhk', 'lx'].forEach(type => {
-                    if (entry[type]) results[type].push(...entry[type]);
-                });
-            }
-            return results;
-        }
-
-        // Search all youth indicators (on demand)
-        async function searchYouthIndicators() {
-            if (!targetData) return;
-
-            const btn = document.getElementById('btn-youth');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading-spinner"></span> Searching...';
-
-            try {
-                vizierYouthData = await queryVizierYouthIndicators(targetData.ra, targetData.dec);
-                displayYouthIndicators(vizierYouthData);
-            } catch (e) {
-                console.error('Youth indicator search error:', e);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"></path></svg> Youth Indicators`;
-            }
-        }
-
-        async function queryVizierYouthIndicators(ra, dec) {
-            const results = { ewli: [], prot: [], rhk: [], lx: [] };
-            const radius = 10 / 3600;
-
-            async function queryVizierCatalog(catalog, label) {
-                const url = `https://vizier.cds.unistra.fr/viz-bin/conesearch/${catalog}?RA=${ra}&DEC=${dec}&SR=${radius}&VERB=3`;
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) return null;
-
-                    const text = await response.text();
-                    const parser = new DOMParser();
-                    const xml = parser.parseFromString(text, 'text/xml');
-
-                    const fields = xml.querySelectorAll('FIELD');
-                    const metadata = Array.from(fields).map(f => ({ name: f.getAttribute('name') || f.getAttribute('ID') }));
-
-                    const trs = xml.querySelectorAll('TABLEDATA TR');
-                    if (trs.length === 0) return null;
-
-                    const rows = Array.from(trs).map(tr => {
-                        const tds = tr.querySelectorAll('TD');
-                        return Array.from(tds).map(td => {
-                            const val = td.textContent.trim();
-                            const num = parseFloat(val);
-                            return isNaN(num) ? val : num;
-                        });
-                    });
-
-                    return { metadata, rows, label };
-                } catch (e) {
-                    return null;
-                }
-            }
-
-            function findColumnValue(metadata, row, patterns) {
-                for (const pattern of patterns) {
-                    const regex = new RegExp(pattern, 'i');
-                    const colIdx = metadata.findIndex(m => regex.test(m.name));
-                    if (colIdx >= 0 && row[colIdx] != null) {
-                        const val = parseFloat(row[colIdx]);
-                        if (!isNaN(val)) {
-                            return { value: val, colName: metadata[colIdx].name };
-                        }
-                    }
-                }
-                return null;
-            }
-
-            // Catalogs including J/A+A/504/829/cbssb for Li
-            const catalogs = [
-                { catalog: 'J/A+A/504/829/cbssb', label: 'Gonzalez+2009', type: 'li' },
-                { catalog: 'J/A+A/664/A78/gaia3', label: 'GALAH DR3', type: 'li' },
-                { catalog: 'J/A+A/616/A10/tablea1', label: 'Gaia-ESO DR3', type: 'li' },
-                { catalog: 'J/ApJ/756/24/table2', label: 'Ramirez+2012', type: 'li' },
-                { catalog: 'J/A+A/576/A69/table2', label: 'Delgado Mena+2015', type: 'li' },
-                { catalog: 'J/ApJS/211/24/table1', label: 'McQuillan+2014', type: 'prot' },
-                { catalog: 'J/ApJS/244/21/table2', label: 'Santos+2019', type: 'prot' },
-                { catalog: 'J/ApJ/879/49/table1', label: 'Curtis+2019', type: 'prot' },
-                { catalog: 'J/A+A/551/L8/table2', label: 'Pace2013', type: 'rhk' },
-                { catalog: 'J/ApJS/152/261/table3', label: 'Wright+2004', type: 'rhk' },
-                { catalog: 'J/A+A/616/A108/catalog', label: 'Boro Saikia+2018', type: 'rhk' },
-                { catalog: 'J/A+A/450/993/table2', label: 'NEXXUS', type: 'lx' },
-                { catalog: 'J/ApJS/262/14/catalog', label: 'Freund+2022', type: 'lx' },
-            ];
-
-            const liPatterns = ['^EWLi$', '^EW_?Li', '^EW$', '^A_?Li', 'Lith', 'LiEW', 'EW\\(Li\\)'];
-            const protPatterns = ['^Prot$', '^P_?rot', '^Per$', '^Period$'];
-            const rhkPatterns = ['logR.*HK', 'log_?R.*HK', "logR'HK", 'RHK'];
-            const lxPatterns = ['^Lx$', '^L_?[Xx]', '^logLx', 'LX'];
-
-            for (const cat of catalogs) {
-                const result = await queryVizierCatalog(cat.catalog, cat.label);
-                if (!result) continue;
-
-                const { metadata, rows, label } = result;
-                const row = rows[0];
-
-                if (cat.type === 'li') {
-                    const found = findColumnValue(metadata, row, liPatterns);
-                    if (found && found.value > 0 && found.value < 500) {
-                        results.ewli.push({ value: found.value, source: label, catalog: cat.catalog });
-                        console.log(`✓ Li from ${label}: ${found.value.toFixed(1)} mÅ`);
-                    }
-                } else if (cat.type === 'prot') {
-                    const found = findColumnValue(metadata, row, protPatterns);
-                    if (found && found.value > 0.1 && found.value < 200) {
-                        results.prot.push({ value: found.value, source: label, catalog: cat.catalog });
-                    }
-                } else if (cat.type === 'rhk') {
-                    const found = findColumnValue(metadata, row, rhkPatterns);
-                    if (found) {
-                        let val = found.value;
-                        if (val > 0) val = -val;
-                        if (val < -3 && val > -6) {
-                            results.rhk.push({ value: val, source: label, catalog: cat.catalog });
-                        }
-                    }
-                } else if (cat.type === 'lx') {
-                    const found = findColumnValue(metadata, row, lxPatterns);
-                    if (found) {
-                        let val = found.value;
-                        let isLog = found.colName.toLowerCase().includes('log');
-                        if (!isLog && val > 100) { val = Math.log10(val); isLog = true; }
-                        if (isLog && val > 25 && val < 35) {
-                            results.lx.push({ value: val, source: label, catalog: cat.catalog, isLog: true });
-                        }
-                    }
-                }
-            }
-
-            return results;
-        }
-      function vizierLink(catalog, source) {
-          if (!catalog) return `<span class="source">${source}</span>`;
-          return `<a href="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=${catalog}" target="_blank" class="source">${source}</a>`;
-      }
- 
-          
-       function displayYouthIndicators(data) {
-            // Merge manual data with VizieR data
-            const manualData = getManualYouthData(targetData);
-            const mergedData = {
-                ewli: [...manualData.ewli, ...data.ewli],
-                prot: [...manualData.prot, ...data.prot],
-                rhk: [...manualData.rhk, ...data.rhk],
-                lx: [...manualData.lx, ...data.lx]
-            };
-
-            // Lithium - updated to show errors and handle URL links
-            let liHTML = mergedData.ewli.length > 0 ? mergedData.ewli.map(m => {
-                const errorStr = m.error ? ` ± ${m.error.toFixed(0)}` : '';
-                const sourceLink = m.url
-                    ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>`
-                    : vizierLink(m.catalog, m.source);
-                return `<div class="youth-item">
-                    <span class="value li-color">${m.value.toFixed(1)}${errorStr} mÅ</span>
-                    ${sourceLink}
-                </div>`;
-            }).join('') : '<div class="no-data">No measurements found</div>';
-            document.getElementById('li-values').innerHTML = liHTML;
-
-            // Rotation
-            let rotHTML = mergedData.prot.length > 0 ? mergedData.prot.map(m => `
-                <div class="youth-item">
-                    <span class="value prot-color">${m.value.toFixed(3)} d</span>
-                    ${m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source)}
-                </div>
-            `).join('') : '<div class="no-data">No measurements found</div>';
-            document.getElementById('rotation-results').innerHTML = rotHTML;
-
-            // R'HK
-            let rhkHTML = mergedData.rhk.length > 0 ? mergedData.rhk.map(m => `
-                <div class="youth-item">
-                    <span class="value rhk-color">${m.value.toFixed(3)}</span>
-                    ${m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source)}
-                </div>
-            `).join('') : '<div class="no-data">No measurements found</div>';
-            document.getElementById('rhk-results').innerHTML = rhkHTML;
-
-            // X-ray
-            let lxHTML = mergedData.lx.length > 0 ? mergedData.lx.map(m => `
-                <div class="youth-item">
-                    <span class="value lx-color">${m.value.toFixed(2)}</span>
-                    ${m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source)}
-                </div>
-            `).join('') : '<div class="no-data">No measurements found</div>';
-            document.getElementById('lx-results').innerHTML = lxHTML;
-        }
-
-        function displayRotationResults(rotResults) {
-            const container = document.getElementById('rotation-results');
-
-            if (rotResults.length > 0) {
-                container.innerHTML = rotResults.map(r => `
-                    <div class="youth-item">
-                        <span class="value prot-color">${r.period.toFixed(3)} d</span>
-                        <a href="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=${r.catalog}" target="_blank" class="source">${r.source}</a>
-                    </div>
-                `).join('');
-
-                // Show gyro plot if we have Teff
-                if (targetData?.teff_gspphot) {
-                    displayGyroPlot(targetData, rotResults[0].period);
-                }
-            } else {
-                container.innerHTML = '<div class="no-data">No rotation periods found</div>';
-            }
-        }
-
-        // Comoving search (on demand)
-        async function runComovingSearch() {
-            if (!targetData) return;
-
-            const btn = document.getElementById('btn-comoving');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading-spinner"></span> Searching...';
-
-            const velocityLimit = parseFloat(document.getElementById('velocity-limit').value) || 5.0;
-            const searchRadius = parseFloat(document.getElementById('search-radius').value) || 5.0;
-
-            try {
-                const targetDist = 1000 / targetData.parallax;
-
-                let searchRadDeg;
-                if (searchRadius >= targetDist) {
-                    searchRadDeg = 60;
-                } else {
-                    searchRadDeg = Math.atan(searchRadius / targetDist) * 180 / Math.PI;
-                }
-
-                const minParallax = 1000 / (targetDist + searchRadius);
-                const neighborQuery = `SELECT source_id, ra, dec, parallax, parallax_error, pmra, pmdec,
-                    radial_velocity, radial_velocity_error, phot_g_mean_mag, phot_bp_mean_mag,
-                    phot_rp_mean_mag, bp_rp, ruwe, teff_gspphot
-                    FROM gaiadr3.gaia_source
-                    WHERE CONTAINS(POINT('ICRS', ra, dec), CIRCLE('ICRS', ${targetData.ra}, ${targetData.dec}, ${searchRadDeg})) = 1
-                    AND parallax > ${minParallax * 0.5}
-                    AND parallax_error < 0.5`;
-
-                const neighborResult = await queryGaia(neighborQuery);
-
-                if (!neighborResult.data || neighborResult.data.length === 0) {
-                    throw new Error('No neighbors found');
-                }
-
-                const neighborCols = neighborResult.metadata.map(m => m.name);
-                const candidates = [];
-               function angularSeparation(ra1, dec1, ra2, dec2) {
-                   const deg2rad = Math.PI / 180.0;
-                   const ra1r = ra1 * deg2rad;
-                   const dec1r = dec1 * deg2rad;
-                   const ra2r = ra2 * deg2rad;
-                   const dec2r = dec2 * deg2rad;
-                   
-                   const sdlat = Math.sin((dec2r - dec1r) / 2);
-                   const sdlon = Math.sin((ra2r - ra1r) / 2);
-                   const a = sdlat * sdlat + Math.cos(dec1r) * Math.cos(dec2r) * sdlon * sdlon;
-                   const c = 2 * Math.asin(Math.sqrt(a));
-                   
-                   return c * 180.0 / Math.PI;  // Returns degrees
-               }
-
-               for (const nrow of neighborResult.data) {
-                   const star = {};
-                   neighborCols.forEach((col, i) => {
-                       const colName = col.toLowerCase();
-                       star[colName] = (colName === 'source_id') ? String(nrow[i]) : nrow[i];
-                   });
-                   
-                    if (!star.parallax || star.parallax <= 0) continue;
-
-                    const starDist = 1000 / star.parallax;
-            
-                     const angSep = angularSeparation(targetData.ra, targetData.dec, star.ra, star.dec);
-                     const angSepRad = angSep * Math.PI / 180; 
-                     const sep3d = Math.sqrt(
-                         starDist * starDist + targetDist * targetDist - 
-                         2 * starDist * targetDist * Math.cos(angSepRad)
-                     );
-                    if (sep3d > searchRadius) continue;
-
-                    const voff = computeVelocityDiff(star, targetData);
-                    if (voff > velocityLimit) continue;
-
-                    star.sep_deg = angSep;
-                    star.sep_3d = sep3d;
-                    star.voff = voff;
-                    star.spt = getSpectralType(star.bp_rp);
-                    star.rv_pred = computePredictedRV(star, targetData);
-
-                    candidates.push(star);
-                }
-
-                candidates.sort((a, b) => a.sep_3d - b.sep_3d);
-                candidates.forEach((c, i) => { c.index = i; });
-                searchResults = candidates;
-
-                // Show comoving panel and update
-                document.getElementById('comoving-panel').style.display = 'block';
-                displayTable(candidates);
-                displayCMD(candidates, targetData);
-                addComovingToAladin(candidates, targetData);
-
-                setStatus(`Found ${candidates.length} comoving candidates within ${searchRadius} pc`, 'success');
-
-            } catch (e) {
-                console.error('Comoving search error:', e);
-                setStatus(`Comoving search error: ${e.message}`, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><circle cx="4" cy="4" r="2"></circle><circle cx="20" cy="4" r="2"></circle><circle cx="4" cy="20" r="2"></circle><circle cx="20" cy="20" r="2"></circle></svg> Comoving Search`;
-            }
-        }
-
-        function computeVelocityDiff(star, target) {
-            const dpmra = star.pmra - target.pmra;
-            const dpmdec = star.pmdec - target.pmdec;
-            const dist = 1000.0 / star.parallax;
-            return Math.sqrt(dpmra * dpmra + dpmdec * dpmdec) * 4.74047 * dist / 1000.0;
-        }
-
-        // Compute predicted RV for a comoving candidate
-        // Assumes candidate has same space velocity as target, projects onto candidate's line of sight
-        function computePredictedRV(candidateStar, targetStar) {
-            // If target has no RV, can't predict
-            if (targetStar.radial_velocity == null) return null;
-
-            // Convert positions to radians
-            const raT = targetStar.ra * Math.PI / 180;
-            const decT = targetStar.dec * Math.PI / 180;
-            const raC = candidateStar.ra * Math.PI / 180;
-            const decC = candidateStar.dec * Math.PI / 180;
-
-            // Target distance in pc
-            const distT = 1000 / targetStar.parallax;
-
-            // Target's velocity components in its local frame (v_ra, v_dec, v_r)
-            const k = 4.74047; // km/s per mas/yr at 1 kpc
-            const vRaT = k * targetStar.pmra * distT / 1000;  // pmra in mas/yr
-            const vDecT = k * targetStar.pmdec * distT / 1000;
-            const vRadT = targetStar.radial_velocity;
-
-            // Convert target's velocity to Cartesian (equatorial)
-            const cosRaT = Math.cos(raT);
-            const sinRaT = Math.sin(raT);
-            const cosDecT = Math.cos(decT);
-            const sinDecT = Math.sin(decT);
-
-            // Cartesian velocity components (equatorial frame)
-            const vx = -sinRaT * vRaT - sinDecT * cosRaT * vDecT + cosDecT * cosRaT * vRadT;
-            const vy = cosRaT * vRaT - sinDecT * sinRaT * vDecT + cosDecT * sinRaT * vRadT;
-            const vz = cosDecT * vDecT + sinDecT * vRadT;
-
-            // Project this velocity onto the radial direction of the candidate
-            const cosRaC = Math.cos(raC);
-            const sinRaC = Math.sin(raC);
-            const cosDecC = Math.cos(decC);
-            const sinDecC = Math.sin(decC);
-
-            // Radial unit vector for candidate
-            const pCx = cosDecC * cosRaC;
-            const pCy = cosDecC * sinRaC;
-            const pCz = sinDecC;
-
-            // Predicted RV = velocity dot radial direction
-            const rvPred = vx * pCx + vy * pCy + vz * pCz;
-
-            return rvPred;
-        }
-
-
-        function getSpectralType(bprp) {
-            if (bprp == null || isNaN(bprp)) return 'N/A';
-            for (let i = 0; i < sptMapping.length - 1; i++) {
-                if (bprp >= sptMapping[i].bprp && bprp < sptMapping[i + 1].bprp) {
-                    return sptMapping[i].spt;
-                }
-            }
-            if (bprp < sptMapping[0].bprp) return 'B/A';
-            if (bprp >= sptMapping[sptMapping.length - 1].bprp) return 'M8+';
-            return 'N/A';
-        }
-
-        function estimateMass(bprp, teff) {
-            if (teff && teff > 2500 && teff < 10000) {
-                if (teff >= 3000) {
-                    const mass = Math.pow(teff / 5772, 1.8);
-                    if (mass <= 2.5) return { value: mass, source: 'Boyajian+2012', url: 'https://ui.adsabs.harvard.edu/abs/2012ApJ...757..112B' };
-                }
-            }
-            return null;
-        }
-
-        function calculateAbsMag(gmag, parallax) {
-            if (parallax <= 0) return null;
-            const dist = 1000 / parallax;
-            return gmag - 5 * Math.log10(dist) + 5;
-        }
-
-        // Display functions
-        function displayTargetInfo(target) {
-            const container = document.getElementById('target-info');
-            const distPc = target.parallax > 0 ? 1000 / target.parallax : null;
-            const absG = distPc ? target.phot_g_mean_mag - 5 * Math.log10(distPc) + 5 : null;
-            const mass = estimateMass(target.bp_rp, target.teff_gspphot);
-
-            let html = '';
-
-            if (target._resolvedName) {
-                html += `<div class="info-item" style="grid-column: 1 / -1;"><div class="label">Name</div><div class="value highlight" style="font-size: 1.1rem;">${target._resolvedName}</div></div>`;
-            }
-
-            html += `
-                <div class="info-item"><div class="label">Gaia DR3 Source ID</div><div class="value">${target.source_id}</div></div>
-                <div class="info-item"><div class="label">RA / Dec</div><div class="value">${target.ra?.toFixed(5)}° / ${target.dec?.toFixed(5)}°</div></div>
-                <div class="info-item"><div class="label">Distance</div><div class="value highlight">${distPc?.toFixed(1) || 'N/A'} pc</div></div>
-                <div class="info-item"><div class="label">G mag / M<sub>G</sub></div><div class="value">${target.phot_g_mean_mag?.toFixed(2)} / ${absG?.toFixed(2) || 'N/A'}</div></div>
-                <div class="info-item"><div class="label">BP - RP</div><div class="value">${target.bp_rp?.toFixed(3) || 'N/A'}</div></div>
-                <div class="info-item"><div class="label">Spectral Type</div><div class="value highlight">${getSpectralType(target.bp_rp)}</div></div>
-                <div class="info-item"><div class="label">T<sub>eff</sub></div><div class="value">${target.teff_gspphot ? Math.round(target.teff_gspphot) + ' K' : 'N/A'}</div></div>
-                <div class="info-item"><div class="label">Mass Est.</div><div class="value">${mass ? mass.value.toFixed(2) + ' M☉' : 'N/A'}</div></div>
-                <div class="info-item"><div class="label">Radial Velocity</div><div class="value">${target.radial_velocity?.toFixed(2) || 'N/A'} km/s</div></div>
-                <div class="info-item"><div class="label">RUWE</div><div class="value">${target.ruwe?.toFixed(2) || 'N/A'}</div></div>
-            `;
-
-            container.innerHTML = html;
-        }
-
-        function displayExternalLinks(target, resolvedName) {
-            const container = document.getElementById('external-links');
-            const simbadId = resolvedName || `Gaia DR3 ${target.source_id}`;
-
-            container.innerHTML = `
-                <a href="https://simbad.cds.unistra.fr/simbad/sim-id?Ident=${encodeURIComponent(simbadId)}" target="_blank" class="external-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
-                    SIMBAD
-                </a>
-                <a href="https://exofop.ipac.caltech.edu/tess/target.php?id=${encodeURIComponent(simbadId)}" target="_blank" class="external-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
-                    ExoFOP
-                </a>
-                <a href="https://vizier.cds.unistra.fr/viz-bin/VizieR-4?-source=&-c=${target.ra}+${target.dec}&-c.rs=3&-out.max=unlimited&-out.all=2" target="_blank" class="external-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M9 21V9"></path></svg>
-                    VizieR
-                </a>
-                <a href="https://heasarc.gsfc.nasa.gov/wsgi-scripts/TESS/TESS-point_Web_Tool/TESS-point_Web_Tool/wtv_v2.0.py/?ra=${target.ra}&dec=${target.dec}" target="_blank" class="external-link">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
-                    TESS-point
-                </a>
-            `;
-        }
-
-        function initAladinViewer(ra, dec) {
-            const container = document.getElementById('aladin-lite-div');
-            if (!container) return;
-
-            // Wait for Aladin to load
-            if (typeof A === 'undefined') {
-                setTimeout(() => initAladinViewer(ra, dec), 500);
-                return;
-            }
-
-            container.innerHTML = '';
-            aladinViewer = A.aladin('#aladin-lite-div', {
-                target: `${ra} ${dec}`,
-                fov: 0.05,
-                survey: 'P/DSS2/color',
-                showReticle: true,
-                showZoomControl: true,
-                showFullscreenControl: true,
-                showLayersControl: true,
-                reticleColor: '#22d3ee',
-                reticleSize: 22
-            });
-
-            const catalog = A.catalog({ name: 'Target', sourceSize: 18, color: '#ef4444' });
-            aladinViewer.addCatalog(catalog);
-            catalog.addSources([A.marker(ra, dec, { popupTitle: 'Target' })]);
-
-            document.getElementById('fov-value').textContent = "6' FOV";
-        }
-
-        function addComovingToAladin(candidates, target) {
-            if (!aladinViewer || candidates.length === 0) return;
-
-            const comovers = candidates.filter(c => c.sep_3d > 0.01 && c.ra != null && c.dec != null);
-            if (comovers.length === 0) return;
-
-            const comovingCatalog = A.catalog({ name: 'Comoving', sourceSize: 12, color: '#22d3ee', shape: 'cross' });
-            aladinViewer.addCatalog(comovingCatalog);
-
-            const sources = comovers.map(c => A.source(c.ra, c.dec, {
-                name: `Gaia DR3 ${c.source_id}`,
-                popupDesc: `Sep: ${c.sep_3d?.toFixed(2)} pc`
-            }));
-            comovingCatalog.addSources(sources);
-        }
-
-        // CMD
-        const spectralTypeColors = [
-            { range: [-1, -0.26], color: 'rgba(91, 124, 255, 0.15)', label: 'O' },
-            { range: [-0.265, -0.038], color: 'rgba(105, 136, 255, 0.15)', label: 'B' },
-            { range: [-0.038, 0.327], color: 'rgba(147, 170, 255, 0.15)', label: 'A' },
-            { range: [0.327, 0.767], color: 'rgba(221, 222, 255, 0.15)', label: 'F' },
-            { range: [0.767, 0.984], color: 'rgba(255, 235, 223, 0.20)', label: 'G' },
-            { range: [0.984, 1.85], color: 'rgba(255, 177, 119, 0.20)', label: 'K' },
-            { range: [1.85, 3.5], color: 'rgba(255, 164, 72, 0.15)', label: 'M' },
-        ];
-
-        // Instability strip boundaries
-        const instabilityStrip = {
-            // Blue edge (hot/blue boundary)
-            blueX: [-0.1937, 0.65894],
-            blueY: [4.3871, -4.87],
-            // Red edge (cool/red boundary)
-            redX: [0.31126, 1.6108],
-            redY: [4.7419, -4.871]
+        // tiny tiebreak: prefer shorter IDs if scores are basically equal
+        score += 1e-6 * (1.0 / Math.max(1, idNorm.length));
+
+        return { idRaw, score, reason, idNorm };
+      });
+
+      scored.sort((a, b) => b.score - a.score);
+      return scored;
+    }
+
+    // =========================
+    // UI glue
+    // =========================
+    function readNum(id) {
+      const v = document.getElementById(id).value;
+      if (v === "" || v == null) return undefined;
+      const x = Number(v);
+      return Number.isFinite(x) ? x : undefined;
+    }
+
+    function setSpeedModeUI() {
+      const mode = document.getElementById("speedMode").value;
+      document.getElementById("rowGroupSpeed").style.display = (mode === "known") ? "" : "none";
+      document.getElementById("rowMuTowards").style.display = (mode === "fromMu") ? "" : "none";
+    }
+
+    function formatKmS(x) {
+      return `${x.toFixed(4)} km/s`;
+    }
+
+    function computeRV() {
+      const out = document.getElementById("rvOutput");
+      out.textContent = "";
+
+      try {
+        const star = {
+          raDeg: readNum("raDeg"),
+          decDeg: readNum("decDeg"),
+          parallaxMas: readNum("parallaxMas"),
+          distancePc: readNum("distancePc"),
+          pmRaMasYr: readNum("pmRaMasYr"),
+          pmDecMasYr: readNum("pmDecMasYr"),
         };
 
-        // Create filled polygon: go down blue edge, then up red edge
-        const stripX = [...instabilityStrip.blueX, ...instabilityStrip.redX.slice().reverse()];
-        const stripY = [...instabilityStrip.blueY, ...instabilityStrip.redY.slice().reverse()];
-
-        function displayCMD(candidates, target) {
-            const container = document.getElementById('cmd-plot');
-
-            const bprp = candidates.map(c => c.bp_rp);
-            const absG = candidates.map(c => calculateAbsMag(c.phot_g_mean_mag, c.parallax));
-            const voff = candidates.map(c => c.voff);
-
-            const targetBpRp = target.bp_rp;
-            const targetAbsMag = calculateAbsMag(target.phot_g_mean_mag, target.parallax);
-
-            const shapes = spectralTypeColors.map(band => ({
-                type: 'rect', xref: 'x', yref: 'paper',
-                x0: band.range[0], x1: band.range[1], y0: 0, y1: 1,
-                fillcolor: band.color, line: { width: 0 }, layer: 'below'
-            }));
-
-            // PARSEC isochrones from CMD 3.7 (http://stev.oapd.inaf.it/cmd)
-            // PARSEC v1.2S + COLIBRI, [M/H]=0.0, Gaia DR2 photometric system (Weiler 2018)
-            const myr100_bp_rp = [-0.180,-0.186,-0.192,-0.194,-0.198,-0.203,-0.204,-0.205,-0.205,-0.205,-0.206,-0.205,-0.204,-0.203,-0.202,-0.199,-0.196,-0.195,-0.189,-0.187,-0.183,-0.177,-0.173,-0.167,-0.165,-0.164,-0.156,-0.152,-0.141,-0.136,-0.129,-0.118,-0.117,-0.097,-0.084,-0.070,-0.053,-0.053,-0.043,-0.032,-0.021,-0.021,-0.008,0.006,0.023,0.041,0.063,0.088,0.118,0.127,0.154,0.197,0.243,0.252,0.293,0.345,0.398,0.448,0.490,0.530,0.568,0.605,0.648,0.691,0.724,0.741,0.795,0.802,0.823,0.916,0.988,1.066,1.069,1.160,1.271,1.448,1.449,1.571,1.586,1.600,1.663,1.767,2.001,2.010,2.141,2.240,2.398,2.527,2.652,2.781,2.831,2.944,3.120,3.205,3.209];
-            const myr100_mg = [-1.967,-1.839,-1.710,-1.672,-1.569,-1.423,-1.325,-1.305,-1.186,-1.043,-1.042,-0.952,-0.852,-0.792,-0.770,-0.653,-0.566,-0.529,-0.394,-0.350,-0.261,-0.143,-0.085,0.020,0.062,0.081,0.201,0.271,0.413,0.485,0.569,0.705,0.721,0.937,1.051,1.183,1.307,1.313,1.381,1.450,1.520,1.525,1.593,1.668,1.746,1.827,1.914,2.005,2.102,2.130,2.208,2.323,2.447,2.471,2.578,2.721,2.869,3.029,3.195,3.374,3.564,3.766,3.978,4.201,4.365,4.443,4.691,4.720,4.815,5.226,5.518,5.837,5.847,6.186,6.569,7.041,7.045,7.368,7.406,7.442,7.586,7.818,8.397,8.420,8.764,9.015,9.468,9.862,10.231,10.602,10.736,11.019,11.384,11.565,11.572];
-            const gyr1_bp_rp = [0.210,0.230,0.269,0.310,0.352,0.394,0.436,0.475,0.483,0.500,0.490,0.460,0.430,0.414,0.392,0.358,0.336,0.333,0.305,0.291,0.288,0.272,0.268,0.264,0.261,0.260,0.261,0.264,0.265,0.271,0.276,0.283,0.294,0.309,0.316,0.326,0.342,0.347,0.374,0.410,0.419,0.450,0.458,0.490,0.526,0.554,0.562,0.596,0.598,0.637,0.681,0.707,0.728,0.780,0.819,0.840,0.843,0.905,0.971,0.982,1.062,1.158,1.160,1.275,1.278,1.457,1.469,1.675,1.719,1.800,1.859,2.005,2.046,2.183,2.216,2.355,2.479,2.606,2.613,2.685,2.701,2.887];
-            const gyr1_mg = [0.353,0.374,0.422,0.471,0.517,0.560,0.605,0.657,0.674,0.711,0.741,0.798,0.840,0.864,0.902,0.966,1.020,1.029,1.113,1.180,1.195,1.294,1.343,1.401,1.489,1.506,1.594,1.667,1.680,1.775,1.827,1.891,1.986,2.102,2.146,2.220,2.308,2.335,2.472,2.641,2.683,2.820,2.857,3.006,3.200,3.363,3.404,3.609,3.619,3.844,4.082,4.220,4.329,4.588,4.760,4.860,4.868,5.146,5.411,5.453,5.786,6.141,6.149,6.537,6.546,7.008,7.036,7.558,7.683,7.919,8.084,8.503,8.617,9.035,9.134,9.615,10.071,10.523,10.543,10.787,10.843,11.466];
-
-            const traces = [
-                // Instability strip (behind everything)
-                {
-                    x: stripX,
-                    y: stripY,
-                    fill: 'toself',
-                    fillcolor: 'rgba(147, 112, 219, 0.15)',
-                    line: { color: 'rgba(147, 112, 219, 0.4)', width: 1, dash: 'dash' },
-                    name: 'Instability Strip',
-                    hoverinfo: 'name',
-                    mode: 'lines'
-                },
-
-                { x: myr100_bp_rp, y: myr100_mg, mode: 'lines', name: '100 Myr (PARSEC)', line: { color: '#000000', width: 1 } },
-                { x: gyr1_bp_rp, y: gyr1_mg, mode: 'lines', name: '1 Gyr (PARSEC)', line: { color: '#000000', width: 1, dash: 'dot' } },
-                { x: [0.874], y: [4.902], mode: 'markers', name: 'Sun', marker: { size: 12, color: '#fbbf24', symbol: 'circle', line: { color: '#000', width: 1 } } }
-            ];
-
-            if (bprp.length > 0) {
-                traces.push({
-                    x: bprp, y: absG, mode: 'markers', name: 'Comoving',
-                    marker: { size: 10, color: voff, colorscale: 'Viridis', showscale: true, colorbar: { title: 'V<sub>off</sub>', len: 0.5, y: 0.75 }, line: { color: '#333', width: 0.5 } },
-                    text: candidates.map(c => `Gaia DR3 ${c.source_id}`),
-                    hovertemplate: '<b>%{text}</b><br>BP-RP: %{x:.3f}<br>M_G: %{y:.2f}<extra></extra>'
-                });
-            }
-
-            if (targetBpRp != null && targetAbsMag != null) {
-                traces.push({
-                    x: [targetBpRp], y: [targetAbsMag], mode: 'markers', name: target._resolvedName || 'Target',
-                    marker: { size: 16, color: '#ef4444', symbol: 'star', line: { color: '#000', width: 2 } }
-                });
-            }
-
-            const layout = {
-                paper_bgcolor: '#ffffff', plot_bgcolor: '#ffffff',
-                font: { color: '#1a1a2e', family: 'IBM Plex Sans', size: 12 },
-                xaxis: { title: 'BP - RP (mag)', range: [-0.5, 3.5], dtick: 0.5, gridcolor: 'rgba(100,100,100,0.3)', zeroline: false },
-                yaxis: { title: 'M<sub>G</sub> (mag)', range: [16, -4], dtick: 2, gridcolor: 'rgba(100,100,100,0.3)', zeroline: false },
-                shapes: shapes,
-                annotations: spectralTypeColors
-                    .filter(band => band.range[0] >= -0.5 && band.range[1] <= 3.5) // Only show labels in visible range
-                    .map(band => ({
-                        x: (band.range[0] + band.range[1]) / 2,
-                        y: -3,
-                        text: band.label,
-                        showarrow: false,
-                        font: { size: 14, color: 'rgba(0,0,0,0.5)', family: 'IBM Plex Sans', weight: 600 },
-                        xanchor: 'center',
-                        yanchor: 'bottom'
-                    })),
-                legend: { x: 0.02, y: 0.02, bgcolor: 'rgba(255,255,255,0.9)', font: { size: 10 } },
-                margin: { t: 20, r: 50, b: 50, l: 50 },
-                hovermode: 'closest'
-            };
-
-            Plotly.newPlot(container, traces, layout, { responsive: true });
+        if (!Number.isFinite(star.raDeg) || !Number.isFinite(star.decDeg)) {
+          throw new Error("Star RA/Dec are required.");
         }
 
-        function displayGyroPlot(target, rotationPeriod) {
-            const container = document.getElementById('gyro-plot');
-            const panel = document.getElementById('gyro-panel');
+        const model = {
+          raDeg: readNum("cpRaDeg"),
+          decDeg: readNum("cpDecDeg"),
+          groupSpeedKmS: undefined,
+          groupSpeedFromMuTowards: undefined,
+        };
 
-            if (!target.teff_gspphot || !rotationPeriod) { panel.style.display = 'none'; return; }
-
-            panel.style.display = 'block';
-
-            const traces = [];
-            const hexToRgba = (hex, alpha) => {
-                const r = parseInt(hex.slice(1, 3), 16);
-                const g = parseInt(hex.slice(3, 5), 16);
-                const b = parseInt(hex.slice(5, 7), 16);
-                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-            };
-
-            Object.entries(gyroClusterData).forEach(([key, cluster]) => {
-                const validIdx = cluster.teff.map((t, i) => t >= 3000 ? i : -1).filter(i => i >= 0);
-                const teff = validIdx.map(i => cluster.teff[i]);
-                const prot = validIdx.map(i => cluster.prot[i]);
-                const scatter = validIdx.map(i => cluster.scatter[i]);
-
-                traces.push({ x: teff, y: prot.map((p, i) => p + scatter[i]), mode: 'lines', line: { color: 'transparent' }, showlegend: false, hoverinfo: 'skip' });
-                traces.push({ x: teff, y: prot.map((p, i) => Math.max(0, p - scatter[i])), mode: 'lines', fill: 'tonexty', fillcolor: hexToRgba(cluster.color, 0.2), line: { color: 'transparent' }, showlegend: false, hoverinfo: 'skip' });
-                traces.push({ x: teff, y: prot, mode: 'lines', name: cluster.label, line: { color: cluster.color, width: 2.5 } });
-            });
-
-            traces.push({
-                x: [target.teff_gspphot], y: [rotationPeriod], mode: 'markers', name: target._resolvedName || 'Target',
-                marker: { size: 16, color: '#ef4444', symbol: 'star', line: { color: '#000', width: 1.5 } }
-            });
-
-            const layout = {
-                paper_bgcolor: '#ffffff', plot_bgcolor: '#ffffff',
-                font: { color: '#1a1a2e', family: 'IBM Plex Sans' },
-                xaxis: { title: 'Effective Temperature [K]', range: [7000, 3000], gridcolor: 'rgba(100,100,100,0.3)' },
-                yaxis: { title: 'Rotation Period [days]', range: [0, 18], gridcolor: 'rgba(100,100,100,0.3)' },
-                legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(255,255,255,0.9)', font: { size: 11 } },
-                margin: { t: 30, r: 20, b: 55, l: 60 }
-            };
-
-            Plotly.newPlot(container, traces, layout, { responsive: true });
+        if (!Number.isFinite(model.raDeg) || !Number.isFinite(model.decDeg)) {
+          throw new Error("Convergent point RA/Dec are required.");
         }
 
-        function displayTable(candidates) {
-            const tbody = document.getElementById('results-tbody');
-            document.getElementById('candidate-count').textContent = `${candidates.length} stars`;
-
-
-         tbody.innerHTML = candidates.map(c => `
-             <tr class="${c.sep_3d < 0.001 ? 'target-row' : ''}">
-                 <td>${c.index}</td>
-                 <td>${c.source_id}</td>
-                 <td>${c.ra?.toFixed(7) || ''}</td>
-                 <td>${c.dec?.toFixed(7) || ''}</td>
-                 <td>${c.phot_g_mean_mag?.toFixed(4) || ''}</td>
-                 <td>${c.bp_rp?.toFixed(4) || ''}</td>
-                 <td>${c.voff?.toFixed(3) || ''}</td>
-                 <td>${c.sep_deg?.toFixed(6) || ''}</td>
-                 <td>${c.sep_3d?.toFixed(4) || ''}</td>
-                 <td>${c.rv_pred?.toFixed(2) || ''}</td>
-                 <td>${c.radial_velocity?.toFixed(2) || ''}</td>
-                 <td>${c.spt}</td>
-                 <td>${c.ruwe?.toFixed(2) || ''}</td>
-             </tr>
-         `).join('');
-        }
-         function downloadCSV() {
-             if (searchResults.length === 0) return;
-             // Updated headers to match data
-             const headers = ['Index', 'Gaia_DR3_source_id', 'RA', 'Dec', 'Gmag', 'Bp-Rp', 'Voff_km_s', 'Sep_deg', 'Sep3D_pc', 'RV_pred', 'RV_obs', 'SpT', 'RUWE'];
-             const rows = searchResults.map(c => [
-                 c.index, 
-                 c.source_id, 
-                 c.ra?.toFixed(9),
-                 c.dec?.toFixed(9), 
-                 c.phot_g_mean_mag?.toFixed(4), 
-                 c.bp_rp?.toFixed(4), 
-                 c.voff?.toFixed(4), 
-                 c.sep_deg?.toFixed(7), 
-                 c.sep_3d?.toFixed(5), 
-                 c.rv_pred?.toFixed(3),
-                 c.radial_velocity?.toFixed(3),
-                 c.spt, 
-                 c.ruwe?.toFixed(3)
-             ].join(','));
-            const csv = [headers.join(','), ...rows].join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `GaiaDR3_${targetData.source_id}_comoving.csv`;
-            a.click();
+        const mode = document.getElementById("speedMode").value;
+        if (mode === "known") {
+          const V = readNum("groupSpeedKmS");
+          if (!Number.isFinite(V)) throw new Error("Provide a finite group speed V (km/s).");
+          model.groupSpeedKmS = V;
+        } else {
+          const mu = readNum("muTowardsMasYr");
+          if (!Number.isFinite(mu)) throw new Error("Provide a finite muTowards (mas/yr).");
+          model.groupSpeedFromMuTowards = { muTowardsMasYr: mu };
         }
 
-        function downloadPlot() {
-            Plotly.downloadImage('cmd-plot', { format: 'png', width: 600, height: 900, filename: `GaiaDR3_${targetData?.source_id}_CMD` });
+        const rvPred = computePredictedRVConvergent(star, model);
+        const cp = { raDeg: model.raDeg, decDeg: model.decDeg };
+        const lambda = angularSeparationRad(star, cp);
+        const lambdaDeg = lambda * 180 / Math.PI;
+
+        const lines = [];
+        lines.push(`λ (star–CP separation): ${lambdaDeg.toFixed(6)} deg`);
+        lines.push(`Predicted RV: ${formatKmS(rvPred)}`);
+
+        const rvObs = readNum("rvObservedKmS");
+        if (Number.isFinite(rvObs)) {
+          const offset = computeVelocityOffsetConvergent(rvObs, star, model);
+          lines.push(`Observed RV:  ${formatKmS(rvObs)}`);
+          lines.push(`Offset (obs - pred): ${formatKmS(offset)}`);
+        } else {
+          lines.push(`Observed RV:  (not provided)`);
+          lines.push(`Offset:       (not computed)`);
         }
 
-        function downloadGyroPlot() {
-            Plotly.downloadImage('gyro-plot', { format: 'png', width: 800, height: 500, filename: `GaiaDR3_${targetData?.source_id}_gyro` });
-        }
+        out.classList.remove("err");
+        out.textContent = lines.join("\n");
+      } catch (e) {
+        out.classList.add("err");
+        out.textContent = `Error: ${e?.message ?? String(e)}`;
+      }
+    }
 
-        // Main search
-        async function runSearch() {
-            const inputId = document.getElementById('target-id').value.trim();
-            if (!inputId) { setStatus('Please enter a target identifier', 'error'); return; }
+    function computeMuTowardsUI() {
+      const out = document.getElementById("muOutput");
+      out.textContent = "";
 
-            const searchBtn = document.getElementById('search-btn');
-            searchBtn.disabled = true;
-            searchBtn.innerHTML = '<span class="loading-spinner"></span> Searching...';
-            document.getElementById('walking-loader').classList.add('active');
-            document.getElementById('results-section').classList.remove('visible');
+      try {
+        const star = {
+          raDeg: readNum("raDeg"),
+          decDeg: readNum("decDeg"),
+          pmRaMasYr: readNum("pmRaMasYr"),
+          pmDecMasYr: readNum("pmDecMasYr"),
+        };
+        const cp = {
+          raDeg: readNum("cpRaDeg"),
+          decDeg: readNum("cpDecDeg"),
+        };
 
-            // Reset state
-            searchResults = [];
-            targetData = null;
-            ticInfo = null;
-            vizierYouthData = { ewli: [], prot: [], rhk: [], lx: [] };
-            document.getElementById('comoving-panel').style.display = 'none';
-            document.getElementById('gyro-panel').style.display = 'none';
-            document.getElementById('toomre-panel').style.display = 'none';
-            document.getElementById('tess-info-container').innerHTML = '';
-            document.getElementById('exoplanet-alert').innerHTML = '';
-            document.getElementById('li-values').innerHTML = '';
-            document.getElementById('rotation-results').innerHTML = '';
-            document.getElementById('rhk-results').innerHTML = '';
-            document.getElementById('lx-results').innerHTML = '';
+        if (!Number.isFinite(star.raDeg) || !Number.isFinite(star.decDeg)) throw new Error("Star RA/Dec are required.");
+        if (!Number.isFinite(cp.raDeg) || !Number.isFinite(cp.decDeg)) throw new Error("CP RA/Dec are required.");
 
-            try {
-                updateProgress([{ text: 'Resolving target identifier...', status: 'active' }]);
-                setStatus('Resolving target...');
+        const mu = computeMuTowardsConvergentPointMasYr(star, cp);
+        const pa = positionAngleRad(star, cp) * 180 / Math.PI;
+        out.classList.remove("err");
+        out.textContent =
+          `Position angle to CP (east of north): ${pa.toFixed(6)} deg\n` +
+          `muTowards: ${mu.toFixed(6)} mas/yr\n\n` +
+          `Tip: You can paste this muTowards into “Infer V from muTowards” mode.`;
+      } catch (e) {
+        out.classList.add("err");
+        out.textContent = `Error: ${e?.message ?? String(e)}`;
+      }
+    }
 
-                const resolved = await resolveIdentifier(inputId);
-                if (!resolved) throw new Error(`Could not resolve "${inputId}"`);
+    function resolveIDs() {
+      const out = document.getElementById("idOutput");
+      out.textContent = "";
 
-                const gaiaId = resolved.gaiaId;
-                const resolvedName = resolved.resolvedName;
+      const q = document.getElementById("idQuery").value ?? "";
+      const lines = (document.getElementById("candidates").value ?? "")
+        .split("\n")
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
 
-                updateProgress([
-                    { text: resolvedName ? `Resolved → Gaia DR3 ${gaiaId}` : 'Using Gaia DR3 ID', status: 'check' },
-                    { text: 'Querying Gaia DR3...', status: 'active' }
-                ]);
-                setStatus('Querying Gaia DR3...');
+      if (!lines.length) {
+        out.classList.add("err");
+        out.textContent = "Error: Add at least one candidate ID.";
+        return;
+      }
 
-                const targetQuery = `SELECT source_id, ra, dec, parallax, parallax_error, pmra, pmdec,
-                    radial_velocity, radial_velocity_error, phot_g_mean_mag, phot_bp_mean_mag,
-                    phot_rp_mean_mag, bp_rp, ruwe, teff_gspphot, logg_gspphot
-                    FROM gaiadr3.gaia_source WHERE source_id = ${gaiaId}`;
+      const scored = resolveIdentifier(q, lines);
 
-               const targetResult = await queryGaia(targetQuery);
-               if (!targetResult.data || targetResult.data.length === 0) {
-                   throw new Error(`No source found. This source likely does not have a Gaia ID on Simbad.`);
-               }
-                targetData = resolvedName ? { _resolvedName: resolvedName } : {};
-                const cols = targetResult.metadata.map(m => m.name);
-                targetResult.data[0].forEach((val, i) => {
-                    const colName = cols[i].toLowerCase();
-                    // Keep source_id as string to preserve precision
-                    targetData[colName] = (colName === 'source_id') ? String(val) : val;
-                });
-                targetData.source_id = gaiaId;
+      const best = scored[0];
+      const buf = [];
+      buf.push(`Query: "${q}"   (normalized: "${normalizeIdentifier(q)}")`);
+      buf.push(`Best:  "${best.idRaw}"   score=${best.score.toFixed(6)}   reason=${best.reason}`);
+      buf.push("");
+      buf.push("Ordered matches:");
+      for (const s of scored) {
+        buf.push(`- ${s.score.toFixed(6)}  ${s.reason.padEnd(15)}  "${s.idRaw}"  (norm="${s.idNorm}")`);
+      }
 
-                if (!targetData.parallax || targetData.parallax <= 0) throw new Error('No valid parallax');
+      out.classList.remove("err");
+      out.textContent = buf.join("\n");
+    }
 
-                document.getElementById('results-section').classList.add('visible');
+    // wire up
+    document.getElementById("btnCompute").addEventListener("click", computeRV);
+    document.getElementById("btnResolve").addEventListener("click", resolveIDs);
+    document.getElementById("btnMuTowards").addEventListener("click", computeMuTowardsUI);
+    document.getElementById("speedMode").addEventListener("change", () => {
+      setSpeedModeUI();
+      computeRV();
+    });
 
-                // Display target info
-                displayTargetInfo(targetData);
-                displayExternalLinks(targetData, resolvedName);
-
-                // Initialize Aladin
-                initAladinViewer(targetData.ra, targetData.dec);
-
-                // Display Galactic map
-                displayGalacticMap(targetData.ra, targetData.dec);
-
-                // Display Toomre diagram (if RV available)
-                displayToomreDiagram(targetData);
-
-                // Display CMD (target only)
-                displayCMD([], targetData);
-
-                // Search rotation periods automatically
-                updateProgress([
-                    { text: resolvedName ? `Resolved → Gaia DR3 ${gaiaId}` : 'Using Gaia DR3 ID', status: 'check' },
-                    { text: 'Target found in Gaia DR3', status: 'check' },
-                    { text: 'Searching rotation periods...', status: 'active' }
-                ]);
-                setStatus('Searching for rotation periods...');
-
-                const rotResults = await searchRotationPeriods(targetData.ra, targetData.dec);
-                displayRotationResults(rotResults);
-
-                updateProgress([
-                    { text: resolvedName ? `Resolved → Gaia DR3 ${gaiaId}` : 'Using Gaia DR3 ID', status: 'check' },
-                    { text: 'Target found in Gaia DR3', status: 'check' },
-                    { text: rotResults.length > 0 ? `Found ${rotResults.length} rotation period(s)` : 'No rotation periods found', status: 'check' }
-                ]);
-
-                setStatus('Search complete. Use buttons above for additional queries.', 'success');
-
-            } catch (error) {
-                console.error('Search error:', error);
-                setStatus(`Error: ${error.message}`, 'error');
-            } finally {
-                searchBtn.disabled = false;
-                searchBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg> Search`;
-                document.getElementById('walking-loader').classList.remove('active');
-            }
-        }
-
-        document.getElementById('target-id').addEventListener('keypress', (e) => { if (e.key === 'Enter') runSearch(); });
-    </script>
+    // initial
+    setSpeedModeUI();
+    computeRV();
+    resolveIDs();
+  </script>
 </body>
 </html>
