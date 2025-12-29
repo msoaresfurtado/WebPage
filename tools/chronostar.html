@@ -2555,7 +2555,7 @@ DATA SOURCES:
                     const starDist = 1000 / star.parallax;
             
                      const angSep = angularSeparation(targetData.ra, targetData.dec, star.ra, star.dec);
-                     const angSepRad = angSep * Math.PI / 180;  // <-- ADD THIS LINE
+                     const angSepRad = angSep * Math.PI / 180; 
                      const sep3d = Math.sqrt(
                          starDist * starDist + targetDist * targetDist - 
                          2 * starDist * targetDist * Math.cos(angSepRad)
