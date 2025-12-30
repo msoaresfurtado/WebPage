@@ -708,7 +708,7 @@ DATA SOURCES:
                 <div class="youth-indicator-panel prot-panel">
                   <h4>P<sub>rot</sub> - Rotation</h4>
                   <div class="youth-indicator-values" id="rotation-results">
-                    <div class="no-data">Searching automatically...</div>
+                    <div class="no-data">Click "Youth Indicators" above to search</div>
                   </div>
                 </div>
                 <div class="youth-indicator-panel rhk-panel">
@@ -1153,6 +1153,26 @@ DATA SOURCES:
 
     const keltMatch = cleaned.match(/^KELT[-\s]*(\d+[A-Za-z]?)$/i);
     if (keltMatch) variants.push(`KELT-${keltMatch[1]}`, `KELT ${keltMatch[1]}`, `KELT${keltMatch[1]}`);
+
+    // K2 targets (e.g., K2-33, K2 33, K233)
+    const k2Match = cleaned.match(/^K2[-\s]*(\d+[A-Za-z]?)$/i);
+    if (k2Match) variants.push(`K2-${k2Match[1]}`, `K2 ${k2Match[1]}`, `K2${k2Match[1]}`);
+
+    // WASP targets (e.g., WASP-12, WASP 12)
+    const waspMatch = cleaned.match(/^WASP[-\s]*(\d+[A-Za-z]?)$/i);
+    if (waspMatch) variants.push(`WASP-${waspMatch[1]}`, `WASP ${waspMatch[1]}`, `WASP${waspMatch[1]}`);
+
+    // HAT-P targets (e.g., HAT-P-1, HATP1)
+    const hatpMatch = cleaned.match(/^HAT[-\s]*P[-\s]*(\d+[A-Za-z]?)$/i);
+    if (hatpMatch) variants.push(`HAT-P-${hatpMatch[1]}`, `HAT-P ${hatpMatch[1]}`, `HATP${hatpMatch[1]}`, `HAT-P${hatpMatch[1]}`);
+
+    // EPIC targets (K2 input catalog)
+    const epicMatch = cleaned.match(/^EPIC\s*(\d+)$/i);
+    if (epicMatch) variants.push(`EPIC ${epicMatch[1]}`, `EPIC${epicMatch[1]}`);
+
+    // Kepler targets (e.g., Kepler-22, Kepler 22)
+    const keplerMatch = cleaned.match(/^Kepler[-\s]*(\d+[A-Za-z]?)$/i);
+    if (keplerMatch) variants.push(`Kepler-${keplerMatch[1]}`, `Kepler ${keplerMatch[1]}`, `Kepler${keplerMatch[1]}`);
 
     // Collect all SIMBAD oid candidates across variants
     const oidSet = new Set();
@@ -1736,7 +1756,7 @@ DATA SOURCES:
       },
       { x: myr100_bp_rp, y: myr100_mg, mode: 'lines', name: '100 Myr (PARSEC)', line: { color: '#000000', width: 1 } },
       { x: gyr1_bp_rp, y: gyr1_mg, mode: 'lines', name: '1 Gyr (PARSEC)', line: { color: '#000000', width: 1, dash: 'dot' } },
-      { x: [0.874], y: [4.902], mode: 'markers', name: 'Sun', marker: { size: 12, color: '#fbbf24', symbol: 'circle', line: { color: '#000', width: 1 } } }
+      { x: [0.874], y: [4.902], mode: 'markers', name: 'Sun', marker: { size: 12, color: '#000000', symbol: 'circle-open-dot', line: { color: '#000000', width: 2 } }, hovertemplate: '<b>Sun</b><br>BP-RP: 0.874<br>M_G: 4.902<extra></extra>' }
     ];
 
     if (bprp.length > 0) {
@@ -1795,86 +1815,329 @@ DATA SOURCES:
     });
   }
 
+  async function discoverVizierTables(catalogPath) {
+    const tapUrl = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
+    const query = `SELECT table_name FROM TAP_SCHEMA.tables WHERE schema_name = '${catalogPath}'`;
+
+    const params = new URLSearchParams({
+      REQUEST: 'doQuery',
+      LANG: 'ADQL',
+      FORMAT: 'json',
+      QUERY: query
+    });
+
+    try {
+      const response = await fetch(tapUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+      });
+
+      if (!response.ok) return [];
+
+      const data = await response.json();
+      if (!data.data) return [];
+
+      return data.data.map(row => row[0]);
+    } catch (e) {
+      console.warn(`[Rotation] Could not discover tables for ${catalogPath}:`, e.message);
+      return [];
+    }
+  }
+
   // =========================
   // Rotation periods (auto)
   // =========================
   async function searchRotationPeriods(ra, dec) {
-    const results = [];
-    const radius = 10 / 3600;
+      const results = [];
+      const radiusDeg = 5 / 3600; // 5 arcsec
+      let gaiaRotationIgnored = false;
 
-    const catalogs = [
-      { name: 'J/ApJS/211/24/table1', label: 'McQuillan+2014', periodCol: 'Prot' },
-      { name: 'J/ApJS/244/21/table2', label: 'Santos+2019', periodCol: 'Prot' },
-      { name: 'J/ApJ/879/49/table1', label: 'Curtis+2019', periodCol: 'Prot' },
-      { name: 'J/ApJS/250/20/table1', label: 'Canto Martins+2020', periodCol: 'Prot' },
-      { name: 'J/ApJ/823/16/table2', label: 'Rebull+2016', periodCol: 'Per' },
-      { name: 'J/AJ/158/77/table1', label: 'Douglas+2019', periodCol: 'Prot' },
-      { name: 'J/ApJS/271/51/table1', label: 'Claytor+2024', periodCol: 'Prot' },
-    ];
+      const ROTATION_CATALOGS = [
+          // GCVS - General Catalogue of Variable Stars
+          { name: 'GCVS', table: '"B/gcvs/gcvs_cat"', periodCol: 'Period',
+            raCol: 'RAJ2000', decCol: 'DEJ2000' },
 
-    for (const cat of catalogs) {
-      try {
-        const url = `https://vizier.cds.unistra.fr/viz-bin/conesearch/${cat.name}?RA=${ra}&DEC=${dec}&SR=${radius}&VERB=3`;
-        const response = await fetch(url);
-        if (!response.ok) continue;
+          // Gaia DR3 variability (keep ignoring by default due to accuracy issues)
+          { name: 'Gaia DR3 Rotation', table: '"I/358/vrm"', periodCol: 'Freq',
+            raCol: 'RA_ICRS', decCol: 'DE_ICRS', ignoreByDefault: true },
 
-        const text = await response.text();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, 'text/xml');
+          // Bohigas+2020 - multi-table catalog
+          { name: 'Bohigas+2020', catalog: 'J/other/RMxAA/56.139', tablePattern: /d$/, periodCol: 'Per',
+            raCol: '_RAJ2000', decCol: '_DEJ2000', multiTable: true },
 
-        const fields = xml.querySelectorAll('FIELD');
-        const metadata = Array.from(fields).map(f => ({ name: f.getAttribute('name') || f.getAttribute('ID') }));
+          // Angus+2018 - Kepler rotation periods
+          { name: 'Angus+2018', table: '"J/MNRAS/474/2094/table5"', periodCol: 'Per',
+            raCol: '_RA', decCol: '_DE' },
 
-        const trs = xml.querySelectorAll('TABLEDATA TR');
-        if (trs.length === 0) continue;
+          // McQuillan+2013 - Kepler rotation periods
+          { name: 'McQuillan+2013', table: '"J/ApJ/775/L11/table1"', periodCol: 'Prot',
+            raCol: '_RA', decCol: '_DE' },
 
-        const row = Array.from(trs[0].querySelectorAll('TD')).map(td => {
-          const val = td.textContent.trim();
-          const num = parseFloat(val);
-          return isNaN(num) ? val : num;
-        });
+          // McQuillan+2014 - Kepler rotation periods
+          { name: 'McQuillan+2014', table: '"J/ApJS/211/24/table1"', periodCol: 'Prot',
+            raCol: '_RAJ2000', decCol: '_DEJ2000' },
 
-        let periodIdx = metadata.findIndex(m => m.name === cat.periodCol);
-        if (periodIdx < 0) periodIdx = metadata.findIndex(m => /^P(rot|er(iod)?)?$/i.test(m.name));
+          // Canto Martins+2020 - TESS TOI rotation
+          { name: 'Canto Martins+2020', table: '"J/ApJS/250/20/table1"', periodCol: 'Prot',
+            raCol: '_RAJ2000', decCol: '_DEJ2000' },
 
-        if (periodIdx >= 0 && row[periodIdx] != null) {
-          const period = parseFloat(row[periodIdx]);
-          if (!isNaN(period) && period > 0.1 && period < 200) {
-            results.push({ period, source: cat.label, catalog: cat.name });
+          // Rebull+2016 - Pleiades K2 rotation
+          { name: 'Rebull+2016', table: '"J/AJ/152/113/table2"', periodCol: 'Prot',
+            raCol: '_RAJ2000', decCol: '_DEJ2000' },
+
+          // Reinhold & Hekker 2020 - K2 rotation
+          { name: 'Reinhold+2020', table: '"J/A+A/635/A43/table2"', periodCol: 'Prot',
+            raCol: '_RAJ2000', decCol: '_DEJ2000', ignoreByDefault: true },
+
+          // Curtis+2019 - Pisces-Eridanus rotation
+          { name: 'Curtis+2019', table: '"J/AJ/158/77/table2"', periodCol: 'Prot',
+            raCol: '_RAJ2000', decCol: '_DEJ2000' },
+
+          // Douglas+2017 - Praesepe K2 rotation
+          { name: 'Douglas+2017', table: '"J/ApJ/842/83/table1"', periodCol: 'Prot',
+            raCol: '_RAJ2000', decCol: '_DEJ2000' },
+          { name: 'Douglas+2017', table: '"J/ApJ/842/83/table2"', periodCol: 'PCat',
+            raCol: '_RAJ2000', decCol: '_DEJ2000' },
+          { name: 'Douglas+2017', table: '"J/ApJ/842/83/table3"', periodCol: 'P',
+            raCol: '_RAJ2000', decCol: '_DEJ2000' },
+
+            // Colman+2024 - Pisces-Eridanus rotation
+            { name: 'Colman+2024', table: '"J/AJ/167/189/fig12"', periodCol: 'Prot',
+              raCol: '_RA', decCol: '_DE' },
+      ];
+
+      const tapUrl = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
+
+      // Common coordinate column name patterns to try
+      const coordPatterns = [
+        { ra: 'RA_ICRS', dec: 'DE_ICRS' },
+        { ra: 'RAJ2000', dec: 'DEJ2000' },
+        { ra: 'RAdeg', dec: 'DEdeg' },
+        { ra: 'RA', dec: 'DE' },
+        { ra: 'ra', dec: 'dec' },
+        { ra: '_RA', dec: '_DE' },
+      ];
+
+      for (const cat of ROTATION_CATALOGS) {
+        try {
+          let tablesToQuery = [];
+
+          if (cat.multiTable && cat.catalog && cat.tablePattern) {
+            const allTables = await discoverVizierTables(cat.catalog);
+            tablesToQuery = allTables
+              .filter(t => cat.tablePattern.test(t))
+              .map(t => `"${cat.catalog}/${t}"`);
+            console.log(`[Rotation] ${cat.name}: Found ${tablesToQuery.length} matching tables`);
+          } else {
+            tablesToQuery = [cat.table];
+          }
+
+          // Query each table
+          for (const tableName of tablesToQuery) {
+            try {
+              console.log(`[Rotation] Querying ${cat.name} (${tableName})...`);
+
+              // First, get the table schema to find coordinate columns
+              const schemaQuery = `SELECT TOP 0 * FROM ${tableName}`;
+              const schemaParams = new URLSearchParams({
+                REQUEST: 'doQuery',
+                LANG: 'ADQL',
+                FORMAT: 'json',
+                QUERY: schemaQuery
+              });
+
+              const schemaResp = await fetch(tapUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: schemaParams
+              });
+
+              if (!schemaResp.ok) {
+                console.log(`[Rotation] ${cat.name}: Table not found in TAP`);
+                continue;
+              }
+
+              const schemaData = await schemaResp.json();
+              const cols = schemaData.metadata.map(m => m.name);
+              console.log(`[Rotation] ${cat.name} available columns:`, cols);
+
+              // Find RA/Dec columns
+              let raCol = null, decCol = null;
+              for (const pattern of coordPatterns) {
+                if (cols.some(c => c === pattern.ra) && cols.some(c => c === pattern.dec)) {
+                  raCol = pattern.ra;
+                  decCol = pattern.dec;
+                  break;
+                }
+              }
+
+              // Try case-insensitive match
+              if (!raCol) {
+                const raMatch = cols.find(c => /^(ra|_ra|raj2000|ra_icrs|radeg)$/i.test(c));
+                const decMatch = cols.find(c => /^(de|dec|_de|dej2000|de_icrs|dedeg)$/i.test(c));
+                if (raMatch && decMatch) {
+                  raCol = raMatch;
+                  decCol = decMatch;
+                }
+              }
+
+              if (!raCol || !decCol) {
+                console.log(`[Rotation] ${cat.name}: Could not find RA/Dec columns`);
+                continue;
+              }
+
+              console.log(`[Rotation] ${cat.name}: Using coords ${raCol}, ${decCol}`);
+
+              // Now do the actual spatial query
+              const query = `
+                SELECT TOP 1 *
+                FROM ${tableName}
+                WHERE 1=CONTAINS(POINT('ICRS', ${raCol}, ${decCol}), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
+              `;
+
+              const params = new URLSearchParams({
+                REQUEST: 'doQuery',
+                LANG: 'ADQL',
+                FORMAT: 'json',
+                QUERY: query
+              });
+
+              const response = await fetch(tapUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
+              });
+
+              if (!response.ok) {
+                console.log(`[Rotation] ${cat.name}: Spatial query failed`);
+                continue;
+              }
+
+              const data = await response.json();
+
+              if (!data.data || data.data.length === 0) {
+                console.log(`[Rotation] ${cat.name}: No match within 10"`);
+                continue;
+              }
+
+              const row = data.data[0];
+              console.log(`[Rotation] ${cat.name} MATCH FOUND!`);
+
+              // Find period column
+              let periodIdx = cols.findIndex(c => c.toLowerCase() === cat.periodCol.toLowerCase());
+              if (periodIdx < 0) periodIdx = cols.findIndex(c => /^P(rot|er(iod)?)?$/i.test(c));
+              if (periodIdx < 0) periodIdx = cols.findIndex(c => /period/i.test(c));
+
+              if (periodIdx >= 0 && row[periodIdx] != null) {
+                const period = parseFloat(row[periodIdx]);
+                console.log(`[Rotation] ${cat.name}: Period = ${period} d`);
+
+                if (!isNaN(period) && period > 0.1 && period < 200) {
+                  if (cat.ignoreByDefault) {
+                    gaiaRotationIgnored = true;
+                    console.log(`[Rotation] ${cat.name}: IGNORING due to accuracy issues`);
+                  } else {
+                    results.push({
+                      period,
+                      source: cat.name,
+                      catalog: tableName.replace(/"/g, '')
+                    });
+                  }
+                }
+              } else {
+                console.log(`[Rotation] ${cat.name}: Period column not found or null`);
+              }
+            } catch (tableErr) {
+              console.warn(`[Rotation] ${cat.name} (${tableName}) error:`, tableErr.message);
+            }
+          } // END inner for loop (tableName)
+        } catch (e) {
+          console.error(`[Rotation] ${cat.name} error:`, e.message);
+        }
+      } // END outer for loop (cat)
+
+      console.log(`[Rotation] Final results:`, results);
+      return { results, gaiaRotationIgnored };
+    }
+
+    function displayRotationResults(rotData) {
+        const container = document.getElementById('rotation-results');
+
+        // Handle both old format (array) and new format (object with results and flag)
+        const rotResults = Array.isArray(rotData) ? rotData : rotData.results;
+        const gaiaIgnored = Array.isArray(rotData) ? false : rotData.gaiaRotationIgnored;
+
+        let html = '';
+
+        if (rotResults.length > 0) {
+          html = rotResults.map(r => {
+            const vizierUrl = `https://vizier.cds.unistra.fr/viz-bin/VizieR-3?-source=${encodeURIComponent(r.catalog)}`;
+            return `
+              <div class="youth-item">
+                <span class="value prot-color">${r.period.toFixed(3)} d</span>
+                <a href="${vizierUrl}" target="_blank" class="source">${r.source}</a>
+              </div>
+            `;
+          }).join('');
+
+          if (targetData?.teff_gspphot) {
+            const periodsForPlot = rotResults.map(r => ({ value: r.period, source: r.source }));
+            displayGyroPlot(targetData, periodsForPlot);
+          }
+        } else {
+          html = '<div class="no-data">No rotation periods found</div>';
+        }
+
+        // Add note about ignored Gaia rotation data
+        if (gaiaIgnored) {
+          html += `
+            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 4px; font-size: 0.75rem; color: var(--text-muted);">
+              <strong style="color: var(--warning);">Note:</strong> Gaia DR3 rotation period found but ignored due to known accuracy issues with that catalog.
+            </div>
+          `;
+        }
+
+        container.innerHTML = html;
+      }
+      function filterDistinctPeriods(rotationData, minDiff = 1.0) {
+        if (!rotationData || rotationData.length === 0) return [];
+
+        // Sort by period value
+        const sorted = [...rotationData].sort((a, b) => a.value - b.value);
+
+        // Keep periods that are >minDiff from all already-kept periods
+        const kept = [sorted[0]];
+
+        for (let i = 1; i < sorted.length; i++) {
+          const isDifferentEnough = kept.every(k => Math.abs(sorted[i].value - k.value) > minDiff);
+          if (isDifferentEnough) {
+            kept.push(sorted[i]);
           }
         }
-      } catch (e) {
-        // continue
+
+        return kept;
       }
-    }
-    return results;
-  }
-
-  function displayRotationResults(rotResults) {
-    const container = document.getElementById('rotation-results');
-
-    if (rotResults.length > 0) {
-      container.innerHTML = rotResults.map(r => `
-        <div class="youth-item">
-          <span class="value prot-color">${r.period.toFixed(3)} d</span>
-          <a href="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=${r.catalog}" target="_blank" class="source">${r.source}</a>
-        </div>
-      `).join('');
-
-      if (targetData?.teff_gspphot) displayGyroPlot(targetData, rotResults[0].period);
-    } else {
-      container.innerHTML = '<div class="no-data">No rotation periods found</div>';
-    }
-  }
-
   // =========================
   // Gyro plot
   // =========================
-  function displayGyroPlot(target, rotationPeriod) {
+  function displayGyroPlot(target, rotationData) {
     const container = document.getElementById('gyro-plot');
     const panel = document.getElementById('gyro-panel');
 
-    if (!target.teff_gspphot || !rotationPeriod) { panel.style.display = 'none'; return; }
+    // Handle both single period (number) and array of periods
+    let periods = [];
+    if (typeof rotationData === 'number') {
+      periods = [{ value: rotationData, source: 'Unknown' }];
+    } else if (Array.isArray(rotationData)) {
+      periods = filterDistinctPeriods(rotationData, 1.0);
+    }
+
+    if (!target.teff_gspphot || periods.length === 0) {
+      panel.style.display = 'none';
+      return;
+    }
+
     panel.style.display = 'block';
 
     const traces = [];
@@ -1885,6 +2148,7 @@ DATA SOURCES:
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     };
 
+    // Plot cluster sequences
     Object.entries(gyroClusterData).forEach(([key, cluster]) => {
       const teff = cluster.teff.slice();
       const prot = cluster.prot.slice();
@@ -1895,13 +2159,23 @@ DATA SOURCES:
       traces.push({ x: teff, y: prot, mode: 'lines', name: cluster.label, line: { color: cluster.color, width: 2.5 } });
     });
 
-    traces.push({
-      x: [target.teff_gspphot],
-      y: [rotationPeriod],
-      mode: 'markers',
-      name: target._resolvedName || `Gaia DR3 ${target.source_id}`,
-      marker: { size: 12, symbol: 'star', color: '#ef4444', line: { color: '#000', width: 1 } },
-      hovertemplate: `<b>${target._resolvedName || `Gaia DR3 ${target.source_id}`}</b><br>Teff=${Math.round(target.teff_gspphot)} K<br>Prot=${rotationPeriod.toFixed(3)} d<extra></extra>`
+    // Plot each distinct rotation period
+    const markerColors = ['#ef4444', '#22d3ee', '#a78bfa', '#4ade80', '#fb923c'];
+    const markerSymbols = ['star', 'star', 'star', 'star', 'star'];
+
+    periods.forEach((p, i) => {
+      const color = markerColors[i % markerColors.length];
+      const symbol = markerSymbols[i % markerSymbols.length];
+      const label = p.source || `Period ${i + 1}`;
+
+      traces.push({
+        x: [target.teff_gspphot],
+        y: [p.value],
+        mode: 'markers',
+        name: `${p.value.toFixed(2)} d (${label})`,
+        marker: { size: 14, symbol: symbol, color: color, line: { color: '#000', width: 1 } },
+        hovertemplate: `<b>${target._resolvedName || 'Target'}</b><br>Teff=${Math.round(target.teff_gspphot)} K<br>Prot=${p.value.toFixed(3)} d<br>Source: ${label}<extra></extra>`
+      });
     });
 
     const layout = {
@@ -1925,15 +2199,6 @@ DATA SOURCES:
     };
 
     Plotly.newPlot(container, traces, layout, { responsive: true });
-  }
-
-  function downloadGyroPlot() {
-    Plotly.downloadImage('gyro-plot', {
-      format: 'png',
-      width: 900,
-      height: 550,
-      filename: `GaiaDR3_${targetData?.source_id}_gyro`
-    });
   }
 
   // =========================
@@ -2037,6 +2302,16 @@ DATA SOURCES:
       hovertemplate: `<b>${target._resolvedName || 'Target'}</b><br>U=${uvw.U.toFixed(1)}<br>V=${uvw.V.toFixed(1)}<br>W=${uvw.W.toFixed(1)}<br>v_tot=${vtot.toFixed(1)}<extra></extra>`
     });
 
+    // Sun's peculiar motion relative to LSR
+    const sunUW = Math.sqrt(11.1*11.1 + 7.25*7.25); // ≈ 13.26 km/s
+    traces.push({
+      x: [12.24], y: [sunUW],
+      mode: 'markers',
+      name: 'Sun',
+      marker: { size: 14, color: '#eab308', symbol: 'circle-open-dot', line: { color: '#000', width: 2 } },
+      hovertemplate: '<b>Sun</b><br>U=11.1<br>V=12.24<br>W=7.25<br>v_tot=18.0<extra></extra>'
+    });
+
     const xMin = Math.min(-160, uvw.V - 20);
     const xMax = Math.max(60, uvw.V + 20);
     const yMax = Math.max(160, UW + 20);
@@ -2068,9 +2343,10 @@ DATA SOURCES:
   // Youth indicators (kept from your v2.1; shortened here to avoid altering behavior)
   // =========================
   function vizierLink(catalog, source) {
-    if (!catalog) return `<span class="source">${source}</span>`;
-    return `<a href="https://vizier.cds.unistra.fr/viz-bin/VizieR?-source=${catalog}" target="_blank" class="source">${source}</a>`;
-  }
+      if (!catalog) return `<span class="source">${source}</span>`;
+      const vizierUrl = `https://vizier.cds.unistra.fr/viz-bin/VizieR-3?-source=${encodeURIComponent(catalog)}`;
+      return `<a href="${vizierUrl}" target="_blank" class="source">${source}</a>`;
+    }
 
   function getManualYouthData(targetData) {
     const results = { ewli: [], prot: [], rhk: [], lx: [] };
@@ -2093,8 +2369,15 @@ DATA SOURCES:
   }
 
   async function queryVizierYouthIndicators(ra, dec) {
-    const results = { ewli: [], prot: [], rhk: [], lx: [] };
-    const radius = 10 / 3600;
+    const results = {
+      ewli: [],
+      prot: [],
+      rhk: [],
+      lx: [],
+      protMeta: { gaiaRotationIgnored: false }
+    };
+
+    const radius = 5 / 3600;
 
     async function queryVizierCatalog(catalog, label) {
       const url = `https://vizier.cds.unistra.fr/viz-bin/conesearch/${catalog}?RA=${ra}&DEC=${dec}&SR=${radius}&VERB=3`;
@@ -2112,11 +2395,13 @@ DATA SOURCES:
         const trs = xml.querySelectorAll('TABLEDATA TR');
         if (trs.length === 0) return null;
 
-        const rows = Array.from(trs).map(tr => Array.from(tr.querySelectorAll('TD')).map(td => {
-          const val = td.textContent.trim();
-          const num = parseFloat(val);
-          return isNaN(num) ? val : num;
-        }));
+        const rows = Array.from(trs).map(tr =>
+          Array.from(tr.querySelectorAll('TD')).map(td => {
+            const val = td.textContent.trim();
+            const num = parseFloat(val);
+            return isNaN(num) ? val : num;
+          })
+        );
 
         return { metadata, rows, label };
       } catch {
@@ -2136,27 +2421,43 @@ DATA SOURCES:
       return null;
     }
 
+    // NOTE: prot catalogs removed here to avoid double-search and overwrites.
     const catalogs = [
       { catalog: 'J/A+A/504/829/cbssb', label: 'Gonzalez+2009', type: 'li' },
       { catalog: 'J/A+A/664/A78/gaia3', label: 'GALAH DR3', type: 'li' },
       { catalog: 'J/A+A/616/A10/tablea1', label: 'Gaia-ESO DR3', type: 'li' },
       { catalog: 'J/ApJ/756/24/table2', label: 'Ramirez+2012', type: 'li' },
       { catalog: 'J/A+A/576/A69/table2', label: 'Delgado Mena+2015', type: 'li' },
-      { catalog: 'J/ApJS/211/24/table1', label: 'McQuillan+2014', type: 'prot' },
-      { catalog: 'J/ApJS/244/21/table2', label: 'Santos+2019', type: 'prot' },
-      { catalog: 'J/ApJ/879/49/table1', label: 'Curtis+2019', type: 'prot' },
+
       { catalog: 'J/A+A/551/L8/table2', label: 'Pace2013', type: 'rhk' },
       { catalog: 'J/ApJS/152/261/table3', label: 'Wright+2004', type: 'rhk' },
       { catalog: 'J/A+A/616/A108/catalog', label: 'Boro Saikia+2018', type: 'rhk' },
+
       { catalog: 'J/A+A/450/993/table2', label: 'NEXXUS', type: 'lx' },
       { catalog: 'J/ApJS/262/14/catalog', label: 'Freund+2022', type: 'lx' },
     ];
 
     const liPatterns = ['^EWLi$', '^EW_?Li', '^EW$', '^A_?Li', 'Lith', 'LiEW', 'EW\\(Li\\)'];
-    const protPatterns = ['^Prot$', '^P_?rot', '^Per$', '^Period$'];
     const rhkPatterns = ['logR.*HK', 'log_?R.*HK', "logR'HK", 'RHK'];
-    const lxPatterns = ['^Lx$', '^L_?[Xx]', '^logLx', 'LX'];
+    const lxPatterns  = ['^Lx$', '^L_?[Xx]', '^logLx', 'LX'];
 
+    // 1) Rotation periods (TAP) — now part of the same pipeline
+    try {
+      const rotData = await searchRotationPeriods(ra, dec); // returns {results, gaiaRotationIgnored}
+      results.protMeta.gaiaRotationIgnored = !!rotData?.gaiaRotationIgnored;
+
+      const rotResults = rotData?.results || [];
+      // Convert to the same shape used elsewhere: {value, source, catalog}
+      results.prot = rotResults.map(r => ({
+        value: r.period,
+        source: r.source,
+        catalog: r.catalog
+      }));
+    } catch (e) {
+      console.warn('[Youth] rotation TAP query failed:', e);
+    }
+
+    // 2) Other youth indicators via conesearch (Li, R'HK, Lx)
     for (const cat of catalogs) {
       const result = await queryVizierCatalog(cat.catalog, cat.label);
       if (!result) continue;
@@ -2165,10 +2466,9 @@ DATA SOURCES:
 
       if (cat.type === 'li') {
         const found = findColumnValue(metadata, row, liPatterns);
-        if (found && found.value > 0 && found.value < 500) results.ewli.push({ value: found.value, source: label, catalog: cat.catalog });
-      } else if (cat.type === 'prot') {
-        const found = findColumnValue(metadata, row, protPatterns);
-        if (found && found.value > 0.1 && found.value < 200) results.prot.push({ value: found.value, source: label, catalog: cat.catalog });
+        if (found && found.value > 0 && found.value < 500) {
+          results.ewli.push({ value: found.value, source: label, catalog: cat.catalog });
+        }
       } else if (cat.type === 'rhk') {
         const found = findColumnValue(metadata, row, rhkPatterns);
         if (found) {
@@ -2186,6 +2486,7 @@ DATA SOURCES:
         }
       }
     }
+
     return results;
   }
 
@@ -2205,13 +2506,31 @@ DATA SOURCES:
     }).join('') : '<div class="no-data">No measurements found</div>';
     document.getElementById('li-values').innerHTML = liHTML;
 
-    const rotHTML = mergedData.prot.length > 0 ? mergedData.prot.map(m => `
-      <div class="youth-item">
-        <span class="value prot-color">${m.value.toFixed(3)} d</span>
-        ${m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source)}
+    const rotHTML = mergedData.prot.length > 0
+      ? mergedData.prot.map(m => `
+          <div class="youth-item">
+            <span class="value prot-color">${m.value.toFixed(3)} d</span>
+            ${m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source)}
+          </div>
+        `).join('')
+      : '<div class="no-data">No measurements found</div>';
+
+    // Append Gaia-ignored note if applicable
+    const gaiaIgnored = !!data?.protMeta?.gaiaRotationIgnored;
+    const ignoredNote = gaiaIgnored ? `
+      <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 4px; font-size: 0.75rem; color: var(--text-muted);">
+        <strong style="color: var(--warning);">Note:</strong> Gaia DR3 rotation period found but ignored due to known accuracy issues with that catalog.
       </div>
-    `).join('') : '<div class="no-data">No measurements found</div>';
-    document.getElementById('rotation-results').innerHTML = rotHTML;
+    ` : '';
+
+    document.getElementById('rotation-results').innerHTML = rotHTML + ignoredNote;
+
+    // Gyro plot: show all distinct periods
+    if (mergedData.prot.length > 0 && targetData?.teff_gspphot) {
+      displayGyroPlot(targetData, mergedData.prot);
+    } else {
+      document.getElementById('gyro-panel').style.display = 'none';
+    }
 
     const rhkHTML = mergedData.rhk.length > 0 ? mergedData.rhk.map(m => `
       <div class="youth-item">
@@ -2232,6 +2551,12 @@ DATA SOURCES:
 
   async function searchYouthIndicators() {
     if (!targetData) return;
+
+    document.getElementById('li-values').innerHTML = '<div class="no-data">Searching...</div>';
+    document.getElementById('rotation-results').innerHTML = '<div class="no-data">Searching...</div>';
+    document.getElementById('rhk-results').innerHTML = '<div class="no-data">Searching...</div>';
+    document.getElementById('lx-results').innerHTML = '<div class="no-data">Searching...</div>';
+    document.getElementById('gyro-panel').style.display = 'none';
 
     const btn = document.getElementById('btn-youth');
     btn.disabled = true;
@@ -2263,228 +2588,235 @@ DATA SOURCES:
     }
   }
 
-async function searchTESSSectors() {
-    if (!targetData) return;
+  async function searchTESSSectors() {
+      if (!targetData) return;
 
-    const btn = document.getElementById('btn-tess');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner"></span> Searching...';
+      const btn = document.getElementById('btn-tess');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> Searching...';
 
-    const container = document.getElementById('tess-info-container');
+      const container = document.getElementById('tess-info-container');
 
-    try {
-      const ra = targetData.ra;
-      const dec = targetData.dec;
-
-      let ticId = null;
-      let tmag = null;
-
-      // Try VizieR TIC v8.2 catalog
       try {
-        const ticUrl = `https://vizier.cds.unistra.fr/viz-bin/conesearch/IV/39/tic82?RA=${ra}&DEC=${dec}&SR=${5/3600}&VERB=3`;
-        console.log('TIC query URL:', ticUrl);
-        const ticResp = await fetch(ticUrl);
+        const ra = targetData.ra;
+        const dec = targetData.dec;
 
-        if (ticResp.ok) {
-          const text = await ticResp.text();
-          console.log('TIC response length:', text.length);
-          
-          const parser = new DOMParser();
-          const xml = parser.parseFromString(text, 'text/xml');
+        let ticId = null;
+        let tmag = null;
 
-          const fields = xml.querySelectorAll('FIELD');
-          // metadata is an array of STRINGS, not objects
-          const metadata = Array.from(fields).map(f => f.getAttribute('name') || f.getAttribute('ID'));
-          console.log('TIC VizieR columns:', metadata);
-
-          const trs = xml.querySelectorAll('TABLEDATA TR');
-          console.log('TIC rows found:', trs.length);
-          
-          if (trs.length > 0) {
-            const row = Array.from(trs[0].querySelectorAll('TD')).map(td => td.textContent.trim());
-            console.log('TIC first row:', row);
-            
-            // Find TIC ID column - metadata is array of strings, so compare directly
-            let ticIdx = metadata.findIndex(m => /^(TIC|TICid|ID)$/i.test(m));
-            console.log('TIC column index by name:', ticIdx);
-            
-            // If not found by name, look for large integer values (TIC IDs are 9-10 digits)
-            if (ticIdx < 0) {
-              for (let i = 0; i < row.length; i++) {
-                const colName = metadata[i] || '';
-                const val = row[i];
-                // TIC IDs are large integers (7+ digits), skip _r (distance) column
-                if (colName !== '_r' && /^\d{7,}$/.test(val)) {
-                  ticIdx = i;
-                  console.log(`Found TIC ID by pattern in column "${colName}" at index ${i}: ${val}`);
-                  break;
-                }
-              }
-            }
-            
-            // Find Tmag column - compare string directly
-            const tmagIdx = metadata.findIndex(m => /^Tmag$/i.test(m));
-            console.log('Tmag column index:', tmagIdx);
-
-            ticId = ticIdx >= 0 ? row[ticIdx] : null;
-            tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
-            
-            console.log('Extracted TIC ID:', ticId, 'Tmag:', tmag);
-          }
-        }
-      } catch (e) {
-        console.warn('TIC VizieR query failed:', e);
-      }
-
-      // Fallback: Try older TIC catalog if v8.2 failed
-      if (!ticId) {
-        console.log('Trying TIC v8.0 fallback...');
+        // Use TAP endpoint (same as Gaia queries) instead of conesearch
         try {
-          const ticUrl2 = `https://vizier.cds.unistra.fr/viz-bin/conesearch/IV/38/tic?RA=${ra}&DEC=${dec}&SR=${5/3600}&VERB=3`;
-          const ticResp2 = await fetch(ticUrl2);
+          const tapUrl = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
+          const radiusDeg = 5 / 3600; // 5 arcsec
 
-          if (ticResp2.ok) {
-            const text = await ticResp2.text();
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, 'text/xml');
+          // Query TIC v8.2 catalog via TAP
+          const query = `
+            SELECT TOP 1 TIC, Tmag, RAJ2000, DEJ2000,
+                   DISTANCE(POINT('ICRS', RAJ2000, DEJ2000), POINT('ICRS', ${ra}, ${dec})) AS dist
+            FROM "IV/39/tic82"
+            WHERE 1=CONTAINS(POINT('ICRS', RAJ2000, DEJ2000), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
+            ORDER BY dist ASC
+          `;
 
-            const fields = xml.querySelectorAll('FIELD');
-            const metadata = Array.from(fields).map(f => f.getAttribute('name') || f.getAttribute('ID'));
-            console.log('TIC v8.0 columns:', metadata);
+          console.log('TIC TAP query:', query);
 
-            const trs = xml.querySelectorAll('TABLEDATA TR');
-            if (trs.length > 0) {
-              const row = Array.from(trs[0].querySelectorAll('TD')).map(td => td.textContent.trim());
-              console.log('TIC v8.0 first row:', row);
-              
-              let ticIdx = metadata.findIndex(m => /^(TIC|TICid|ID)$/i.test(m));
-              if (ticIdx < 0) {
-                for (let i = 0; i < row.length; i++) {
-                  if (metadata[i] !== '_r' && /^\d{7,}$/.test(row[i])) {
-                    ticIdx = i;
-                    break;
-                  }
-                }
+          const params = new URLSearchParams({
+            REQUEST: 'doQuery',
+            LANG: 'ADQL',
+            FORMAT: 'json',
+            QUERY: query
+          });
+
+          const response = await fetch(tapUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('TIC TAP response:', data);
+
+            if (data.data && data.data.length > 0) {
+              const cols = data.metadata.map(m => m.name);
+              const row = data.data[0];
+
+              const ticIdx = cols.findIndex(c => /^TIC$/i.test(c));
+              const tmagIdx = cols.findIndex(c => /^Tmag$/i.test(c));
+
+              console.log('Columns:', cols);
+              console.log('Row:', row);
+
+              if (ticIdx >= 0) {
+                ticId = String(row[ticIdx]);
+                tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
+                console.log('Found TIC:', ticId, 'Tmag:', tmag);
               }
-              
-              const tmagIdx = metadata.findIndex(m => /^Tmag$/i.test(m));
-              ticId = ticIdx >= 0 ? row[ticIdx] : null;
-              tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
-              console.log('TIC v8.0 extracted:', ticId, tmag);
             }
           }
         } catch (e) {
-          console.warn('TIC v8.0 query failed:', e);
+          console.warn('TIC TAP query failed:', e);
         }
-      }
 
-      if (ticId) {
-        ticInfo = { tic: ticId, tmag };
-        updateTargetInfoWithTIC(ticId);
-      }
+        // Fallback: Try TIC v8.0 if v8.2 failed
+        if (!ticId) {
+          try {
+            const tapUrl = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
+            const radiusDeg = 5 / 3600;
 
-      // Search for TESS sectors
-      let sectors = [];
-      try {
-        const mastRequest = {
-          service: "Mast.Caom.Cone",
-          params: { ra, dec, radius: 0.001 },
-          format: "json",
-          pagesize: 500
-        };
+            const query = `
+              SELECT TOP 1 TIC, Tmag, RAJ2000, DEJ2000,
+                     DISTANCE(POINT('ICRS', RAJ2000, DEJ2000), POINT('ICRS', ${ra}, ${dec})) AS dist
+              FROM "IV/38/tic"
+              WHERE 1=CONTAINS(POINT('ICRS', RAJ2000, DEJ2000), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
+              ORDER BY dist ASC
+            `;
 
-        const mastUrl = 'https://mast.stsci.edu/api/v0/invoke';
-        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(mastUrl)}`;
+            console.log('TIC v8.0 TAP query:', query);
 
-        const obsResp = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'request=' + encodeURIComponent(JSON.stringify(mastRequest))
-        });
+            const params = new URLSearchParams({
+              REQUEST: 'doQuery',
+              LANG: 'ADQL',
+              FORMAT: 'json',
+              QUERY: query
+            });
 
-        if (obsResp.ok) {
-          const obsData = await obsResp.json();
-          if (obsData.data && obsData.data.length > 0) {
-            const tessObs = obsData.data.filter(obs =>
-              obs.obs_collection === 'TESS' || (obs.project && obs.project.includes('TESS'))
-            );
+            const response = await fetch(tapUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params
+            });
 
-            const sectorSet = new Set();
-            for (const obs of tessObs) {
-              const obsId = obs.obs_id || '';
-              const seqNum = obs.sequence_number;
+            if (response.ok) {
+              const data = await response.json();
+              console.log('TIC v8.0 TAP response:', data);
 
-              const sectorMatch = obsId.match(/tess.*?-s(\d{4})/i) ||
-                obsId.match(/tess.*?sector(\d+)/i) ||
-                obsId.match(/-s(\d+)-/i);
-              if (sectorMatch) sectorSet.add(parseInt(sectorMatch[1]));
-              if (seqNum && seqNum > 0 && seqNum < 100) sectorSet.add(seqNum);
+              if (data.data && data.data.length > 0) {
+                const cols = data.metadata.map(m => m.name);
+                const row = data.data[0];
+
+                const ticIdx = cols.findIndex(c => /^TIC$/i.test(c));
+                const tmagIdx = cols.findIndex(c => /^Tmag$/i.test(c));
+
+                if (ticIdx >= 0) {
+                  ticId = String(row[ticIdx]);
+                  tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
+                  console.log('Found TIC v8.0:', ticId, 'Tmag:', tmag);
+                }
+              }
             }
-            sectors = Array.from(sectorSet).filter(s => s > 0 && s < 100).sort((a, b) => a - b);
+          } catch (e) {
+            console.warn('TIC v8.0 TAP query failed:', e);
           }
         }
-      } catch (e) {
-        console.warn('MAST observations query failed:', e);
-      }
 
-      // Fallback sector search via TESScut
-      if (sectors.length === 0) {
+        if (ticId) {
+          ticInfo = { tic: ticId, tmag };
+          updateTargetInfoWithTIC(ticId);
+        }
+
+        // Search for TESS sectors via MAST
+        let sectors = [];
         try {
-          const tessecutUrl = `https://mast.stsci.edu/tesscut/api/v0.1/sector?ra=${ra}&dec=${dec}`;
-          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(tessecutUrl)}`;
+          const mastRequest = {
+            service: "Mast.Caom.Cone",
+            params: { ra, dec, radius: 0.001 },
+            format: "json",
+            pagesize: 500
+          };
 
-          const sectResp = await fetch(proxyUrl);
-          if (sectResp.ok) {
-            const sectData = await sectResp.json();
-            if (sectData.results && sectData.results.length > 0) {
-              sectors = sectData.results.map(r => r.sector).filter(s => s > 0).sort((a, b) => a - b);
+          const mastUrl = 'https://mast.stsci.edu/api/v0/invoke';
+          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(mastUrl)}`;
+
+          const obsResp = await fetch(proxyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'request=' + encodeURIComponent(JSON.stringify(mastRequest))
+          });
+
+          if (obsResp.ok) {
+            const obsData = await obsResp.json();
+            if (obsData.data && obsData.data.length > 0) {
+              const tessObs = obsData.data.filter(obs =>
+                obs.obs_collection === 'TESS' || (obs.project && obs.project.includes('TESS'))
+              );
+
+              const sectorSet = new Set();
+              for (const obs of tessObs) {
+                const obsId = obs.obs_id || '';
+                const seqNum = obs.sequence_number;
+
+                const sectorMatch = obsId.match(/tess.*?-s(\d{4})/i) ||
+                  obsId.match(/tess.*?sector(\d+)/i) ||
+                  obsId.match(/-s(\d+)-/i);
+                if (sectorMatch) sectorSet.add(parseInt(sectorMatch[1]));
+                if (seqNum && seqNum > 0 && seqNum < 100) sectorSet.add(seqNum);
+              }
+              sectors = Array.from(sectorSet).filter(s => s > 0 && s < 100).sort((a, b) => a - b);
             }
           }
         } catch (e) {
-          console.warn('TESScut query failed:', e);
+          console.warn('MAST observations query failed:', e);
         }
+
+        // Fallback sector search via TESScut
+        if (sectors.length === 0) {
+          try {
+            const tessecutUrl = `https://mast.stsci.edu/tesscut/api/v0.1/sector?ra=${ra}&dec=${dec}`;
+            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(tessecutUrl)}`;
+
+            const sectResp = await fetch(proxyUrl);
+            if (sectResp.ok) {
+              const sectData = await sectResp.json();
+              if (sectData.results && sectData.results.length > 0) {
+                sectors = sectData.results.map(r => r.sector).filter(s => s > 0).sort((a, b) => a - b);
+              }
+            }
+          } catch (e) {
+            console.warn('TESScut query failed:', e);
+          }
+        }
+
+        if (ticInfo) ticInfo.sectors = sectors;
+
+        // Build display HTML
+        let html = `<div class="tess-info"><div class="tess-info-header">TESS Information</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.85rem;">`;
+
+        if (ticId) {
+          html += `<div><span style="color:var(--text-muted);">TIC ID:</span>
+            <a href="https://exofop.ipac.caltech.edu/tess/target.php?id=${ticId}" target="_blank"
+               style="color:var(--accent-cyan); font-family:'IBM Plex Mono', monospace;">${ticId}</a></div>
+            <div><span style="color:var(--text-muted);">T mag:</span> ${tmag?.toFixed(2) || 'N/A'}</div>`;
+        } else {
+          html += `<div style="grid-column:1 / -1; color:var(--text-muted);">No TIC match found within 5"</div>`;
+        }
+        html += `</div>`;
+
+        if (sectors.length > 0) {
+          html += `<div style="margin-top:0.5rem; font-size:0.85rem;">
+            <span style="color:var(--text-muted);">Observed Sectors (${sectors.length}):</span><br>
+            <span style="font-family:'IBM Plex Mono', monospace; color:var(--accent-blue);">${sectors.join(', ')}</span>
+          </div>`;
+        } else {
+          html += `<div style="margin-top:0.5rem; font-size:0.85rem;">
+            <span style="color:var(--text-muted);">Sectors:</span>
+            <a href="https://heasarc.gsfc.nasa.gov/wsgi-scripts/TESS/TESS-point_Web_Tool/TESS-point_Web_Tool/wtv_v2.0.py/?ra=${ra}&dec=${dec}" target="_blank"
+               style="color:var(--accent-cyan); margin-left:0.5rem;">Check TESS-point →</a>
+          </div>`;
+        }
+
+        html += `</div>`;
+        container.innerHTML = html;
+
+      } catch (e) {
+        console.error('TESS search error:', e);
+        container.innerHTML = `<div class="tess-info"><div class="tess-info-header">TESS Information</div><p style="color: var(--error);">Error: ${e.message}</p></div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> TESS Sectors`;
       }
-
-      if (ticInfo) ticInfo.sectors = sectors;
-
-      // Build display HTML
-      let html = `<div class="tess-info"><div class="tess-info-header">TESS Information</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.85rem;">`;
-
-      if (ticId) {
-        html += `<div><span style="color:var(--text-muted);">TIC ID:</span>
-          <a href="https://exofop.ipac.caltech.edu/tess/target.php?id=${ticId}" target="_blank"
-             style="color:var(--accent-cyan); font-family:'IBM Plex Mono', monospace;">${ticId}</a></div>
-          <div><span style="color:var(--text-muted);">T mag:</span> ${tmag?.toFixed(2) || 'N/A'}</div>`;
-      } else {
-        html += `<div style="grid-column:1 / -1; color:var(--text-muted);">No TIC match found within 5"</div>`;
-      }
-      html += `</div>`;
-
-      if (sectors.length > 0) {
-        html += `<div style="margin-top:0.5rem; font-size:0.85rem;">
-          <span style="color:var(--text-muted);">Observed Sectors (${sectors.length}):</span><br>
-          <span style="font-family:'IBM Plex Mono', monospace; color:var(--accent-blue);">${sectors.join(', ')}</span>
-        </div>`;
-      } else {
-        html += `<div style="margin-top:0.5rem; font-size:0.85rem;">
-          <span style="color:var(--text-muted);">Sectors:</span>
-          <a href="https://heasarc.gsfc.nasa.gov/wsgi-scripts/TESS/TESS-point_Web_Tool/TESS-point_Web_Tool/wtv_v2.0.py/?ra=${ra}&dec=${dec}" target="_blank"
-             style="color:var(--accent-cyan); margin-left:0.5rem;">Check TESS-point →</a>
-        </div>`;
-      }
-
-      html += `</div>`;
-      container.innerHTML = html;
-
-    } catch (e) {
-      console.error('TESS search error:', e);
-      container.innerHTML = `<div class="tess-info"><div class="tess-info-header">TESS Information</div><p style="color: var(--error);">Error: ${e.message}</p></div>`;
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> TESS Sectors`;
     }
-  }
 
   async function checkExoplanetArchive() {
     if (!targetData) return;
@@ -2516,7 +2848,7 @@ async function searchTESSSectors() {
       }
 
       if (data.length === 0 && targetData.ra && targetData.dec) {
-        const url3 = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,disc_year,ra,dec+FROM+pscomppars+WHERE+1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${targetData.ra},${targetData.dec},${10/3600}))&format=json`;
+        const url3 = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,disc_year,ra,dec+FROM+pscomppars+WHERE+1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${targetData.ra},${targetData.dec},${5/3600}))&format=json`;
         const result = await fetchWithProxy(url3);
         if (result && result.length > 0) data = result;
       }
@@ -2532,9 +2864,9 @@ async function searchTESSSectors() {
           if (b.pl_orbper == null) return -1;
           return a.pl_orbper - b.pl_orbper;
         });
-   
+
         const hostname = data[0].hostname;
-   
+
         const planetList = uniquePlanets.map(p => {
           const details = [];
           if (p.pl_orbper) details.push(`P=${p.pl_orbper.toFixed(2)}d`);
@@ -2586,7 +2918,6 @@ async function searchTESSSectors() {
       { status: 'active', text: 'Resolve identifier (SIMBAD/Gaia)' },
       { status: 'pending', text: 'Fetch Gaia DR3 parameters' },
       { status: 'pending', text: 'Initialize sky view & plots' },
-      { status: 'pending', text: 'Search rotation periods' },
     ]);
 
     try {
@@ -2598,7 +2929,6 @@ async function searchTESSSectors() {
         { status: 'check', text: `Resolved: Gaia DR3 ${resolved.gaiaId}${resolved.resolvedName ? ' (SIMBAD: ' + resolved.resolvedName + ')' : ''}` },
         { status: 'active', text: 'Fetch Gaia DR3 parameters' },
         { status: 'pending', text: 'Initialize sky view & plots' },
-        { status: 'pending', text: 'Search rotation periods' },
       ]);
 
       // 2) fetch Gaia row
@@ -2619,37 +2949,33 @@ async function searchTESSSectors() {
         { status: 'check', text: `Resolved: Gaia DR3 ${resolved.gaiaId}${resolved.resolvedName ? ' (SIMBAD: ' + resolved.resolvedName + ')' : ''}` },
         { status: 'check', text: 'Fetched Gaia DR3 parameters' },
         { status: 'active', text: 'Initialize sky view & plots' },
-        { status: 'pending', text: 'Search rotation periods' },
       ]);
 
       initAladinViewer(targetData.ra, targetData.dec);
       displayGalacticMap(targetData.ra, targetData.dec);
       displayToomreDiagram(targetData);
       displayCMD([], targetData);  // Show CMD with just the target star initially
-      // 4) auto-rotation period search
-      updateProgress([
-        { status: 'check', text: `Resolved: Gaia DR3 ${resolved.gaiaId}${resolved.resolvedName ? ' (SIMBAD: ' + resolved.resolvedName + ')' : ''}` },
-        { status: 'check', text: 'Fetched Gaia DR3 parameters' },
-        { status: 'check', text: 'Initialized sky view & plots' },
-        { status: 'active', text: 'Search rotation periods' },
-      ]);
-
-      const rotResults = await searchRotationPeriods(targetData.ra, targetData.dec);
-      displayRotationResults(rotResults);
 
       updateProgress([
-        { status: 'check', text: `Resolved: Gaia DR3 ${resolved.gaiaId}${resolved.resolvedName ? ' (SIMBAD: ' + resolved.resolvedName + ')' : ''}` },
-        { status: 'check', text: 'Fetched Gaia DR3 parameters' },
-        { status: 'check', text: 'Initialized sky view & plots' },
-        { status: 'check', text: `Rotation periods: ${rotResults.length ? rotResults.length + ' found' : 'none found'}` },
-      ]);
+              { status: 'check', text: `Resolved: Gaia DR3 ${resolved.gaiaId}${resolved.resolvedName ? ' (SIMBAD: ' + resolved.resolvedName + ')' : ''}` },
+              { status: 'check', text: 'Fetched Gaia DR3 parameters' },
+              { status: 'check', text: 'Initialized sky view & plots' },
+            ]);
 
-      setStatus('Done. Use “Comoving Search” to find candidates.', 'success');
+      setStatus('Feel free to explore "Youth Indicators" or perform a "Comoving Search" on your target.', 'success');
 
       // clear previous comoving panel
       document.getElementById('comoving-panel').style.display = 'none';
       document.getElementById('tess-info-container').innerHTML = '';
       document.getElementById('exoplanet-alert').innerHTML = '';
+
+      document.getElementById('li-values').innerHTML = '<div class="no-data">Click "Youth Indicators" above to search</div>';
+      document.getElementById('rotation-results').innerHTML = '<div class="no-data">Click "Youth Indicators" above to search</div>';
+      document.getElementById('rhk-results').innerHTML = '<div class="no-data">Click "Youth Indicators" above to search</div>';
+      document.getElementById('lx-results').innerHTML = '<div class="no-data">Click "Youth Indicators" above to search</div>';
+      document.getElementById('gyro-panel').style.display = 'none';
+      vizierYouthData = { ewli: [], prot: [], rhk: [], lx: [] };
+      ticInfo = null;
 
     } catch (e) {
       console.error(e);
