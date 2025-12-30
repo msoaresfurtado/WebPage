@@ -2522,16 +2522,25 @@ async function searchTESSSectors() {
       }
 
       if (data && data.length > 0) {
-        const uniquePlanets = [...new Set(data.map(p => p.pl_name))];
+        // Get unique planets and sort by orbital period (shortest first)
+        const uniquePlanetNames = [...new Set(data.map(p => p.pl_name))];
+        const uniquePlanets = uniquePlanetNames.map(name => data.find(pl => pl.pl_name === name));
+        uniquePlanets.sort((a, b) => {
+          // Put planets without period data at the end
+          if (a.pl_orbper == null && b.pl_orbper == null) return 0;
+          if (a.pl_orbper == null) return 1;
+          if (b.pl_orbper == null) return -1;
+          return a.pl_orbper - b.pl_orbper;
+        });
+   
         const hostname = data[0].hostname;
-
-        const planetList = uniquePlanets.map(name => {
-          const p = data.find(pl => pl.pl_name === name);
+   
+        const planetList = uniquePlanets.map(p => {
           const details = [];
           if (p.pl_orbper) details.push(`P=${p.pl_orbper.toFixed(2)}d`);
           if (p.pl_rade) details.push(`R=${p.pl_rade.toFixed(2)}R⊕`);
           if (p.disc_year) details.push(`(${p.disc_year})`);
-          return `<strong>${name}</strong>${details.length ? ': ' + details.join(', ') : ''}`;
+          return `<strong>${p.pl_name}</strong>${details.length ? ': ' + details.join(', ') : ''}`;
         }).join('<br>');
 
         container.innerHTML = `
