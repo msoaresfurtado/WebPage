@@ -2280,9 +2280,10 @@ DATA SOURCES:
       let tmag = null;
 
       try {
-        const ticUrl = `https://vizier.cds.unistra.fr/viz-bin/conesearch/IV/39/tic82?RA=${ra}&DEC=${dec}&SR=${5/3600}&VERB=3`;
+        const ticUrl = `https://vizier.cds.unistra.fr/viz-bin/conesearch/IV/38/tic?RA=${ra}&DEC=${dec}&SR=${5/3600}&VERB=3`;
         const ticResp = await fetch(ticUrl);
 
+         
         if (ticResp.ok) {
           const text = await ticResp.text();
           const parser = new DOMParser();
@@ -2294,7 +2295,7 @@ DATA SOURCES:
           const trs = xml.querySelectorAll('TABLEDATA TR');
           if (trs.length > 0) {
             const row = Array.from(trs[0].querySelectorAll('TD')).map(td => td.textContent.trim());
-            const ticIdx = metadata.findIndex(m => m === 'TIC' || m === 'ID');
+            const ticIdx = metadata.findIndex(m => m.name === 'TIC' || m.name === 'ID' || m.name === 'TICid' || m.name === '_r' === false && /tic/i.test(m.name));
             const tmagIdx = metadata.findIndex(m => m === 'Tmag');
 
             ticId = ticIdx >= 0 ? row[ticIdx] : null;
