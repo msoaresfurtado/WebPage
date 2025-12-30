@@ -2263,7 +2263,7 @@ DATA SOURCES:
     }
   }
 
-  async function searchTESSSectors() {
+async function searchTESSSectors() {
     if (!targetData) return;
 
     const btn = document.getElementById('btn-tess');
@@ -2279,31 +2279,103 @@ DATA SOURCES:
       let ticId = null;
       let tmag = null;
 
+      // Try VizieR TIC v8.2 catalog
       try {
-        const ticUrl = `https://vizier.cds.unistra.fr/viz-bin/conesearch/IV/38/tic?RA=${ra}&DEC=${dec}&SR=${5/3600}&VERB=3`;
+        const ticUrl = `https://vizier.cds.unistra.fr/viz-bin/conesearch/IV/39/tic82?RA=${ra}&DEC=${dec}&SR=${5/3600}&VERB=3`;
+        console.log('TIC query URL:', ticUrl);
         const ticResp = await fetch(ticUrl);
 
-         
         if (ticResp.ok) {
           const text = await ticResp.text();
+          console.log('TIC response length:', text.length);
+          
           const parser = new DOMParser();
           const xml = parser.parseFromString(text, 'text/xml');
 
           const fields = xml.querySelectorAll('FIELD');
+          // metadata is an array of STRINGS, not objects
           const metadata = Array.from(fields).map(f => f.getAttribute('name') || f.getAttribute('ID'));
+          console.log('TIC VizieR columns:', metadata);
 
           const trs = xml.querySelectorAll('TABLEDATA TR');
+          console.log('TIC rows found:', trs.length);
+          
           if (trs.length > 0) {
             const row = Array.from(trs[0].querySelectorAll('TD')).map(td => td.textContent.trim());
-            const ticIdx = metadata.findIndex(m => m.name === 'TIC' || m.name === 'ID' || m.name === 'TICid' || m.name === '_r' === false && /tic/i.test(m.name));
-            const tmagIdx = metadata.findIndex(m => m === 'Tmag');
+            console.log('TIC first row:', row);
+            
+            // Find TIC ID column - metadata is array of strings, so compare directly
+            let ticIdx = metadata.findIndex(m => /^(TIC|TICid|ID)$/i.test(m));
+            console.log('TIC column index by name:', ticIdx);
+            
+            // If not found by name, look for large integer values (TIC IDs are 9-10 digits)
+            if (ticIdx < 0) {
+              for (let i = 0; i < row.length; i++) {
+                const colName = metadata[i] || '';
+                const val = row[i];
+                // TIC IDs are large integers (7+ digits), skip _r (distance) column
+                if (colName !== '_r' && /^\d{7,}$/.test(val)) {
+                  ticIdx = i;
+                  console.log(`Found TIC ID by pattern in column "${colName}" at index ${i}: ${val}`);
+                  break;
+                }
+              }
+            }
+            
+            // Find Tmag column - compare string directly
+            const tmagIdx = metadata.findIndex(m => /^Tmag$/i.test(m));
+            console.log('Tmag column index:', tmagIdx);
 
             ticId = ticIdx >= 0 ? row[ticIdx] : null;
             tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
+            
+            console.log('Extracted TIC ID:', ticId, 'Tmag:', tmag);
           }
         }
       } catch (e) {
-        console.warn('TIC query failed:', e);
+        console.warn('TIC VizieR query failed:', e);
+      }
+
+      // Fallback: Try older TIC catalog if v8.2 failed
+      if (!ticId) {
+        console.log('Trying TIC v8.0 fallback...');
+        try {
+          const ticUrl2 = `https://vizier.cds.unistra.fr/viz-bin/conesearch/IV/38/tic?RA=${ra}&DEC=${dec}&SR=${5/3600}&VERB=3`;
+          const ticResp2 = await fetch(ticUrl2);
+
+          if (ticResp2.ok) {
+            const text = await ticResp2.text();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(text, 'text/xml');
+
+            const fields = xml.querySelectorAll('FIELD');
+            const metadata = Array.from(fields).map(f => f.getAttribute('name') || f.getAttribute('ID'));
+            console.log('TIC v8.0 columns:', metadata);
+
+            const trs = xml.querySelectorAll('TABLEDATA TR');
+            if (trs.length > 0) {
+              const row = Array.from(trs[0].querySelectorAll('TD')).map(td => td.textContent.trim());
+              console.log('TIC v8.0 first row:', row);
+              
+              let ticIdx = metadata.findIndex(m => /^(TIC|TICid|ID)$/i.test(m));
+              if (ticIdx < 0) {
+                for (let i = 0; i < row.length; i++) {
+                  if (metadata[i] !== '_r' && /^\d{7,}$/.test(row[i])) {
+                    ticIdx = i;
+                    break;
+                  }
+                }
+              }
+              
+              const tmagIdx = metadata.findIndex(m => /^Tmag$/i.test(m));
+              ticId = ticIdx >= 0 ? row[ticIdx] : null;
+              tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
+              console.log('TIC v8.0 extracted:', ticId, tmag);
+            }
+          }
+        } catch (e) {
+          console.warn('TIC v8.0 query failed:', e);
+        }
       }
 
       if (ticId) {
@@ -2311,6 +2383,7 @@ DATA SOURCES:
         updateTargetInfoWithTIC(ticId);
       }
 
+      // Search for TESS sectors
       let sectors = [];
       try {
         const mastRequest = {
@@ -2354,7 +2427,8 @@ DATA SOURCES:
         console.warn('MAST observations query failed:', e);
       }
 
-      if (sectors.length === 0 && ticId) {
+      // Fallback sector search via TESScut
+      if (sectors.length === 0) {
         try {
           const tessecutUrl = `https://mast.stsci.edu/tesscut/api/v0.1/sector?ra=${ra}&dec=${dec}`;
           const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(tessecutUrl)}`;
@@ -2373,6 +2447,7 @@ DATA SOURCES:
 
       if (ticInfo) ticInfo.sectors = sectors;
 
+      // Build display HTML
       let html = `<div class="tess-info"><div class="tess-info-header">TESS Information</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.85rem;">`;
 
@@ -2382,7 +2457,7 @@ DATA SOURCES:
              style="color:var(--accent-cyan); font-family:'IBM Plex Mono', monospace;">${ticId}</a></div>
           <div><span style="color:var(--text-muted);">T mag:</span> ${tmag?.toFixed(2) || 'N/A'}</div>`;
       } else {
-        html += `<div style="grid-column:1 / -1; color:var(--text-muted);">No TIC match found</div>`;
+        html += `<div style="grid-column:1 / -1; color:var(--text-muted);">No TIC match found within 5"</div>`;
       }
       html += `</div>`;
 
