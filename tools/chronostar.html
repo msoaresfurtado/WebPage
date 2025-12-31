@@ -738,23 +738,33 @@ DATA SOURCES:
       }
 
       .advanced-toggle {
-        margin-top: 1rem;
-        padding: 0.6rem 1rem;
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
+        margin: 0;
+        padding: 0.35rem 0.6rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        font-family: "IBM Plex Sans", -apple-system, sans-serif;
+        background: rgba(167, 139, 250, 0.15);
+        border: 1px solid rgba(167, 139, 250, 0.4);
+        border-radius: 4px;
+        color: var(--accent-purple);
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.3rem;
         transition: all 0.2s ease;
+        line-height: 1;
+        box-sizing: border-box;
+        height: auto;
       }
 
       .advanced-toggle:hover {
-        color: var(--text-primary);
-        border-color: var(--accent-cyan);
+        background: rgba(167, 139, 250, 0.25);
+        border-color: var(--accent-purple);
+      }
+
+      .advanced-toggle.expanded {
+        background: rgba(167, 139, 250, 0.25);
+        border-color: var(--accent-purple);
       }
 
       .advanced-toggle .toggle-arrow {
@@ -879,6 +889,17 @@ DATA SOURCES:
       .action-buttons .btn-small:hover:not(:disabled) {
         background: rgba(59, 130, 246, 0.25);
         border-color: var(--accent-blue);
+      }
+
+      .action-buttons .btn-small#btn-comoving {
+        background: rgba(167, 139, 250, 0.15);
+        border: 1px solid rgba(167, 139, 250, 0.4);
+        color: var(--accent-purple);
+      }
+
+      .action-buttons .btn-small#btn-comoving:hover:not(:disabled) {
+        background: rgba(167, 139, 250, 0.25);
+        border-color: var(--accent-purple);
       }
 
       .exoplanet-alert {
@@ -1006,7 +1027,12 @@ DATA SOURCES:
                     </svg>
                     Check Exoplanets
                   </button>
-                  <button class="btn btn-secondary btn-small" id="btn-youth" onclick="searchYouthIndicators()">
+                  <button
+                    class="btn btn-secondary btn-small"
+                    id="btn-youth"
+                    onclick="searchYouthIndicators()"
+                    style="background: rgba(74, 222, 128, 0.15); border-color: rgba(74, 222, 128, 0.4); color: var(--accent-green);"
+                    >
                     <svg
                       width="14"
                       height="14"
@@ -1023,6 +1049,7 @@ DATA SOURCES:
                     class="btn btn-secondary btn-small"
                     id="btn-comoving"
                     onclick="runComovingSearch()"
+                    style="background: rgba(167, 139, 250, 0.15); border-color: rgba(167, 139, 250, 0.4); color: var(--accent-purple);"
                   >
                     <svg
                       width="14"
@@ -1040,21 +1067,20 @@ DATA SOURCES:
                     </svg>
                     Comoving Search
                   </button>
-                </div>
-
-                <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()" style="margin-top: 0.7rem">
-                  <svg
-                    class="toggle-arrow"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                  Comoving Search Options
+                  <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()">
+                    <svg
+                      class="toggle-arrow"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                    Comoving Search Options
+                  </div>
                 </div>
 
                 <div class="advanced-options" id="advanced-options">
@@ -1068,8 +1094,8 @@ DATA SOURCES:
                       <input type="number" id="search-radius" value="5" step="5" />
                     </div>
                   </div>
-                  <div style="margin-top: 0.7rem; font-size: 0.8rem; color: var(--text-muted)">
-                    Note: no RV cut is applied (binary RVs can be offset).
+                  <div style="margin-top: 0.7rem; font-size: 0.7rem; color: var(--text-muted)">
+                    Note: no RV cut is applied (binary RVs can be offset). Results are shown at the bottom of the page.
                   </div>
                 </div>
 
@@ -2393,7 +2419,7 @@ DATA SOURCES:
       addComovingToAladin(candidates, targetData);
 
       const rvNote = targetHasRV ? '' : ' (Target RV missing: RV_pred suppressed)';
-      setStatus(`Found ${candidates.length} comoving candidates within ${searchRadius} pc${rvNote}`, 'success');
+      setStatus(`Found ${candidates.length} comoving candidates within ${searchRadius} pc${rvNote}. Results at the bottom of the page.`, 'success');
 
     } catch (e) {
       console.error('Comoving search error:', e);
