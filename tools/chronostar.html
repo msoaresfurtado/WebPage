@@ -6,7 +6,11 @@ CHRONOSTAR - DEVELOPMENT NOTES & CHANGE LOG
 
 CHANGE LOG:
 -----------
-v2.2 (This update):
+v2.3 (This update):
+1. Reorganized layout: Youth Indicators panel now sits directly below Target Star panel
+2. Cleaned up CSS and removed redundant styles
+
+v2.2 (Previous):
 1. resolveIdentifier() now selects the *closest* SIMBAD match (best Gaia↔SIMBAD positional agreement)
 2. Comoving kinematics now use *convergent-point / shared space-velocity projection*
    - Velocity offset uses projected tangential-velocity residuals (accounts for sky-position projection)
@@ -31,702 +35,1091 @@ DATA SOURCES:
 ================================================================================
 -->
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ChronoStar - Stellar Age Analysis</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.min.css" />
-  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-  <script type="text/javascript" src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
-
-  <style>
-    :root {
-      --bg-primary: #0a0e17;
-      --bg-secondary: #111827;
-      --bg-tertiary: #1f2937;
-      --text-primary: #f0f4f8;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent-blue: #3b82f6;
-      --accent-cyan: #22d3ee;
-      --accent-purple: #a78bfa;
-      --accent-orange: #fb923c;
-      --accent-green: #4ade80;
-      --accent-red: #f87171;
-      --border-color: #374151;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --error: #ef4444;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'IBM Plex Sans', -apple-system, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      line-height: 1.6;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background:
-        radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.8), transparent),
-        radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.5), transparent),
-        radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.6), transparent),
-        radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
-        radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.7), transparent),
-        radial-gradient(1.5px 1.5px at 160px 120px, rgba(34,211,238,0.9), transparent),
-        radial-gradient(1px 1px at 200px 50px, rgba(255,255,255,0.5), transparent),
-        radial-gradient(1px 1px at 250px 180px, rgba(255,255,255,0.6), transparent),
-        radial-gradient(1px 1px at 300px 90px, rgba(255,255,255,0.4), transparent),
-        radial-gradient(1.5px 1.5px at 350px 140px, rgba(167,139,250,0.8), transparent);
-      background-size: 400px 200px;
-      pointer-events: none;
-      z-index: -1;
-      opacity: 0.6;
-    }
-
-    .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-
-    header {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      padding: 1.25rem 0;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    h1 {
-      font-size: 2.2rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      margin-bottom: 0.25rem;
-      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .subtitle { color: var(--text-secondary); font-size: 1rem; font-weight: 300; }
-    .subtitle a, .header-attribution a { color: var(--accent-cyan); text-decoration: none; }
-
-    .search-section {
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 1.5rem;
-      border: 1px solid var(--border-color);
-    }
-
-    .input-group { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; }
-
-    .input-field { flex: 1; min-width: 380px; }
-    .input-field label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-bottom: 0.35rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .input-field input, .input-field select {
-      width: 100%;
-      padding: 0.65rem 0.85rem;
-      font-size: 0.95rem;
-      font-family: 'IBM Plex Mono', monospace;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      color: var(--text-primary);
-      transition: all 0.2s ease;
-    }
-
-    .input-field input:focus, .input-field select:focus {
-      outline: none;
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
-    }
-
-    .input-field input::placeholder { color: var(--text-muted); }
-
-    .btn {
-      padding: 0.65rem 1.5rem;
-      font-size: 0.95rem;
-      font-weight: 500;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-      color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
-    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .btn-secondary {
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      border: 1px solid var(--border-color);
-    }
-
-    .btn-secondary:hover:not(:disabled) { background: var(--border-color); }
-    .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .btn-small { padding: 0.5rem 1rem; font-size: 0.85rem; }
-
-    .status-bar {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      background: var(--bg-tertiary);
-      border-radius: 6px;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.8rem;
-      display: none;
-    }
-
-    .status-bar.visible { display: block; }
-    .status-bar .status-text { color: var(--accent-cyan); }
-    .status-bar.error .status-text { color: var(--error); }
-    .status-bar.success .status-text { color: var(--success); }
-
-    .results-section { display: none; }
-    .results-section.visible { display: block; }
-
-    .results-grid {
-      display: grid;
-      grid-template-columns: 1fr 420px;
-      gap: 1rem;
-      margin-bottom: 1rem;
-      align-items: stretch;
-    }
-
-    .results-grid > .panel { display: flex; flex-direction: column; }
-    .results-grid > .panel > .panel-body { flex: 1; display: flex; flex-direction: column; }
-    .results-grid > .panel > .panel-body #aladin-lite-div { flex: 1; min-height: 300px; }
-
-    @media (max-width: 1000px) { .results-grid { grid-template-columns: 1fr; } }
-
-    .panel {
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      overflow: hidden;
-    }
-
-    .panel-header {
-      padding: 0.75rem 1rem;
-      background: var(--bg-tertiary);
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .panel-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .panel-title .icon { width: 18px; height: 18px; opacity: 0.8; }
-
-    .panel-body { padding: 0.75rem; }
-
-    .target-info {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0.5rem;
-    }
-
-    .info-item { padding: 0.5rem 0.75rem; background: var(--bg-tertiary); border-radius: 6px; }
-    .info-item .label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: 0.15rem;
-    }
-    .info-item .value { font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; color: var(--text-primary); }
-    .info-item .value.highlight { color: var(--accent-cyan); }
-
-    .plot-container { width: 100%; height: 500px; background: var(--bg-primary); border-radius: 8px; }
-    .cmd-plot-container { width: 100%; max-width: 420px; height: 600px; margin: 0 auto; }
-    .galactic-plot-container { width: 100%; height: 265px; }
-    .toomre-plot-container { width: 100%; height: 320px; }
-
-    .data-table-wrapper { max-height: 400px; overflow: auto; border-radius: 8px; border: 1px solid var(--border-color); }
-    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; font-family: 'IBM Plex Mono', monospace; }
-    .data-table th {
-      position: sticky; top: 0;
-      background: var(--bg-tertiary);
-      padding: 0.75rem 1rem;
-      text-align: left;
-      font-weight: 500;
-      color: var(--text-secondary);
-      border-bottom: 1px solid var(--border-color);
-      white-space: nowrap;
-    }
-    .data-table td { padding: 0.625rem 1rem; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
-    .data-table tr:hover td { background: var(--bg-tertiary); }
-    .data-table .target-row { background: rgba(34, 211, 238, 0.1); }
-
-    .badge { display: inline-block; padding: 0.125rem 0.5rem; font-size: 0.75rem; border-radius: 4px; font-weight: 500; }
-    .badge-info { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
-
-    .full-width-panel { grid-column: 1 / -1; }
-
-    .youth-indicators-grid { display: flex; flex-direction: column; gap: 0.75rem; }
-
-    .youth-indicator-panel { padding: 0.75rem; border-radius: 8px; border-left: 3px solid; }
-    .youth-indicator-panel.li-panel { background: rgba(251, 146, 60, 0.1); border-left-color: var(--accent-orange); }
-    .youth-indicator-panel.prot-panel { background: rgba(34, 197, 94, 0.1); border-left-color: var(--accent-green); }
-    .youth-indicator-panel.rhk-panel { background: rgba(168, 85, 247, 0.1); border-left-color: var(--accent-purple); }
-    .youth-indicator-panel.lx-panel { background: rgba(34, 211, 238, 0.1); border-left-color: var(--accent-cyan); }
-
-    .youth-indicator-panel h4 { margin-bottom: 0.5rem; font-size: 0.85rem; }
-    .youth-indicator-panel.li-panel h4 { color: var(--accent-orange); }
-    .youth-indicator-panel.prot-panel h4 { color: var(--accent-green); }
-    .youth-indicator-panel.rhk-panel h4 { color: var(--accent-purple); }
-    .youth-indicator-panel.lx-panel h4 { color: var(--accent-cyan); }
-
-    .youth-indicator-values { display: flex; flex-direction: column; gap: 0.5rem; }
-
-    .youth-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.5rem 0.75rem; background: var(--bg-tertiary); border-radius: 6px;
-      font-size: 0.85rem;
-    }
-
-    .youth-item .value { font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
-    .youth-item .value.li-color { color: var(--accent-orange); }
-    .youth-item .value.prot-color { color: var(--accent-green); }
-    .youth-item .value.rhk-color { color: var(--accent-purple); }
-    .youth-item .value.lx-color { color: var(--accent-cyan); }
-
-    .youth-item .source {
-      font-size: 0.7rem; color: var(--text-muted);
-      max-width: 130px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-    .youth-item a.source { color: var(--accent-cyan); text-decoration: none; }
-    .youth-item a.source:hover { color: var(--text-primary); text-decoration: underline; }
-
-    .no-data { color: var(--text-muted); font-style: italic; padding: 0.5rem; text-align: center; }
-
-    .walking-loader { position: relative; height: 28px; margin-bottom: 0.25rem; overflow: hidden; opacity: 0; transition: opacity 0.3s ease; }
-    .walking-loader.active { opacity: 1; }
-
-    .walking-emoji {
-      position: absolute;
-      font-size: 1.4rem;
-      top: 50%;
-      transform: translateY(-50%);
-      animation: flyAcross 25s linear infinite;
-    }
-
-    .walking-emoji::after {
-      content: '· · ✦';
-      position: absolute;
-      right: 100%;
-      bottom: -2px;
-      margin-right: 2px;
-      font-size: 0.7rem;
-      opacity: 0.5;
-      animation: trailFade 25s linear infinite;
-      white-space: nowrap;
-      letter-spacing: 3px;
-      color: var(--accent-cyan);
-    }
-
-    @keyframes flyAcross {
-      0% { left: -8%; transform: translateY(-50%) scaleX(1); }
-      48% { left: 100%; transform: translateY(-50%) scaleX(1); }
-      50% { left: 100%; transform: translateY(-50%) scaleX(-1); }
-      98% { left: -8%; transform: translateY(-50%) scaleX(-1); }
-      100% { left: -8%; transform: translateY(-50%) scaleX(1); }
-    }
-
-    @keyframes trailFade {
-      0%, 48% { opacity: 0.4; }
-      49%, 51% { opacity: 0; }
-      52%, 98% { opacity: 0.4; }
-      99%, 100% { opacity: 0; }
-    }
-
-    .loading-spinner {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid transparent;
-      border-top-color: currentColor;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .progress-steps { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; }
-    .progress-step { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
-    .progress-step .check { color: var(--success); }
-    .progress-step .pending { color: var(--text-muted); }
-    .progress-step .active { color: var(--accent-cyan); }
-
-    .advanced-toggle {
-      margin-top: 1rem;
-      padding: 0.6rem 1rem;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.2s ease;
-    }
-
-    .advanced-toggle:hover { color: var(--text-primary); border-color: var(--accent-cyan); }
-    .advanced-toggle .toggle-arrow { transition: transform 0.3s ease; }
-    .advanced-toggle.expanded .toggle-arrow { transform: rotate(180deg); }
-
-    .advanced-options {
-      display: none;
-      margin-top: 1rem;
-      padding: 1rem;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-    }
-    .advanced-options.visible { display: block; }
-
-    .small-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
-    .small-inputs .input-field { min-width: auto; }
-
-    #aladin-lite-div { width: 100%; height: 100%; min-height: 350px; border-radius: 8px; overflow: hidden; }
-
-    .aladin-fov-info {
-      margin-top: 0.75rem;
-      padding: 0.5rem 0.75rem;
-      background: var(--bg-tertiary);
-      border-radius: 6px;
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .aladin-fov-info .fov-value { color: var(--accent-cyan); font-family: 'IBM Plex Mono', monospace; }
-
-    .external-links { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; margin-bottom: 0.5rem; }
-
-    .external-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.35rem 0.6rem;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: 0.75rem;
-      transition: all 0.2s ease;
-    }
-
-    .external-link:hover { background: var(--border-color); border-color: var(--accent-cyan); color: var(--text-primary); }
-    .external-link svg { width: 12px; height: 12px; opacity: 0.7; }
-
-    footer {
-      text-align: center;
-      padding: 2rem;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      border-top: 1px solid var(--border-color);
-      margin-top: 3rem;
-    }
-
-    footer a { color: var(--accent-cyan); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
-
-    .youth-cmd-container { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: flex-start; }
-    .youth-cmd-container .left-panels { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-    .youth-cmd-container .cmd-column { flex: 0 0 auto; width: 420px; max-width: 100%; display: flex; flex-direction: column; gap: 1rem; }
-    .youth-cmd-container .cmd-panel { flex: 0 0 auto; }
-
-    @media (max-width: 1100px) {
-      .youth-cmd-container { flex-direction: column; }
-      .youth-cmd-container .cmd-column { width: 100%; }
-    }
-
-    .gyro-plot-container { max-width: 800px; height: 450px; margin: 0 auto; }
-
-    .action-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      margin-top: 0.5rem;
-      padding-top: 0.5rem;
-      border-top: 1px solid var(--border-color);
-    }
-
-    .action-buttons .btn-small {
-      padding: 0.35rem 0.6rem;
-      font-size: 0.75rem;
-      gap: 0.3rem;
-      border-radius: 4px;
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: var(--accent-blue);
-    }
-
-    .action-buttons .btn-small:hover:not(:disabled) {
-      background: rgba(59, 130, 246, 0.25);
-      border-color: var(--accent-blue);
-    }
-
-    .exoplanet-alert {
-      background: rgba(251, 191, 36, 0.15);
-      border: 1px solid var(--accent-orange);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 0.75rem;
-    }
-
-    .exoplanet-alert-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      color: var(--accent-orange);
-      font-weight: 600;
-    }
-
-    .tess-info {
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid var(--accent-blue);
-      border-radius: 6px;
-      padding: 0.75rem;
-      margin-top: 0.5rem;
-    }
-
-    .tess-info-header { color: var(--accent-blue); font-weight: 600; font-size: 0.85rem; margin-bottom: 0.25rem; }
-  </style>
-</head>
-
-<body>
-  <div class="container">
-    <header>
-      <h1>ChronoStar</h1>
-      <p class="subtitle">Stellar age analysis via youth indicators, kinematics, & CMD position</p>
-    </header>
-
-    <section class="search-section">
-      <div class="walking-loader" id="walking-loader">
-        <span class="walking-emoji">🛰️</span>
-      </div>
-
-      <div class="input-group">
-        <div class="input-field">
-          <label for="target-id">Target (Gaia DR3 ID or SIMBAD Name)</label>
-          <input type="text" id="target-id" placeholder="e.g., 2007420940415412352, TOI 811, HD 63433, TOI-5882" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChronoStar - Stellar Age Analysis</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.min.css"
+    />
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js"
+      charset="utf-8"
+    ></script>
+
+    <style>
+      :root {
+        --bg-primary: #0a0e17;
+        --bg-secondary: #111827;
+        --bg-tertiary: #1f2937;
+        --text-primary: #f0f4f8;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --accent-blue: #3b82f6;
+        --accent-cyan: #22d3ee;
+        --accent-purple: #a78bfa;
+        --accent-orange: #fb923c;
+        --accent-green: #4ade80;
+        --accent-red: #f87171;
+        --border-color: #374151;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --error: #ef4444;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "IBM Plex Sans", -apple-system, sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        line-height: 1.6;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(1px 1px at 20px 30px, rgba(255, 255, 255, 0.8), transparent),
+          radial-gradient(1px 1px at 40px 70px, rgba(255, 255, 255, 0.5), transparent),
+          radial-gradient(1px 1px at 50px 160px, rgba(255, 255, 255, 0.6), transparent),
+          radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.4), transparent),
+          radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.7), transparent),
+          radial-gradient(1.5px 1.5px at 160px 120px, rgba(34, 211, 238, 0.9), transparent),
+          radial-gradient(1px 1px at 200px 50px, rgba(255, 255, 255, 0.5), transparent),
+          radial-gradient(1px 1px at 250px 180px, rgba(255, 255, 255, 0.6), transparent),
+          radial-gradient(1px 1px at 300px 90px, rgba(255, 255, 255, 0.4), transparent),
+          radial-gradient(1.5px 1.5px at 350px 140px, rgba(167, 139, 250, 0.8), transparent);
+        background-size: 400px 200px;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.6;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        padding: 1.25rem 0;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      h1 {
+        font-size: 2.2rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.1rem;
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        font-weight: 300;
+      }
+
+      .subtitle a,
+      .header-attribution a {
+        color: var(--accent-cyan);
+        text-decoration: none;
+      }
+
+      .search-section {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 0.7rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+      }
+
+      .input-group {
+        display: flex;
+        gap: 0.7rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+
+      .input-field {
+        flex: 1;
+        min-width: 380px;
+      }
+
+      .input-field label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .input-field input,
+      .input-field select {
+        width: 100%;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.95rem;
+        font-family: "IBM Plex Mono", monospace;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+      }
+
+      .input-field input:focus,
+      .input-field select:focus {
+        outline: none;
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+      }
+
+      .input-field input::placeholder {
+        color: var(--text-muted);
+      }
+
+      .btn {
+        padding: 0.65rem 1.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+        color: white;
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+      }
+
+      .btn-secondary:hover:not(:disabled) {
+        background: var(--border-color);
+      }
+
+      .btn-secondary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-small {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+      }
+
+      .status-bar {
+        margin-top: 1rem;
+        padding: 0.7rem;
+        background: var(--bg-tertiary);
+        border-radius: 6px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.8rem;
+        display: none;
+      }
+
+      .status-bar.visible {
+        display: block;
+      }
+
+      .status-bar .status-text {
+        color: var(--accent-cyan);
+      }
+
+      .status-bar.error .status-text {
+        color: var(--error);
+      }
+
+      .status-bar.success .status-text {
+        color: var(--success);
+      }
+
+      .results-section {
+        display: none;
+      }
+
+      .results-section.visible {
+        display: block;
+      }
+
+      /* Main two-column grid */
+      .results-grid {
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        align-items: start;
+      }
+
+      .left-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 420px;
+      }
+
+      @media (max-width: 1000px) {
+        .results-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .right-column {
+          width: 100%;
+        }
+      }
+
+      .panel {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        padding: 0.7rem 1rem;
+        background: var(--bg-tertiary);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .panel-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .panel-title .icon {
+        width: 18px;
+        height: 18px;
+        opacity: 0.8;
+      }
+
+      .panel-body {
+        padding: 0.7rem;
+      }
+
+      .panel-body.collapsed {
+        display: none;
+      }
+
+      .collapse-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        transition: transform 0.3s ease;
+      }
+
+      .collapse-btn:hover {
+        color: var(--text-primary);
+      }
+
+      .collapse-btn.collapsed {
+        transform: rotate(-90deg);
+      }
+
+      .target-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.5rem;
+      }
+
+      .info-item {
+        padding: 0.5rem 0.7rem;
+        background: var(--bg-tertiary);
+        border-radius: 6px;
+      }
+
+      .info-item .label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 0.15rem;
+      }
+
+      .info-item .value {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+      }
+
+      .info-item .value.highlight {
+        color: var(--accent-cyan);
+      }
+
+      .plot-container {
+        width: 100%;
+        height: 500px;
+        background: var(--bg-primary);
+        border-radius: 8px;
+      }
+
+      .cmd-plot-container {
+        width: 100%;
+        max-width: 420px;
+        height: 600px;
+        margin: 0 auto;
+      }
+
+      .galactic-plot-container {
+        width: 100%;
+        height: 265px;
+      }
+
+      .toomre-plot-container {
+        width: 100%;
+        height: 320px;
+      }
+
+      .gyro-plot-container {
+        max-width: 800px;
+        height: 450px;
+        margin: 0 auto;
+      }
+
+      .data-table-wrapper {
+        max-height: 400px;
+        overflow: auto;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      .data-table th {
+        position: sticky;
+        top: 0;
+        background: var(--bg-tertiary);
+        padding: 0.7rem 1rem;
+        text-align: left;
+        font-weight: 500;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+      }
+
+      .data-table td {
+        padding: 0.625rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+      }
+
+      .data-table tr:hover td {
+        background: var(--bg-tertiary);
+      }
+
+      .data-table .target-row {
+        background: rgba(34, 211, 238, 0.1);
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.125rem 0.5rem;
+        font-size: 0.7rem;
+        border-radius: 4px;
+        font-weight: 500;
+      }
+
+      .badge-info {
+        background: rgba(59, 130, 246, 0.2);
+        color: var(--accent-blue);
+      }
+
+      .full-width-panel {
+        grid-column: 1 / -1;
+      }
+
+      #aladin-lite-div {
+        width: 100%;
+        height: 350px;
+        min-height: 350px;
+        max-height: 350px;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .youth-indicators-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+      }
+
+      .youth-indicator-panel {
+        padding: 0.7rem;
+        border-radius: 8px;
+        border-left: 3px solid;
+      }
+
+      .youth-indicator-panel.li-panel {
+        background: rgba(251, 146, 60, 0.1);
+        border-left-color: var(--accent-orange);
+      }
+
+      .youth-indicator-panel.prot-panel {
+        background: rgba(34, 197, 94, 0.1);
+        border-left-color: var(--accent-green);
+      }
+
+      .youth-indicator-panel.rhk-panel {
+        background: rgba(168, 85, 247, 0.1);
+        border-left-color: var(--accent-purple);
+      }
+
+      .youth-indicator-panel.lx-panel {
+        background: rgba(34, 211, 238, 0.1);
+        border-left-color: var(--accent-cyan);
+      }
+
+      .youth-indicator-panel h4 {
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+      }
+
+      .youth-indicator-panel.li-panel h4 {
+        color: var(--accent-orange);
+      }
+
+      .youth-indicator-panel.prot-panel h4 {
+        color: var(--accent-green);
+      }
+
+      .youth-indicator-panel.rhk-panel h4 {
+        color: var(--accent-purple);
+      }
+
+      .youth-indicator-panel.lx-panel h4 {
+        color: var(--accent-cyan);
+      }
+
+      .youth-indicator-values {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .youth-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0.7rem;
+        background: var(--bg-tertiary);
+        border-radius: 6px;
+        font-size: 0.85rem;
+      }
+
+      .youth-item .value {
+        font-family: "IBM Plex Mono", monospace;
+        font-weight: 500;
+      }
+
+      .youth-item .value.li-color {
+        color: var(--accent-orange);
+      }
+
+      .youth-item .value.prot-color {
+        color: var(--accent-green);
+      }
+
+      .youth-item .value.rhk-color {
+        color: var(--accent-purple);
+      }
+
+      .youth-item .value.lx-color {
+        color: var(--accent-cyan);
+      }
+
+      .youth-item .source {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        max-width: 130px;
+        text-align: right;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .youth-item a.source {
+        color: var(--accent-cyan);
+        text-decoration: none;
+      }
+
+      .youth-item a.source:hover {
+        color: var(--text-primary);
+        text-decoration: underline;
+      }
+
+      .no-data {
+        color: var(--text-muted);
+        font-style: italic;
+        padding: 0.5rem;
+        text-align: center;
+      }
+
+      .walking-loader {
+        position: relative;
+        height: 28px;
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .walking-loader.active {
+        opacity: 1;
+      }
+
+      .walking-emoji {
+        position: absolute;
+        font-size: 1.4rem;
+        top: 50%;
+        transform: translateY(-50%);
+        animation: flyAcross 25s linear infinite;
+      }
+
+      .walking-emoji::after {
+        content: "· · ✦";
+        position: absolute;
+        right: 100%;
+        bottom: -2px;
+        margin-right: 2px;
+        font-size: 0.7rem;
+        opacity: 0.5;
+        animation: trailFade 25s linear infinite;
+        white-space: nowrap;
+        letter-spacing: 3px;
+        color: var(--accent-cyan);
+      }
+
+      @keyframes flyAcross {
+        0% {
+          left: -8%;
+          transform: translateY(-50%) scaleX(1);
+        }
+        48% {
+          left: 100%;
+          transform: translateY(-50%) scaleX(1);
+        }
+        50% {
+          left: 100%;
+          transform: translateY(-50%) scaleX(-1);
+        }
+        98% {
+          left: -8%;
+          transform: translateY(-50%) scaleX(-1);
+        }
+        100% {
+          left: -8%;
+          transform: translateY(-50%) scaleX(1);
+        }
+      }
+
+      @keyframes trailFade {
+        0%,
+        48% {
+          opacity: 0.4;
+        }
+        49%,
+        51% {
+          opacity: 0;
+        }
+        52%,
+        98% {
+          opacity: 0.4;
+        }
+        99%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid transparent;
+        border-top-color: currentColor;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .progress-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 0.7rem;
+      }
+
+      .progress-step {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+      }
+
+      .progress-step .check {
+        color: var(--success);
+      }
+
+      .progress-step .pending {
+        color: var(--text-muted);
+      }
+
+      .progress-step .active {
+        color: var(--accent-cyan);
+      }
+
+      .advanced-toggle {
+        margin-top: 1rem;
+        padding: 0.6rem 1rem;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+      }
+
+      .advanced-toggle:hover {
+        color: var(--text-primary);
+        border-color: var(--accent-cyan);
+      }
+
+      .advanced-toggle .toggle-arrow {
+        transition: transform 0.3s ease;
+      }
+
+      .advanced-toggle.expanded .toggle-arrow {
+        transform: rotate(180deg);
+      }
+
+      .advanced-options {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+      }
+
+      .advanced-options.visible {
+        display: block;
+      }
+
+      .small-inputs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+
+      .small-inputs .input-field {
+        min-width: auto;
+      }
+
+      .aladin-fov-info {
+        margin-top: 0.7rem;
+        padding: 0.5rem 0.7rem;
+        background: var(--bg-tertiary);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .aladin-fov-info .fov-value {
+        color: var(--accent-cyan);
+        font-family: "IBM Plex Mono", monospace;
+      }
+
+      .external-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.7rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .external-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.35rem 0.6rem;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.7rem;
+        transition: all 0.2s ease;
+      }
+
+      .external-link:hover {
+        background: var(--border-color);
+        border-color: var(--accent-cyan);
+        color: var(--text-primary);
+      }
+
+      .external-link svg {
+        width: 12px;
+        height: 12px;
+        opacity: 0.7;
+      }
+
+      footer {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        border-top: 1px solid var(--border-color);
+        margin-top: 3rem;
+      }
+
+      footer a {
+        color: var(--accent-cyan);
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+      }
+
+      .action-buttons .btn-small {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.7rem;
+        gap: 0.3rem;
+        border-radius: 4px;
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        color: var(--accent-blue);
+      }
+
+      .action-buttons .btn-small:hover:not(:disabled) {
+        background: rgba(59, 130, 246, 0.25);
+        border-color: var(--accent-blue);
+      }
+
+      .exoplanet-alert {
+        background: rgba(251, 191, 36, 0.15);
+        border: 1px solid var(--accent-orange);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.7rem;
+      }
+
+      .exoplanet-alert-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--accent-orange);
+        font-weight: 600;
+      }
+
+      .tess-info {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid var(--accent-blue);
+        border-radius: 6px;
+        padding: 0.7rem;
+        margin-top: 0.5rem;
+      }
+
+      .tess-info-header {
+        color: var(--accent-blue);
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <header>
+        <h1>ChronoStar</h1>
+        <p class="subtitle">Stellar age analysis via youth indicators, kinematics, & CMD position</p>
+      </header>
+
+      <!-- Search Section -->
+      <section class="search-section">
+        <div class="walking-loader" id="walking-loader">
+          <span class="walking-emoji">🛰️</span>
         </div>
-        <button class="btn btn-primary" id="search-btn" onclick="runSearch()">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          Search
-        </button>
-      </div>
 
-      <div class="status-bar" id="status-bar">
-        <span class="status-text" id="status-text"></span>
-        <div class="progress-steps" id="progress-steps"></div>
-      </div>
-    </section>
-
-    <section class="results-section" id="results-section">
-      <div class="results-grid">
-        <div class="panel">
-          <div class="panel-header">
-            <span class="panel-title">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              Target Star
-            </span>
+        <div class="input-group">
+          <div class="input-field">
+            <label for="target-id">Target (Gaia DR3 ID or SIMBAD Name)</label>
+            <input
+              type="text"
+              id="target-id"
+              placeholder="e.g., 2007420940415412352, TOI 811, HD 63433, TOI-5882"
+            />
           </div>
-          <div class="panel-body">
-            <div class="target-info" id="target-info"></div>
-            <div class="external-links" id="external-links"></div>
-
-            <div class="action-buttons" id="action-buttons">
-              <button class="btn btn-secondary btn-small" id="btn-tess" onclick="searchTESSSectors()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M12 6v6l4 2"></path>
-                </svg>
-                TESS Sectors
-              </button>
-
-              <button class="btn btn-secondary btn-small" id="btn-exoplanet" onclick="checkExoplanetArchive()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-                Check Exoplanets
-              </button>
-
-              <button class="btn btn-secondary btn-small" id="btn-youth" onclick="searchYouthIndicators()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2v20M2 12h20"></path>
-                </svg>
-                Youth Indicators
-              </button>
-
-              <button class="btn btn-secondary btn-small" id="btn-comoving" onclick="runComovingSearch()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <circle cx="4" cy="4" r="2"></circle>
-                  <circle cx="20" cy="4" r="2"></circle>
-                  <circle cx="4" cy="20" r="2"></circle>
-                  <circle cx="20" cy="20" r="2"></circle>
-                </svg>
-                Comoving Search
-              </button>
-            </div>
-
-            <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()" style="margin-top: 0.75rem;">
-              <svg class="toggle-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-              Comoving Search Options
-            </div>
-
-            <div class="advanced-options" id="advanced-options">
-              <div class="small-inputs">
-                <div class="input-field">
-                  <label for="velocity-limit">Velocity Limit (km/s)</label>
-                  <input type="number" id="velocity-limit" value="5.0" step="0.5" />
-                </div>
-                <div class="input-field">
-                  <label for="search-radius">Search Radius (pc)</label>
-                  <input type="number" id="search-radius" value="5" step="5" />
-                </div>
-                <!-- RV Cut removed (intentionally) -->
-              </div>
-              <div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted);">
-                Note: no RV cut is applied (binary RVs can be offset).
-              </div>
-            </div>
-
-            <div id="tess-info-container"></div>
-            <div id="exoplanet-alert"></div>
-          </div>
+          <button class="btn btn-primary" id="search-btn" onclick="runSearch()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Search
+          </button>
         </div>
 
-        <div class="panel">
-          <div class="panel-header">
-            <span class="panel-title">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-              </svg>
-              Sky View
-            </span>
-          </div>
-          <div class="panel-body">
-            <div id="aladin-lite-div"></div>
-            <div class="aladin-fov-info" id="aladin-fov-info">
-              Field of view: <span class="fov-value" id="fov-value">--</span>
-            </div>
-          </div>
+        <div class="status-bar" id="status-bar">
+          <span class="status-text" id="status-text"></span>
+          <div class="progress-steps" id="progress-steps"></div>
         </div>
-      </div>
+      </section>
 
-      <div class="youth-cmd-container">
-        <div class="left-panels">
-          <div class="panel" style="margin-bottom: 1rem;">
-            <div class="panel-header">
-              <span class="panel-title">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <ellipse cx="12" cy="12" rx="10" ry="4"></ellipse>
-                  <path d="M12 2v20"></path>
-                </svg>
-                Galactic Position
-              </span>
-              <button class="btn btn-secondary btn-small" onclick="downloadGalacticPlot()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                PNG
-              </button>
-            </div>
-            <div class="panel-body">
-              <div class="galactic-plot-container" id="galactic-plot"></div>
-            </div>
-          </div>
+      <!-- Results Section -->
+      <section class="results-section" id="results-section">
+        <!-- Main Grid: Left Column | Right Column -->
+        <div class="results-grid">
+          <!-- LEFT COLUMN: Target Star, Youth Indicators, Gyro -->
+          <div class="left-column">
+            <!-- Target Star Panel -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Target Star
+                </span>
+              </div>
+              <div class="panel-body">
+                <div class="target-info" id="target-info"></div>
+                <div class="external-links" id="external-links"></div>
 
-          <div class="panel">
-            <div class="panel-header">
-              <span class="panel-title">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2v20M2 12h20"></path>
-                </svg>
-                Youth Indicators
-              </span>
+                <div class="action-buttons" id="action-buttons">
+                  <button class="btn btn-secondary btn-small" id="btn-tess" onclick="searchTESSSectors()">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    TESS Sectors
+                  </button>
+                  <button
+                    class="btn btn-secondary btn-small"
+                    id="btn-exoplanet"
+                    onclick="checkExoplanetArchive()"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    Check Exoplanets
+                  </button>
+                  <button class="btn btn-secondary btn-small" id="btn-youth" onclick="searchYouthIndicators()">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M12 2v20M2 12h20"></path>
+                    </svg>
+                    Youth Indicators
+                  </button>
+                  <button
+                    class="btn btn-secondary btn-small"
+                    id="btn-comoving"
+                    onclick="runComovingSearch()"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <circle cx="4" cy="4" r="2"></circle>
+                      <circle cx="20" cy="4" r="2"></circle>
+                      <circle cx="4" cy="20" r="2"></circle>
+                      <circle cx="20" cy="20" r="2"></circle>
+                    </svg>
+                    Comoving Search
+                  </button>
+                </div>
+
+                <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()" style="margin-top: 0.7rem">
+                  <svg
+                    class="toggle-arrow"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                  Comoving Search Options
+                </div>
+
+                <div class="advanced-options" id="advanced-options">
+                  <div class="small-inputs">
+                    <div class="input-field">
+                      <label for="velocity-limit">Velocity Limit (km/s)</label>
+                      <input type="number" id="velocity-limit" value="5.0" step="0.5" />
+                    </div>
+                    <div class="input-field">
+                      <label for="search-radius">Search Radius (pc)</label>
+                      <input type="number" id="search-radius" value="5" step="5" />
+                    </div>
+                  </div>
+                  <div style="margin-top: 0.7rem; font-size: 0.8rem; color: var(--text-muted)">
+                    Note: no RV cut is applied (binary RVs can be offset).
+                  </div>
+                </div>
+
+                <div id="tess-info-container"></div>
+                <div id="exoplanet-alert"></div>
+              </div>
             </div>
-            <div class="panel-body">
-              <div class="youth-indicators-grid" id="youth-indicators-grid">
-                <div class="youth-indicator-panel li-panel">
-                  <h4>EW(Li) and A(Li) - Lithium</h4>
-                  <div class="youth-indicator-values" id="li-values">
-                    <div class="no-data">Click "Youth Indicators" above to search</div>
+
+            <!-- Youth Indicators Panel -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M2 12h20"></path>
+                  </svg>
+                  Youth Indicators
+                </span>
+              </div>
+              <div class="panel-body">
+                <div class="youth-indicators-grid" id="youth-indicators-grid">
+                  <div class="youth-indicator-panel li-panel">
+                    <h4>EW(Li) and A(Li) - Lithium</h4>
+                    <div class="youth-indicator-values" id="li-values">
+                      <div class="no-data">Click "Youth Indicators" above to search</div>
+                    </div>
                   </div>
-                </div>
-                <div class="youth-indicator-panel prot-panel">
-                  <h4>P<sub>rot</sub> - Rotation</h4>
-                  <div class="youth-indicator-values" id="rotation-results">
-                    <div class="no-data">Click "Youth Indicators" above to search</div>
+                  <div class="youth-indicator-panel prot-panel">
+                    <h4>P<sub>rot</sub> - Rotation</h4>
+                    <div class="youth-indicator-values" id="rotation-results">
+                      <div class="no-data">Click "Youth Indicators" above to search</div>
+                    </div>
                   </div>
-                </div>
-                <div class="youth-indicator-panel rhk-panel">
-                  <h4>log(R'<sub>HK</sub>) - Activity</h4>
-                  <div class="youth-indicator-values" id="rhk-results">
-                    <div class="no-data">Click "Youth Indicators" above to search</div>
+                  <div class="youth-indicator-panel rhk-panel">
+                    <h4>log(R'<sub>HK</sub>) - Activity</h4>
+                    <div class="youth-indicator-values" id="rhk-results">
+                      <div class="no-data">Click "Youth Indicators" above to search</div>
+                    </div>
                   </div>
-                </div>
-                <div class="youth-indicator-panel lx-panel">
-                  <h4>log(L<sub>X</sub>) - X-ray</h4>
-                  <div class="youth-indicator-values" id="lx-results">
-                    <div class="no-data">Click "Youth Indicators" above to search</div>
+                  <div class="youth-indicator-panel lx-panel">
+                    <h4>log(L<sub>X</sub>) - X-ray</h4>
+                    <div class="youth-indicator-values" id="lx-results">
+                      <div class="no-data">Click "Youth Indicators" above to search</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="panel full-width-panel" id="gyro-panel" style="margin-bottom: 1rem; display: none;">
+            <!-- Gyrochronology Panel -->
+            <div class="panel" id="gyro-panel" style="display: none">
               <div class="panel-header">
                 <span class="panel-title">
                   <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -736,7 +1129,14 @@ DATA SOURCES:
                   Gyrochronology: P<sub>rot</sub> vs T<sub>eff</sub>
                 </span>
                 <button class="btn btn-secondary btn-small" onclick="downloadGyroPlot()">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -749,201 +1149,355 @@ DATA SOURCES:
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="cmd-column">
-          <div class="panel cmd-panel">
-            <div class="panel-header">
-              <span class="panel-title">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 3v18h18"></path>
-                  <circle cx="9" cy="9" r="2"></circle>
-                  <circle cx="19" cy="5" r="2"></circle>
-                  <circle cx="14" cy="14" r="2"></circle>
-                </svg>
-                CMD
-              </span>
-              <button class="btn btn-secondary btn-small" onclick="downloadPlot()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                PNG
-              </button>
+          <!-- RIGHT COLUMN: Sky View, Galactic Position -->
+          <div class="right-column">
+            <!-- Sky View Panel -->
+            <div class="panel" id="sky-view-panel">
+              <div class="panel-header">
+                <span class="panel-title">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  </svg>
+                  Sky View
+                </span>
+                <button class="collapse-btn" onclick="togglePanel('sky-view-panel')" title="Toggle panel">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+              </div>
+              <div class="panel-body">
+                <div id="aladin-lite-div"></div>
+                <div class="aladin-fov-info" id="aladin-fov-info">
+                  Field of view: <span class="fov-value" id="fov-value">--</span>
+                </div>
+              </div>
             </div>
-            <div class="panel-body">
-              <div class="cmd-plot-container" id="cmd-plot"></div>
+
+            <!-- Galactic Position Panel -->
+            <div class="panel" id="galactic-panel">
+              <div class="panel-header">
+                <span class="panel-title">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="12" rx="10" ry="4"></ellipse>
+                    <path d="M12 2v20"></path>
+                  </svg>
+                  Galactic Position
+                </span>
+                <button class="btn btn-secondary btn-small" onclick="downloadGalacticPlot()">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  PNG
+                </button>
+              </div>
+              <div class="panel-body">
+                <div class="galactic-plot-container" id="galactic-plot"></div>
+              </div>
+            </div>
+
+            <div class="panel" id="toomre-panel" style="display: none">
+              <div class="panel-header">
+                <span class="panel-title">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 6v6l4 2"></path>
+                  </svg>
+                  Toomre Diagram
+                </span>
+                <button class="btn btn-secondary btn-small" onclick="downloadToomrePlot()">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  PNG
+                </button>
+              </div>
+              <div class="panel-body">
+                <div class="toomre-plot-container" id="toomre-plot"></div>
+              </div>
+            </div>
+
+            <!-- CMD Panel -->
+            <div class="panel">
+              <div class="panel-header">
+                <span class="panel-title">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3v18h18"></path>
+                    <circle cx="9" cy="9" r="2"></circle>
+                    <circle cx="19" cy="5" r="2"></circle>
+                    <circle cx="14" cy="14" r="2"></circle>
+                  </svg>
+                  CMD
+                </span>
+                <button class="btn btn-secondary btn-small" onclick="downloadPlot()">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  PNG
+                </button>
+              </div>
+              <div class="panel-body">
+                <div class="cmd-plot-container" id="cmd-plot"></div>
+              </div>
             </div>
           </div>
+          <!-- END RIGHT COLUMN -->
+        </div>
+        <!-- END results-grid -->
 
-          <div class="panel" id="toomre-panel" style="display: none;">
-            <div class="panel-header">
-              <span class="panel-title">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M12 6v6l4 2"></path>
-                </svg>
-                Toomre Diagram
-              </span>
-              <button class="btn btn-secondary btn-small" onclick="downloadToomrePlot()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                PNG
-              </button>
-            </div>
-            <div class="panel-body">
-              <div class="toomre-plot-container" id="toomre-plot"></div>
+        <!-- Comoving Candidates Panel (Full Width) -->
+        <div class="panel full-width-panel" id="comoving-panel" style="display: none">
+          <div class="panel-header">
+            <span class="panel-title">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <path d="M3 9h18M9 21V9"></path>
+              </svg>
+              Comoving Candidates
+              <span class="badge badge-info" id="candidate-count">0 stars</span>
+            </span>
+            <button class="btn btn-secondary btn-small" onclick="downloadCSV()">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              CSV
+            </button>
+          </div>
+          <div class="panel-body">
+            <div class="data-table-wrapper">
+              <table class="data-table" id="results-table">
+                <thead>
+                  <tr>
+                    <th>Index</th>
+                    <th>Gaia DR3 ID</th>
+                    <th>RA</th>
+                    <th>Dec</th>
+                    <th>G mag</th>
+                    <th>Bp-Rp</th>
+                    <th>V<sub>off</sub> (km/s)</th>
+                    <th>Sep (°)</th>
+                    <th>Sep 3D (pc)</th>
+                    <th>RV<sub>pred</sub></th>
+                    <th>RV<sub>obs</sub></th>
+                    <th>SpT</th>
+                    <th>RUWE</th>
+                  </tr>
+                </thead>
+                <tbody id="results-tbody"></tbody>
+              </table>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+      <!-- END results-section -->
 
-      <div class="panel full-width-panel" id="comoving-panel" style="display: none;">
-        <div class="panel-header">
-          <span class="panel-title">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-              <path d="M3 9h18M9 21V9"></path>
-            </svg>
-            Comoving Candidates
-            <span class="badge badge-info" id="candidate-count">0 stars</span>
-          </span>
-          <button class="btn btn-secondary btn-small" onclick="downloadCSV()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            CSV
-          </button>
-        </div>
-        <div class="panel-body">
-          <div class="data-table-wrapper">
-            <table class="data-table" id="results-table">
-              <thead>
-              <tr>
-                <th>Index</th>
-                <th>Gaia DR3 ID</th>
-                <th>RA</th>
-                <th>Dec</th>
-                <th>G mag</th>
-                <th>Bp-Rp</th>
-                <th>V<sub>off</sub> (km/s)</th>
-                <th>Sep (°)</th>
-                <th>Sep 3D (pc)</th>
-                <th>RV<sub>pred</sub></th>
-                <th>RV<sub>obs</sub></th>
-                <th>SpT</th>
-                <th>RUWE</th>
-              </tr>
-              </thead>
-              <tbody id="results-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
+      <footer>
+        <p>
+          Made for the <a href="https://msoaresfurtado.com" target="_blank">Soares-Furtado Research Group</a>,
+          UW-Madison
+        </p>
+        <p style="margin-top: 0.5rem">
+          Comoving search inspired by <a href="https://github.com/adamkraus/Comove" target="_blank">FriendFinder</a>
+          | Please cite:
+          <a href="https://ui.adsabs.harvard.edu/abs/2021AJ....161..171T" target="_blank">Tofflemire et al. (2021)</a>
+        </p>
+        <p style="margin-top: 0.5rem; color: var(--text-muted)">
+          Data from
+          <a href="https://vizier.cds.unistra.fr/viz-bin/VizieR-3?-source=I/355/gaiadr3" target="_blank">Gaia DR3</a>,
+          <a href="https://simbad.cds.unistra.fr/" target="_blank">SIMBAD</a>,
+          <a href="https://vizier.cds.unistra.fr/" target="_blank">VizieR</a>
+          | Isochrones from <a href="http://stev.oapd.inaf.it/cmd" target="_blank">PARSEC</a>
+        </p>
+        <p style="margin-top: 0.5rem; color: var(--text-muted)">
+          Built with <a href="https://plotly.com/javascript/" target="_blank">Plotly.js</a> and
+          <a href="https://aladin.cds.unistra.fr/AladinLite/" target="_blank">Aladin Lite</a> | All queries run
+          client-side in JavaScript
+        </p>
+      </footer>
+    </div>
 
-    <footer>
-      <p> Made for the <a href="https://msoaresfurtado.com" target="_blank">Soares-Furtado Research Group</a>, UW-Madison</p>
-      <p style="margin-top: 0.5rem;">Comoving search inspired by <a href="https://github.com/adamkraus/Comove" target="_blank">FriendFinder</a> | Please cite: <a href="https://ui.adsabs.harvard.edu/abs/2021AJ....161..171T" target="_blank">Tofflemire et al. (2021)</a></p>
-      <p style="margin-top: 0.5rem; color: var(--text-muted);">Data from <a href="https://vizier.cds.unistra.fr/viz-bin/VizieR-3?-source=I/355/gaiadr3" target="_blank">Gaia DR3</a>, <a href="https://simbad.cds.unistra.fr/" target="_blank">SIMBAD</a>, <a href="https://vizier.cds.unistra.fr/" target="_blank">VizieR</a> | Isochrones from <a href="http://stev.oapd.inaf.it/cmd" target="_blank">PARSEC</a></p>
-      <p style="margin-top: 0.5rem; color: var(--text-muted);">Built with <a href="https://plotly.com/javascript/" target="_blank">Plotly.js</a> and <a href="https://aladin.cds.unistra.fr/AladinLite/" target="_blank">Aladin Lite</a> | All queries run client-side in JavaScript</p>
-    </footer>
-  </div>
+  <script>
+    // =========================
+    // Global state
+    // =========================
+    let searchResults = [];
+    let targetData = null;
+    let vizierYouthData = { ewli: [], prot: [], rhk: [], lx: [] };
+    let aladinViewer = null;
+    let ticInfo = null;
+    let exoplanetData = null;
 
-<script>
-  // =========================
-  // Global state
-  // =========================
-  let searchResults = [];
-  let targetData = null;
-  let vizierYouthData = { ewli: [], prot: [], rhk: [], lx: [] };
-  let aladinViewer = null;
-  let ticInfo = null;
+    // =========================
+    // Reference data
+    // =========================
 
-  // =========================
-  // Reference data
-  // =========================
-  const sptMapping = [
-    { bprp: -0.037, spt: 'A0' },
-    { bprp: 0.377, spt: 'F0' },
-    { bprp: 0.782, spt: 'G0' },
-    { bprp: 0.980, spt: 'K0' },
-    { bprp: 1.84, spt: 'M0' },
-    { bprp: 2.50, spt: 'M3' },
-    { bprp: 3.36, spt: 'M5' },
-    { bprp: 4.75, spt: 'M7' }
-  ];
+    // CGS Constants for Teq calculation
+    const R_SUN_CM = 6.957e10;  // Solar radius in cm
+    const AU_CM = 1.496e13;     // 1 AU in cm
 
-  const gyroClusterData = {
-    pleiades: {
-      age: 150, label: 'Pleiades (150 Myr)', color: '#3b82f6',
-      teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
-      prot: [0.5, 1.2, 2.0, 3.2, 4.5, 6.0, 7.5, 8.5, 7.0, 4.0, 1.8, 0.6],
-      scatter: [0.2, 0.4, 0.6, 0.9, 1.2, 1.5, 1.8, 2.2, 2.5, 2.0, 1.0, 0.4]
-    },
-    ngc3532: {
-      age: 300, label: 'NGC 3532 (300 Myr)', color: '#eab308',
-      teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
-      prot: [2.0, 3.5, 5.0, 7.0, 8.5, 10.0, 11.0, 11.5, 10.0, 6.5, 3.5, 1.5],
-      scatter: [0.5, 0.7, 0.9, 1.1, 1.4, 1.6, 1.9, 2.2, 2.5, 2.0, 1.3, 0.8]
-    },
-    ngc6811: {
-      age: 1000, label: 'NGC 6811 (1 Gyr)', color: '#f97316',
-      teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
-      prot: [5.0, 8.0, 11.0, 13.5, 15.0, 15.5, 15.0, 14.0, 12.0, 8.0, 4.0, 2.0],
-      scatter: [0.8, 1.0, 1.3, 1.6, 1.9, 2.1, 2.3, 2.6, 3.0, 2.5, 1.5, 1.0]
+    const sptMapping = [
+      { bprp: -0.037, spt: 'A0' },
+      { bprp: 0.377, spt: 'F0' },
+      { bprp: 0.782, spt: 'G0' },
+      { bprp: 0.980, spt: 'K0' },
+      { bprp: 1.84, spt: 'M0' },
+      { bprp: 2.50, spt: 'M3' },
+      { bprp: 3.36, spt: 'M5' },
+      { bprp: 4.75, spt: 'M7' }
+    ];
+
+    // Reference exoplanets for Teq plot (from literature)
+    const referenceExoplanets = [
+      { name: 'K2-18 b', radius: 2.61, teq: 284, teff: 3457},
+      { name: 'GJ 1214 b', radius: 2.74, teq: 553, teff: 3250},
+      { name: 'GJ 3470 b', radius: 4.57, teq: 604, teff: 3652},
+      { name: 'TOI-270 d', radius: 2.13, teq: 394, teff: 3506},
+      { name: 'L 98-59 d', radius: 1.58, teq: 416, teff: 3412},
+      { name: 'GJ 9827 d', radius: 2.02, teq: 612, teff: 4255},
+      { name: 'GJ 3090 b', radius: 2.13, teq: 693, teff: 3648},
+      { name: 'LHS 1140 b', radius: 1.73, teq: 235, teff: 3216},
+      { name: 'TRAPPIST-1 e', radius: 0.92, teq: 251, teff: 2566},
+      { name: 'TRAPPIST-1 f', radius: 1.05, teq: 219, teff: 2566},
+      { name: 'HD 97658 b', radius: 2.25, teq: 725, teff: 5170},
+      { name: '55 Cnc e', radius: 1.88, teq: 1950, teff: 5196},
+      { name: 'HD 219134 b', radius: 1.50, teq: 1015, teff: 4699},
+      { name: 'HD 63433 d', radius: 1.1, teq: 1040, teff: 5688},
+    ];
+
+    const gyroClusterData = {
+      pleiades: {
+        age: 150, label: 'Pleiades (150 Myr)', color: '#3b82f6',
+        teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
+        prot: [0.5, 1.2, 2.0, 3.2, 4.5, 6.0, 7.5, 8.5, 7.0, 4.0, 1.8, 0.6],
+        scatter: [0.2, 0.4, 0.6, 0.9, 1.2, 1.5, 1.8, 2.2, 2.5, 2.0, 1.0, 0.4]
+      },
+      ngc3532: {
+        age: 300, label: 'NGC 3532 (300 Myr)', color: '#eab308',
+        teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
+        prot: [2.0, 3.5, 5.0, 7.0, 8.5, 10.0, 11.0, 11.5, 10.0, 6.5, 3.5, 1.5],
+        scatter: [0.5, 0.7, 0.9, 1.1, 1.4, 1.6, 1.9, 2.2, 2.5, 2.0, 1.3, 0.8]
+      },
+      ngc6811: {
+        age: 1000, label: 'NGC 6811 (1 Gyr)', color: '#f97316',
+        teff: [6500, 6200, 5900, 5600, 5300, 5000, 4700, 4400, 4100, 3800, 3500, 3200],
+        prot: [5.0, 8.0, 11.0, 13.5, 15.0, 15.5, 15.0, 14.0, 12.0, 8.0, 4.0, 2.0],
+        scatter: [0.8, 1.0, 1.3, 1.6, 1.9, 2.1, 2.3, 2.6, 3.0, 2.5, 1.5, 1.0]
+      }
+    };
+
+    // Manual youth indicator data for targets not yet in VizieR catalogs
+    const manualYouthData = {
+      'TOI-811': {
+        ewli: [{ value: 133, error: 24, source: 'Carmichael+2021', url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1', isALi: false }]
+      },
+      'TOI 811': { aliasOf: 'TOI-811' },
+      'TOI811': { aliasOf: 'TOI-811' },
+      'TOI-5882': {
+        ewli: [{ value: 71.2, error: 6.9, source: 'Vowell+2025', url: 'https://arxiv.org/abs/2501.09795', isALi: false }]
+      },
+      'TOI 5882': { aliasOf: 'TOI-5882' },
+      'TOI5882': { aliasOf: 'TOI-5882' }
+    };
+
+    // =========================
+    // UI helpers
+    // =========================
+    function togglePanel(panelId) {
+      const panel = document.getElementById(panelId);
+      const body = panel.querySelector('.panel-body');
+      const btn = panel.querySelector('.collapse-btn');
+
+      body.classList.toggle('collapsed');
+      btn.classList.toggle('collapsed');
+
+      // Special handling for Aladin
+      if (panelId === 'sky-view-panel' && !body.classList.contains('collapsed') && aladinViewer) {
+        setTimeout(() => aladinViewer.view.requestRedraw(), 100);
+      }
     }
-  };
+    function toggleAdvanced() {
+      document.getElementById('advanced-options').classList.toggle('visible');
+      document.getElementById('advanced-toggle').classList.toggle('expanded');
+    }
 
-  // Manual youth indicator data for targets not yet in VizieR catalogs
-  const manualYouthData = {
-    'TOI-811': {
-      ewli: [{ value: 133, error: 24, source: 'Carmichael+2021', url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1',isALi: false }]
-    },
-    'TOI 811': { aliasOf: 'TOI-811' },
-    'TOI811': { aliasOf: 'TOI-811' },
-    'TOI-5882': {
-      ewli: [{ value: 71.2, error: 6.9, source: 'Vowell+2025', url: 'https://arxiv.org/abs/2501.09795',isALi: false }]
-    },
-    'TOI 5882': { aliasOf: 'TOI-5882' },
-    'TOI5882': { aliasOf: 'TOI-5882' }
-  };
+    function setStatus(message, type = 'info') {
+      const statusBar = document.getElementById('status-bar');
+      const statusText = document.getElementById('status-text');
+      statusBar.classList.add('visible');
+      statusBar.classList.remove('error', 'success');
+      if (type === 'error') statusBar.classList.add('error');
+      if (type === 'success') statusBar.classList.add('success');
+      statusText.innerHTML = message;
+    }
 
-  // =========================
-  // UI helpers
-  // =========================
-  function toggleAdvanced() {
-    document.getElementById('advanced-options').classList.toggle('visible');
-    document.getElementById('advanced-toggle').classList.toggle('expanded');
-  }
+    function updateProgress(steps) {
+      document.getElementById('progress-steps').innerHTML = steps.map(s => `
+        <div class="progress-step">
+          <span class="${s.status}">${s.status === 'check' ? '✓' : s.status === 'active' ? '◉' : '○'}</span>
+          ${s.text}
+        </div>
+      `).join('');
+    }
 
-  function setStatus(message, type = 'info') {
-    const statusBar = document.getElementById('status-bar');
-    const statusText = document.getElementById('status-text');
-    statusBar.classList.add('visible');
-    statusBar.classList.remove('error', 'success');
-    if (type === 'error') statusBar.classList.add('error');
-    if (type === 'success') statusBar.classList.add('success');
-    statusText.innerHTML = message;
-  }
+    function startWalking() {
+      document.getElementById('walking-loader')?.classList.add('active');
+    }
 
-  function updateProgress(steps) {
-    document.getElementById('progress-steps').innerHTML = steps.map(s => `
-      <div class="progress-step">
-        <span class="${s.status}">${s.status === 'check' ? '✓' : s.status === 'active' ? '◉' : '○'}</span>
-        ${s.text}
-      </div>
-    `).join('');
-  }
+    function stopWalking() {
+      document.getElementById('walking-loader')?.classList.remove('active');
+    }
 
-  function startWalking() { document.getElementById('walking-loader')?.classList.add('active'); }
-  function stopWalking() { document.getElementById('walking-loader')?.classList.remove('active'); }
+    function toggleExoplanetDetails() {
+      const details = document.getElementById('exoplanet-details');
+      const arrow = document.getElementById('exoplanet-toggle-arrow');
+      if (!details || !arrow) return;
+
+      if (details.style.display === 'none') {
+        details.style.display = 'block';
+        arrow.style.transform = 'rotate(0deg)';
+      } else {
+        details.style.display = 'none';
+        arrow.style.transform = 'rotate(-90deg)';
+      }
+    }
 
   // =========================
   // Math helpers
@@ -977,6 +1531,240 @@ DATA SOURCES:
     return gmag - 5 * Math.log10(dist) + 5;
   }
 
+  // =========================
+  // Equilibrium Temperature Calculator
+  // =========================
+  // Formula: Teq = T_star * sqrt(R_star / (2 * a)) * (1 - A)^(1/4)
+  // All units converted to CGS before calculation
+  function calculateTeq(T_star_K, R_star_Rsun, a_AU, albedo) {
+    if (!T_star_K || !R_star_Rsun || !a_AU || T_star_K <= 0 || R_star_Rsun <= 0 || a_AU <= 0) {
+      return null;
+    }
+    if (albedo < 0 || albedo >= 1) {
+      return null;
+    }
+
+    // Convert to CGS
+    const R_star_cm = R_star_Rsun * R_SUN_CM;
+    const a_cm = a_AU * AU_CM;
+
+    // Calculate Teq
+    const Teq = T_star_K * Math.sqrt(R_star_cm / (2 * a_cm)) * Math.pow(1 - albedo, 0.25);
+    return Teq;
+  }
+
+  // Get temperature classification and color
+  function getTeqClassification(teq) {
+    if (teq < 200) return { class: 'teq-cold', label: 'Cold', color: '#60A5FA' };
+    if (teq < 273) return { class: 'teq-cool', label: 'Cool', color: '#34D399' };
+    if (teq < 373) return { class: 'teq-habitable-zone', label: 'Potentially Habitable', color: '#22C55E' };
+    if (teq < 500) return { class: 'teq-warm', label: 'Warm', color: '#FBBF24' };
+    if (teq < 800) return { class: 'teq-hot', label: 'Hot', color: '#F97316' };
+    return { class: 'teq-very-hot', label: 'Very Hot', color: '#EF4444' };
+  }
+
+  // Show Teq plot for all planets in the system
+    function showTeqPlot() {
+      if (!exoplanetData || !exoplanetData.planets) return;
+
+      const plotEl = document.getElementById('teq-plot-container');
+      if (!plotEl) return;
+
+      if (plotEl.style.display !== 'none' && plotEl.innerHTML !== '') {
+        plotEl.style.display = 'none';
+        return;
+      }
+      plotEl.style.display = 'block';
+
+      const plottablePlanets = exoplanetData.planets.filter(p => p.pl_orbsmax && p.pl_rade);
+      const planetColors = ['#ef4444', '#22d3ee', '#a78bfa', '#4ade80', '#fb923c'];
+
+      // Build per-planet albedo inputs
+      let albedoInputsHtml = plottablePlanets.map((p, i) => `
+        <div style="display:flex; align-items:center; gap:0.4rem;">
+          <span style="color:${planetColors[i % planetColors.length]}; font-weight:500;">${p.pl_name}:</span>
+          <input type="number" id="teq-albedo-${i}" value="0.3" min="0" max="0.99" step="0.05"
+                 style="width:60px; padding:0.2rem 0.3rem; background:var(--bg-tertiary); border:1px solid var(--border-color);
+                        border-radius:4px; color:var(--text-primary); font-family:'IBM Plex Mono',monospace; font-size:0.7rem;"
+                 onchange="updateTeqPlot()" onkeyup="updateTeqPlot()">
+        </div>
+      `).join('');
+
+      plotEl.innerHTML = `
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:1rem; margin-bottom:0.5rem; font-size:0.8rem;">
+          <span style="color:var(--text-secondary);">Albedo:</span>
+          ${albedoInputsHtml}
+          <span style="color:var(--text-muted); font-size:0.7rem; margin-left:0.5rem;">Earth ≈ 0.3 | Venus ≈ 0.77</span>
+        </div>
+        <div style="margin-bottom:0.5rem;">
+          <button onclick="resetTeqPlotZoom()" style="background:var(--bg-tertiary); border:1px solid var(--border-color);
+                  color:var(--text-secondary); padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-size:0.7rem;">
+            Reset Zoom
+          </button>
+          <button onclick="downloadTeqPlot()" style="background:var(--bg-tertiary); border:1px solid var(--border-color);
+                  color:var(--text-secondary); padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-size:0.7rem; margin-left:0.5rem;">
+            PNG
+          </button>
+        </div>
+        <div id="teq-plot-area"></div>
+      `;
+
+      updateTeqPlot();
+    }
+
+    // Reset zoom to default view
+    function resetTeqPlotZoom() {
+      const plotArea = document.getElementById('teq-plot-area');
+      if (!plotArea) return;
+
+      Plotly.relayout(plotArea, {
+        'xaxis.range': [0.5, 15],
+        'yaxis.range': [0, 3000]
+      });
+    }
+
+    // Update/render the Teq plot with current albedos
+    function updateTeqPlot() {
+      if (!exoplanetData || !exoplanetData.planets) return;
+
+      const plotArea = document.getElementById('teq-plot-area');
+      if (!plotArea) return;
+
+      const plottablePlanets = exoplanetData.planets.filter(p => p.pl_orbsmax && p.pl_rade);
+      if (plottablePlanets.length === 0) return;
+
+      // Get per-planet albedos
+      const albedos = plottablePlanets.map((p, i) => {
+        const input = document.getElementById(`teq-albedo-${i}`);
+        let val = input ? parseFloat(input.value) : 0.3;
+        if (isNaN(val) || val < 0 || val >= 1) val = 0.3;
+        return val;
+      });
+
+      // Color scale based on stellar Teff
+      const teffToColor = (teff) => {
+        const minT = 2500, maxT = 6000;
+        const norm = Math.max(0, Math.min(1, (teff - minT) / (maxT - minT)));
+        const r = Math.round(80 + 175 * norm);
+        const g = Math.round(120 + 50 * (1 - norm));
+        const b = Math.round(220 - 150 * norm);
+        return `rgb(${r},${g},${b})`;
+      };
+
+      const traces = [];
+
+      // Habitable zone band (horizontal)
+      const hzShape = {
+        type: 'rect',
+        xref: 'paper', yref: 'y',
+        x0: 0, x1: 1,
+        y0: 200, y1: 320,
+        fillcolor: 'rgba(34, 197, 94, 0.15)',
+        line: { width: 0 },
+        layer: 'below'
+      };
+
+      // Super-Earth region (vertical)
+      const superEarthShape = {
+        type: 'rect',
+        xref: 'x', yref: 'paper',
+        x0: 1.25, x1: 4,
+        y0: 0, y1: 1,
+        fillcolor: 'rgba(167, 139, 250, 0.12)',
+        line: { width: 0 },
+        layer: 'below'
+      };
+
+      // Reference planets trace (always A=0.3 from literature)
+      traces.push({
+        x: referenceExoplanets.map(p => p.radius),
+        y: referenceExoplanets.map(p => p.teq),
+        mode: 'markers',
+        type: 'scatter',
+        name: 'Known Exoplanets',
+        text: referenceExoplanets.map(p => p.name),
+        marker: {
+          size: 12,
+          color: referenceExoplanets.map(p => teffToColor(p.teff)),
+          line: { color: 'rgba(0,0,0,0.3)', width: 1 },
+          opacity: 0.8
+        },
+        hovertemplate: '<b>%{text}</b><br>R = %{x:.2f} R⊕<br>Teq = %{y:.0f} K<extra></extra>'
+      });
+
+      // Target system planets - each as separate trace for legend
+      const planetColors = ['#ef4444', '#22d3ee', '#a78bfa', '#4ade80', '#fb923c'];
+
+      plottablePlanets.forEach((p, i) => {
+        const albedo = albedos[i];
+        const teq = calculateTeq(exoplanetData.st_teff, exoplanetData.st_rad, p.pl_orbsmax, albedo);
+        if (!teq) return;
+
+        traces.push({
+          x: [p.pl_rade],
+          y: [teq],
+          mode: 'markers',
+          type: 'scatter',
+          name: `${p.pl_name} (${teq.toFixed(0)} K, A=${albedo})`,
+          marker: {
+            size: 14,
+            color: planetColors[i % planetColors.length],
+            symbol: 'star',
+            line: { color: '#000', width: 1 }
+          },
+          hovertemplate: `<b>${p.pl_name}</b><br>R = %{x:.2f} R⊕<br>Teq = %{y:.0f} K (A=${albedo})<extra></extra>`
+        });
+      });
+
+      const layout = {
+        paper_bgcolor: '#ffffff',
+        plot_bgcolor: '#ffffff',
+        font: { color: '#1a1a2e', family: 'IBM Plex Sans', size: 11 },
+        xaxis: {
+          title: 'Radius [R⊕]',
+          range: [0.5, 15],
+          gridcolor: 'rgba(100,100,100,0.2)',
+          zerolinecolor: 'rgba(100,100,100,0.3)',
+          dtick: 2
+        },
+        yaxis: {
+          title: 'Equilibrium Temperature [K]',
+          range: [0, 3000],
+          gridcolor: 'rgba(100,100,100,0.2)',
+          zerolinecolor: 'rgba(100,100,100,0.3)',
+          dtick: 500
+        },
+        shapes: [superEarthShape, hzShape],
+        annotations: [
+          {
+            x: 14.5, y: 260,
+            text: 'Habitable Zone',
+            showarrow: false,
+            font: { size: 9, color: 'rgba(34, 197, 94, 0.8)' },
+            xanchor: 'right'
+          },
+          {
+            x: 2.85, y: 100,
+            text: 'Super-Earths',
+            showarrow: false,
+            font: { size: 9, color: 'rgba(167, 139, 250, 0.8)' },
+            xanchor: 'center'
+          }
+        ],
+        showlegend: true,
+        legend: {
+          x: 0.02, y: 0.98,
+          bgcolor: 'rgba(255,255,255,0.9)',
+          bordercolor: 'rgba(0,0,0,0.1)',
+          borderwidth: 1,
+          font: { size: 10 }
+        },
+        margin: { t: 20, r: 20, b: 50, l: 60 },
+        hovermode: 'closest'
+      };
+
+      Plotly.react(plotArea, traces, layout, { responsive: true, displayModeBar: false });
+    }
   // =========================
   // Galactic conversion (unchanged)
   // =========================
@@ -1044,7 +1832,7 @@ DATA SOURCES:
       xaxis: { title: { text: 'Galactic Longitude l (°)', font: { size: 12 } }, range: [180, -180], dtick: 60, showgrid: false, zeroline: false, showticklabels: false },
       yaxis: { title: { text: 'Galactic Latitude b (°)', font: { size: 12 } }, range: [-90, 90], dtick: 30, showgrid: false, zeroline: false, showticklabels: false, scaleanchor: 'x', scaleratio: 0.5 },
       legend: { x: 0.01, y: 0.99, bgcolor: 'rgba(0, 0, 0, 0.5)', font: { size: 10 } },
-      margin: { t: 20, r: 20, b: 50, l: 60 },
+      margin: { t: 10, r: 20, b: 10, l: 45 },
     };
 
     Plotly.newPlot(container, traces, layout, { responsive: true });
@@ -1053,9 +1841,20 @@ DATA SOURCES:
   function downloadGalacticPlot() {
     Plotly.downloadImage('galactic-plot', {
       format: 'png',
-      width: 1000,
-      height: 400,
+      width: 350,
+      height: 300,
+      scale: 2,
       filename: `GaiaDR3_${targetData?.source_id}_galactic`
+    });
+  }
+
+  function downloadGyroPlot() {
+    Plotly.downloadImage('gyro-plot', {
+      format: 'png',
+      width: 800,
+      height: 450,
+      scale: 3,
+      filename: `GaiaDR3_${targetData?.source_id}_gyro`
     });
   }
 
@@ -1809,8 +2608,9 @@ DATA SOURCES:
   function downloadPlot() {
     Plotly.downloadImage('cmd-plot', {
       format: 'png',
-      width: 900,
-      height: 900,
+      width: 400,
+      height: 600,
+      scale: 2,
       filename: `GaiaDR3_${targetData?.source_id}_CMD`
     });
   }
@@ -1905,6 +2705,11 @@ DATA SOURCES:
             // Colman+2024 - Pisces-Eridanus rotation
             { name: 'Colman+2024', table: '"J/AJ/167/189/fig12"', periodCol: 'Prot',
               raCol: '_RA', decCol: '_DE' },
+
+            // Lin+2024 - Flares & flaring stars from TESS & machine learning
+            { name: 'Lin+2024', table: '"J/AJ/168/234/table10"', periodCol: 'Prot',
+              raCol: '_RAJ2000', decCol: '_DEJ2000' },
+
       ];
 
       const tapUrl = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
@@ -2102,7 +2907,7 @@ DATA SOURCES:
         // Add note about ignored Gaia rotation data
         if (gaiaIgnored) {
           html += `
-            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 4px; font-size: 0.75rem; color: var(--text-muted);">
+            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 4px; font-size: 0.7rem; color: var(--text-muted);">
               <strong style="color: var(--warning);">Note:</strong> Gaia DR3 rotation period found but ignored due to known accuracy issues with that catalog.
             </div>
           `;
@@ -2343,9 +3148,26 @@ DATA SOURCES:
   function downloadToomrePlot() {
     Plotly.downloadImage('toomre-plot', {
       format: 'png',
-      width: 700,
-      height: 550,
+      width: 400,
+      height: 300,
+      scale: 2,
       filename: `GaiaDR3_${targetData?.source_id}_toomre`
+    });
+  }
+
+  function downloadTeqPlot() {
+    const plotArea = document.getElementById('teq-plot-area');
+    if (!plotArea || !plotArea.data) {
+      console.error('Teq plot not found or not rendered');
+      return;
+    }
+
+    Plotly.downloadImage(plotArea, {
+      format: 'png',
+      width: 600,
+      height: 400,
+      scale: 3,
+      filename: `GaiaDR3_${targetData?.source_id || 'target'}_teq`
     });
   }
 
@@ -2553,7 +3375,7 @@ DATA SOURCES:
     // Append Gaia-ignored note if applicable
     const gaiaIgnored = !!data?.protMeta?.gaiaRotationIgnored;
     const ignoredNote = gaiaIgnored ? `
-      <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 4px; font-size: 0.75rem; color: var(--text-muted);">
+      <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 4px; font-size: 0.7rem; color: var(--text-muted);">
         <strong style="color: var(--warning);">Note:</strong> Gaia DR3 rotation period found but ignored due to known accuracy issues with that catalog.
       </div>
     ` : '';
@@ -2853,89 +3675,159 @@ DATA SOURCES:
       }
     }
 
-  async function checkExoplanetArchive() {
-    if (!targetData) return;
+    async function checkExoplanetArchive() {
+      if (!targetData) return;
 
-    const btn = document.getElementById('btn-exoplanet');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loading-spinner"></span> Checking...';
+      const btn = document.getElementById('btn-exoplanet');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> Checking...';
 
-    const container = document.getElementById('exoplanet-alert');
+      const container = document.getElementById('exoplanet-alert');
 
-    async function fetchWithProxy(url) {
-      try {
-        const resp = await fetch(url);
-        if (resp.ok) return await resp.json();
-      } catch {}
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-      const resp = await fetch(proxyUrl);
-      if (resp.ok) return await resp.json();
-      return null;
+      // Fetch with timeout and proxy fallback
+            async function fetchWithTimeout(url, timeoutMs = 8000) {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+              try {
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (resp.ok) return await resp.json();
+              } catch (e) {
+                clearTimeout(timeoutId);
+                if (e.name === 'AbortError') {
+                  console.log('[Exoplanet] Direct fetch timed out, trying proxy...');
+                }
+              }
+
+              // Try CORS proxy with shorter timeout
+              try {
+                const proxyController = new AbortController();
+                const proxyTimeoutId = setTimeout(() => proxyController.abort(), 6000);
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+                const resp = await fetch(proxyUrl, { signal: proxyController.signal });
+                clearTimeout(proxyTimeoutId);
+                if (resp.ok) return await resp.json();
+              } catch (e) {
+                console.log('[Exoplanet] Proxy fetch failed:', e.message);
+              }
+
+              return null;
+            }
+
+            try {
+              let data = [];
+              const selectFields = 'hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,pl_orbsmax,st_rad,st_teff,disc_year';
+
+              // Try coordinate search FIRST (usually faster)
+              if (targetData.ra && targetData.dec) {
+                console.log('[Exoplanet] Trying coordinate search...');
+                const url = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+${selectFields}+FROM+pscomppars+WHERE+1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${targetData.ra},${targetData.dec},${5/3600}))&format=json`;
+                const result = await fetchWithTimeout(url);
+                if (result && result.length > 0) data = result;
+              }
+
+              // Fallback to Gaia ID if coordinate search failed
+              if (data.length === 0 && targetData.source_id) {
+                console.log('[Exoplanet] Trying Gaia ID search...');
+                const url = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+${selectFields}+FROM+pscomppars+WHERE+gaia_id='Gaia+DR3+${targetData.source_id}'&format=json`;
+                const result = await fetchWithTimeout(url);
+                if (result && result.length > 0) data = result;
+              }
+
+              if (data && data.length > 0) {
+          const uniquePlanetNames = [...new Set(data.map(p => p.pl_name))];
+          const uniquePlanets = uniquePlanetNames.map(name => data.find(pl => pl.pl_name === name));
+          uniquePlanets.sort((a, b) => {
+            if (a.pl_orbper == null && b.pl_orbper == null) return 0;
+            if (a.pl_orbper == null) return 1;
+            if (b.pl_orbper == null) return -1;
+            return a.pl_orbper - b.pl_orbper;
+          });
+
+          const hostname = data[0].hostname;
+          const st_rad = data[0].st_rad;
+          const st_teff = data[0].st_teff;
+
+          exoplanetData = { hostname, st_rad, st_teff, planets: uniquePlanets };
+
+          // Check if any planet can be plotted
+          const plottablePlanets = uniquePlanets.filter(p => p.pl_orbsmax && p.pl_rade);
+
+          let html = `
+                      <div class="exoplanet-alert">
+                        <div class="exoplanet-alert-header" onclick="toggleExoplanetDetails()" style="cursor:pointer; user-select:none;">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle>
+                          </svg>
+                          Confirmed Exoplanet Host: ${hostname}
+                          <svg id="exoplanet-toggle-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto; transition:transform 0.3s;">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                          </svg>
+                        </div>
+                        <div id="exoplanet-details">
+                          <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.5rem;">
+                            T<sub>eff</sub> = ${st_teff ? st_teff.toFixed(0) + ' K' : 'N/A'} |
+                            R<sub>★</sub> = ${st_rad ? st_rad.toFixed(3) + ' R☉' : 'N/A'}
+                          </div>
+                          <table style="width:100%; font-size:0.7rem; font-family:'IBM Plex Mono',monospace; border-collapse:collapse;">
+                            <tr style="color:var(--text-muted); border-bottom:1px solid var(--border-color);">
+                              <th style="text-align:left; padding:0.25rem;">Planet</th>
+                              <th style="text-align:right; padding:0.25rem;">Period</th>
+                              <th style="text-align:right; padding:0.25rem;">Sep</th>
+                              <th style="text-align:right; padding:0.25rem;">Radius</th>
+                            </tr>
+                    `;
+
+                    uniquePlanets.forEach(p => {
+                      html += `
+                        <tr style="border-bottom:1px solid var(--border-color);">
+                          <td style="padding:0.25rem; color:var(--text-primary);">${p.pl_name}</td>
+                          <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_orbper ? p.pl_orbper.toFixed(2) + ' d' : 'N/A'}</td>
+                          <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_orbsmax ? p.pl_orbsmax.toFixed(3) + ' AU' : 'N/A'}</td>
+                          <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_rade ? p.pl_rade.toFixed(2) + ' R⊕' : 'N/A'}</td>
+                        </tr>
+                      `;
+                    });
+
+                    html += `</table>`;
+
+                    if (plottablePlanets.length > 0) {
+                      html += `
+                        <button onclick="showTeqPlot()" style="margin-top:0.7rem; background:var(--bg-tertiary); border:1px solid var(--accent-cyan); color:var(--accent-cyan); padding:0.4rem 0.8rem; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:0.3rem;">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3v18h18"></path>
+                            <circle cx="9" cy="9" r="2"></circle>
+                            <circle cx="19" cy="5" r="2"></circle>
+                          </svg>
+                          T<sub>eq</sub> vs Radius Plot
+                        </button>
+                        <div id="teq-plot-container" style="display:none; margin-top:0.7rem;"></div>
+                      `;
+                    }
+
+                    html += `
+                        <a href="https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(hostname)}" target="_blank"
+                           style="display:inline-block; margin-top:0.5rem; font-size:0.7rem; color:var(--accent-cyan);">
+                          View on NASA Exoplanet Archive →
+                        </a>
+                      </div>
+                    </div>`;
+
+                    container.innerHTML = html;
+        }
+        else {
+          exoplanetData = null;
+          container.innerHTML = `<div style="padding:0.5rem; font-size:0.85rem; color:var(--text-muted);">No confirmed exoplanets found in NASA Exoplanet Archive</div>`;
+        }
+      } catch (e) {
+        console.error('Exoplanet Archive error:', e);
+        container.innerHTML = `<div style="padding:0.5rem; color:var(--error); font-size:0.85rem;">Error checking exoplanet archive</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg> Check Exoplanets`;
+      }
     }
-
-    try {
-      let data = [];
-
-      if (data.length === 0 && targetData.source_id) {
-        const url1 = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,disc_year+FROM+pscomppars+WHERE+gaia_id='Gaia+DR3+${targetData.source_id}'&format=json`;
-        const result = await fetchWithProxy(url1);
-        if (result && result.length > 0) data = result;
-      }
-
-      if (data.length === 0 && targetData.ra && targetData.dec) {
-        const url3 = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,disc_year,ra,dec+FROM+pscomppars+WHERE+1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${targetData.ra},${targetData.dec},${5/3600}))&format=json`;
-        const result = await fetchWithProxy(url3);
-        if (result && result.length > 0) data = result;
-      }
-
-      if (data && data.length > 0) {
-        // Get unique planets and sort by orbital period (shortest first)
-        const uniquePlanetNames = [...new Set(data.map(p => p.pl_name))];
-        const uniquePlanets = uniquePlanetNames.map(name => data.find(pl => pl.pl_name === name));
-        uniquePlanets.sort((a, b) => {
-          // Put planets without period data at the end
-          if (a.pl_orbper == null && b.pl_orbper == null) return 0;
-          if (a.pl_orbper == null) return 1;
-          if (b.pl_orbper == null) return -1;
-          return a.pl_orbper - b.pl_orbper;
-        });
-
-        const hostname = data[0].hostname;
-
-        const planetList = uniquePlanets.map(p => {
-          const details = [];
-          if (p.pl_orbper) details.push(`P=${p.pl_orbper.toFixed(2)}d`);
-          if (p.pl_rade) details.push(`R=${p.pl_rade.toFixed(2)}R⊕`);
-          if (p.disc_year) details.push(`(${p.disc_year})`);
-          return `<strong>${p.pl_name}</strong>${details.length ? ': ' + details.join(', ') : ''}`;
-        }).join('<br>');
-
-        container.innerHTML = `
-          <div class="exoplanet-alert">
-            <div class="exoplanet-alert-header">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              Confirmed Exoplanet Host!
-            </div>
-            <div style="font-size:0.85rem; color:var(--text-secondary);">${planetList}</div>
-            <a href="https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(hostname)}" target="_blank"
-               style="display:inline-block; margin-top:0.5rem; font-size:0.8rem; color:var(--accent-cyan);">
-              View on NASA Exoplanet Archive →
-            </a>
-          </div>
-        `;
-      } else {
-        container.innerHTML = `<div style="padding:0.5rem; font-size:0.85rem; color:var(--text-muted);">No confirmed exoplanets found in NASA Exoplanet Archive</div>`;
-      }
-    } catch (e) {
-      console.error('Exoplanet Archive error:', e);
-      container.innerHTML = `<div style="padding:0.5rem; color:var(--error); font-size:0.85rem;">Error checking exoplanet archive</div>`;
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg> Check Exoplanets`;
-    }
-  }
 
   // =========================
   // Main Search
