@@ -700,7 +700,7 @@ DATA SOURCES:
             <div class="panel-body">
               <div class="youth-indicators-grid" id="youth-indicators-grid">
                 <div class="youth-indicator-panel li-panel">
-                  <h4>EW(Li) - Lithium</h4>
+                  <h4>EW(Li) and A(Li) - Lithium</h4>
                   <div class="youth-indicator-values" id="li-values">
                     <div class="no-data">Click "Youth Indicators" above to search</div>
                   </div>
@@ -904,12 +904,12 @@ DATA SOURCES:
   // Manual youth indicator data for targets not yet in VizieR catalogs
   const manualYouthData = {
     'TOI-811': {
-      ewli: [{ value: 133, error: 24, source: 'Carmichael+2021', url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1' }]
+      ewli: [{ value: 133, error: 24, source: 'Carmichael+2021', url: 'https://iopscience.iop.org/article/10.3847/1538-3881/abd4e1',isALi: false }]
     },
     'TOI 811': { aliasOf: 'TOI-811' },
     'TOI811': { aliasOf: 'TOI-811' },
     'TOI-5882': {
-      ewli: [{ value: 71.2, error: 6.9, source: 'Vowell+2025', url: 'https://arxiv.org/abs/2501.09795' }]
+      ewli: [{ value: 71.2, error: 6.9, source: 'Vowell+2025', url: 'https://arxiv.org/abs/2501.09795',isALi: false }]
     },
     'TOI 5882': { aliasOf: 'TOI-5882' },
     'TOI5882': { aliasOf: 'TOI-5882' }
@@ -1919,143 +1919,153 @@ DATA SOURCES:
         { ra: '_RA', dec: '_DE' },
       ];
 
+      // 1) Build flat list of all tables to query (expand multi-table catalogs)
+      const tableQueries = [];
       for (const cat of ROTATION_CATALOGS) {
-        try {
-          let tablesToQuery = [];
+        if (cat.multiTable && cat.catalog && cat.tablePattern) {
+          const allTables = await discoverVizierTables(cat.catalog);
+          const matchingTables = allTables.filter(t => cat.tablePattern.test(t));
+          console.log(`[Rotation] ${cat.name}: Found ${matchingTables.length} matching tables`);
+          for (const t of matchingTables) {
+            tableQueries.push({ ...cat, table: `"${cat.catalog}/${t}"` });
+          }
+        } else {
+          tableQueries.push(cat);
+        }
+      }
 
-          if (cat.multiTable && cat.catalog && cat.tablePattern) {
-            const allTables = await discoverVizierTables(cat.catalog);
-            tablesToQuery = allTables
-              .filter(t => cat.tablePattern.test(t))
-              .map(t => `"${cat.catalog}/${t}"`);
-            console.log(`[Rotation] ${cat.name}: Found ${tablesToQuery.length} matching tables`);
-          } else {
-            tablesToQuery = [cat.table];
+      // 2) Query function for a single table
+      async function queryRotationTable(cat) {
+        const tableName = cat.table;
+        try {
+          console.log(`[Rotation] Querying ${cat.name} (${tableName})...`);
+
+          // First, get the table schema to find coordinate columns
+          const schemaQuery = `SELECT TOP 0 * FROM ${tableName}`;
+          const schemaParams = new URLSearchParams({
+            REQUEST: 'doQuery',
+            LANG: 'ADQL',
+            FORMAT: 'json',
+            QUERY: schemaQuery
+          });
+
+          const schemaResp = await fetch(tapUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: schemaParams
+          });
+
+          if (!schemaResp.ok) {
+            console.log(`[Rotation] ${cat.name}: Table not found in TAP`);
+            return null;
           }
 
-          // Query each table
-          for (const tableName of tablesToQuery) {
-            try {
-              console.log(`[Rotation] Querying ${cat.name} (${tableName})...`);
+          const schemaData = await schemaResp.json();
+          const cols = schemaData.metadata.map(m => m.name);
 
-              // First, get the table schema to find coordinate columns
-              const schemaQuery = `SELECT TOP 0 * FROM ${tableName}`;
-              const schemaParams = new URLSearchParams({
-                REQUEST: 'doQuery',
-                LANG: 'ADQL',
-                FORMAT: 'json',
-                QUERY: schemaQuery
-              });
-
-              const schemaResp = await fetch(tapUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: schemaParams
-              });
-
-              if (!schemaResp.ok) {
-                console.log(`[Rotation] ${cat.name}: Table not found in TAP`);
-                continue;
-              }
-
-              const schemaData = await schemaResp.json();
-              const cols = schemaData.metadata.map(m => m.name);
-              console.log(`[Rotation] ${cat.name} available columns:`, cols);
-
-              // Find RA/Dec columns
-              let raCol = null, decCol = null;
-              for (const pattern of coordPatterns) {
-                if (cols.some(c => c === pattern.ra) && cols.some(c => c === pattern.dec)) {
-                  raCol = pattern.ra;
-                  decCol = pattern.dec;
-                  break;
-                }
-              }
-
-              // Try case-insensitive match
-              if (!raCol) {
-                const raMatch = cols.find(c => /^(ra|_ra|raj2000|ra_icrs|radeg)$/i.test(c));
-                const decMatch = cols.find(c => /^(de|dec|_de|dej2000|de_icrs|dedeg)$/i.test(c));
-                if (raMatch && decMatch) {
-                  raCol = raMatch;
-                  decCol = decMatch;
-                }
-              }
-
-              if (!raCol || !decCol) {
-                console.log(`[Rotation] ${cat.name}: Could not find RA/Dec columns`);
-                continue;
-              }
-
-              console.log(`[Rotation] ${cat.name}: Using coords ${raCol}, ${decCol}`);
-
-              // Now do the actual spatial query
-              const query = `
-                SELECT TOP 1 *
-                FROM ${tableName}
-                WHERE 1=CONTAINS(POINT('ICRS', ${raCol}, ${decCol}), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
-              `;
-
-              const params = new URLSearchParams({
-                REQUEST: 'doQuery',
-                LANG: 'ADQL',
-                FORMAT: 'json',
-                QUERY: query
-              });
-
-              const response = await fetch(tapUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params
-              });
-
-              if (!response.ok) {
-                console.log(`[Rotation] ${cat.name}: Spatial query failed`);
-                continue;
-              }
-
-              const data = await response.json();
-
-              if (!data.data || data.data.length === 0) {
-                console.log(`[Rotation] ${cat.name}: No match within 10"`);
-                continue;
-              }
-
-              const row = data.data[0];
-              console.log(`[Rotation] ${cat.name} MATCH FOUND!`);
-
-              // Find period column
-              let periodIdx = cols.findIndex(c => c.toLowerCase() === cat.periodCol.toLowerCase());
-              if (periodIdx < 0) periodIdx = cols.findIndex(c => /^P(rot|er(iod)?)?$/i.test(c));
-              if (periodIdx < 0) periodIdx = cols.findIndex(c => /period/i.test(c));
-
-              if (periodIdx >= 0 && row[periodIdx] != null) {
-                const period = parseFloat(row[periodIdx]);
-                console.log(`[Rotation] ${cat.name}: Period = ${period} d`);
-
-                if (!isNaN(period) && period > 0.1 && period < 200) {
-                  if (cat.ignoreByDefault) {
-                    gaiaRotationIgnored = true;
-                    console.log(`[Rotation] ${cat.name}: IGNORING due to accuracy issues`);
-                  } else {
-                    results.push({
-                      period,
-                      source: cat.name,
-                      catalog: tableName.replace(/"/g, '')
-                    });
-                  }
-                }
-              } else {
-                console.log(`[Rotation] ${cat.name}: Period column not found or null`);
-              }
-            } catch (tableErr) {
-              console.warn(`[Rotation] ${cat.name} (${tableName}) error:`, tableErr.message);
+          // Find RA/Dec columns
+          let raCol = null, decCol = null;
+          for (const pattern of coordPatterns) {
+            if (cols.some(c => c === pattern.ra) && cols.some(c => c === pattern.dec)) {
+              raCol = pattern.ra;
+              decCol = pattern.dec;
+              break;
             }
-          } // END inner for loop (tableName)
-        } catch (e) {
-          console.error(`[Rotation] ${cat.name} error:`, e.message);
+          }
+
+          // Try case-insensitive match
+          if (!raCol) {
+            const raMatch = cols.find(c => /^(ra|_ra|raj2000|ra_icrs|radeg)$/i.test(c));
+            const decMatch = cols.find(c => /^(de|dec|_de|dej2000|de_icrs|dedeg)$/i.test(c));
+            if (raMatch && decMatch) {
+              raCol = raMatch;
+              decCol = decMatch;
+            }
+          }
+
+          if (!raCol || !decCol) {
+            console.log(`[Rotation] ${cat.name}: Could not find RA/Dec columns`);
+            return null;
+          }
+
+          // Now do the actual spatial query
+          const query = `
+            SELECT TOP 1 *
+            FROM ${tableName}
+            WHERE 1=CONTAINS(POINT('ICRS', ${raCol}, ${decCol}), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
+          `;
+
+          const params = new URLSearchParams({
+            REQUEST: 'doQuery',
+            LANG: 'ADQL',
+            FORMAT: 'json',
+            QUERY: query
+          });
+
+          const response = await fetch(tapUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+          });
+
+          if (!response.ok) {
+            console.log(`[Rotation] ${cat.name}: Spatial query failed`);
+            return null;
+          }
+
+          const data = await response.json();
+
+          if (!data.data || data.data.length === 0) {
+            console.log(`[Rotation] ${cat.name}: No match within 5"`);
+            return null;
+          }
+
+          const row = data.data[0];
+          console.log(`[Rotation] ${cat.name} MATCH FOUND!`);
+
+          // Find period column
+          let periodIdx = cols.findIndex(c => c.toLowerCase() === cat.periodCol.toLowerCase());
+          if (periodIdx < 0) periodIdx = cols.findIndex(c => /^P(rot|er(iod)?)?$/i.test(c));
+          if (periodIdx < 0) periodIdx = cols.findIndex(c => /period/i.test(c));
+
+          if (periodIdx >= 0 && row[periodIdx] != null) {
+            const period = parseFloat(row[periodIdx]);
+            console.log(`[Rotation] ${cat.name}: Period = ${period} d`);
+
+            if (!isNaN(period) && period > 0.1 && period < 200) {
+              return { period, cat, tableName };
+            }
+          } else {
+            console.log(`[Rotation] ${cat.name}: Period column not found or null`);
+          }
+          return null;
+        } catch (err) {
+          console.warn(`[Rotation] ${cat.name} (${tableName}) error:`, err.message);
+          return null;
         }
-      } // END outer for loop (cat)
+      }
+
+      // 3) Run ALL queries in parallel
+      console.log(`[Rotation] Starting parallel search across ${tableQueries.length} tables...`);
+      const queryResults = await Promise.allSettled(tableQueries.map(cat => queryRotationTable(cat)));
+
+      // 4) Collect results
+      for (const settled of queryResults) {
+        if (settled.status !== 'fulfilled' || !settled.value) continue;
+
+        const { period, cat, tableName } = settled.value;
+
+        if (cat.ignoreByDefault) {
+          gaiaRotationIgnored = true;
+          console.log(`[Rotation] ${cat.name}: IGNORING due to accuracy issues`);
+        } else {
+          results.push({
+            period,
+            source: cat.name,
+            catalog: tableName.replace(/"/g, '')
+          });
+        }
+      }
 
       console.log(`[Rotation] Final results:`, results);
       return { results, gaiaRotationIgnored };
@@ -2423,23 +2433,29 @@ DATA SOURCES:
 
     // NOTE: prot catalogs removed here to avoid double-search and overwrites.
     const catalogs = [
-      { catalog: 'J/A+A/504/829/cbssb', label: 'Gonzalez+2009', type: 'li' },
+      { catalog: 'J/A+A/504/829/cbssb', label: 'Guillout+2009', type: 'li' },
       { catalog: 'J/A+A/664/A78/gaia3', label: 'GALAH DR3', type: 'li' },
       { catalog: 'J/A+A/616/A10/tablea1', label: 'Gaia-ESO DR3', type: 'li' },
-      { catalog: 'J/ApJ/756/24/table2', label: 'Ramirez+2012', type: 'li' },
+      { catalog: 'J/ApJ/756/24/table2', label: 'Scholz+2012', type: 'li' },
       { catalog: 'J/A+A/576/A69/table2', label: 'Delgado Mena+2015', type: 'li' },
+      { catalog: 'J/A+A/614/A55/table3', label: 'Aguilera-Gomez+2018', type: 'li' },
+      { catalog: 'J/AJ/153/21/table5', label: 'Luck+2016', type: 'li' },
+      { catalog: 'J/ApJ/756/46/table3', label: 'Ramirez+, 2012', type: 'li' },
 
-      { catalog: 'J/A+A/551/L8/table2', label: 'Pace2013', type: 'rhk' },
-      { catalog: 'J/ApJS/152/261/table3', label: 'Wright+2004', type: 'rhk' },
+      { catalog: 'J/A+A/551/L8/cacomp', label: 'Pace+2013', type: 'rhk' },
+      { catalog: 'J/A+A/450/993/tablea1', label: 'Wright+2004', type: 'rhk' },
+      { catalog: 'J/A+A/450/993/tableb1', label: 'Wright+2004', type: 'rhk' },
+      { catalog: 'J/A+A/450/993/tablec1', label: 'Wright+2004', type: 'rhk' },
       { catalog: 'J/A+A/616/A108/catalog', label: 'Boro Saikia+2018', type: 'rhk' },
 
       { catalog: 'J/A+A/450/993/table2', label: 'NEXXUS', type: 'lx' },
       { catalog: 'J/ApJS/262/14/catalog', label: 'Freund+2022', type: 'lx' },
     ];
 
-    const liPatterns = ['^EWLi$', '^EW_?Li', '^EW$', '^A_?Li', 'Lith', 'LiEW', 'EW\\(Li\\)'];
-    const rhkPatterns = ['logR.*HK', 'log_?R.*HK', "logR'HK", 'RHK'];
-    const lxPatterns  = ['^Lx$', '^L_?[Xx]', '^logLx', 'LX'];
+    const ewLiPatterns = ['^EWLi$', '^EW_?Li', '^EW$', 'LiEW', 'EW\\(Li\\)'];
+    const aLiPatterns = ['^A_?Li', '^ALi$', '^A\\(Li\\)$', '^Li$', 'Lith'];
+    const rhkPatterns = ['logR.*HK', 'log_?R.*HK', "logR'HK", 'RHK', 'logRMW'];
+    const lxPatterns  = ['^Lx$', '^L_?[Xx]', '^logLx', 'LX',];
 
     // 1) Rotation periods (TAP) — now part of the same pipeline
     try {
@@ -2457,17 +2473,32 @@ DATA SOURCES:
       console.warn('[Youth] rotation TAP query failed:', e);
     }
 
-    // 2) Other youth indicators via conesearch (Li, R'HK, Lx)
-    for (const cat of catalogs) {
+    // 2) Other youth indicators via conesearch (Li, R'HK, Lx) - PARALLEL
+    const catalogPromises = catalogs.map(async (cat) => {
       const result = await queryVizierCatalog(cat.catalog, cat.label);
-      if (!result) continue;
+      return { cat, result };
+    });
+
+    const catalogResults = await Promise.allSettled(catalogPromises);
+
+    for (const settled of catalogResults) {
+      if (settled.status !== 'fulfilled' || !settled.value.result) continue;
+
+      const { cat, result } = settled.value;
       const { metadata, rows, label } = result;
       const row = rows[0];
 
       if (cat.type === 'li') {
-        const found = findColumnValue(metadata, row, liPatterns);
+        // Try EW(Li) first (in mÅ, typically 0-500)
+        let found = findColumnValue(metadata, row, ewLiPatterns);
         if (found && found.value > 0 && found.value < 500) {
-          results.ewli.push({ value: found.value, source: label, catalog: cat.catalog });
+          results.ewli.push({ value: found.value, source: label, catalog: cat.catalog, isALi: false });
+        } else {
+          // Try A(Li) (in dex, typically 0-4)
+          found = findColumnValue(metadata, row, aLiPatterns);
+          if (found && found.value > -1 && found.value < 5) {
+            results.ewli.push({ value: found.value, source: label, catalog: cat.catalog, isALi: true });
+          }
         }
       } else if (cat.type === 'rhk') {
         const found = findColumnValue(metadata, row, rhkPatterns);
@@ -2500,9 +2531,13 @@ DATA SOURCES:
     };
 
     const liHTML = mergedData.ewli.length > 0 ? mergedData.ewli.map(m => {
-      const errorStr = m.error ? ` ± ${m.error.toFixed(0)}` : '';
+      const errorStr = m.error ? ` ± ${m.error.toFixed(m.isALi ? 2 : 0)}` : '';
       const sourceLink = m.url ? `<a href="${m.url}" target="_blank" class="source">${m.source}</a>` : vizierLink(m.catalog, m.source);
-      return `<div class="youth-item"><span class="value li-color">${m.value.toFixed(1)}${errorStr} mÅ</span>${sourceLink}</div>`;
+      if (m.isALi) {
+        return `<div class="youth-item"><span class="value li-color">A(Li) = ${m.value.toFixed(2)}${errorStr} dex</span>${sourceLink}</div>`;
+      } else {
+        return `<div class="youth-item"><span class="value li-color">EW(Li) = ${m.value.toFixed(1)}${errorStr} mÅ</span>${sourceLink}</div>`;
+      }
     }).join('') : '<div class="no-data">No measurements found</div>';
     document.getElementById('li-values').innerHTML = liHTML;
 
