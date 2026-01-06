@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CrA Source Viewer</title>
-    
+
     <!-- Aladin Lite -->
     <link rel="stylesheet" href="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.min.css" />
     <script type="text/javascript" src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js" charset="utf-8"></script>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --bg-primary: #0a0a0f;
@@ -30,9 +30,9 @@
             --roman-color: #ff4adc;
             --jwst-color: #ffd24a;
         }
-        
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
             font-family: 'JetBrains Mono', monospace;
             background: var(--bg-primary);
@@ -40,13 +40,13 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-        
+
         body::before {
             content: '';
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background-image: 
+            background-image:
                 radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.3), transparent),
                 radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.2), transparent),
                 radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.2), transparent),
@@ -56,7 +56,7 @@
             z-index: 0;
             opacity: 0.5;
         }
-        
+
         .app-container {
             position: relative;
             z-index: 1;
@@ -67,7 +67,7 @@
             gap: 1px;
             background: var(--border-color);
         }
-        
+
         header {
             grid-column: 1 / -1;
             background: var(--bg-secondary);
@@ -77,13 +77,13 @@
             justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
         }
-        
+
         .logo {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .logo-icon {
             width: 22px; height: 22px;
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
@@ -93,22 +93,22 @@
             justify-content: center;
             font-size: 9px;
         }
-        
+
         .logo h1 {
             font-family: 'Source Serif 4', serif;
             font-size: 0.95rem;
             font-weight: 600;
         }
-        
+
         .logo-highlight { color: var(--accent-primary); }
-        
+
         .header-info {
             font-size: 0.55rem;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.1em;
         }
-        
+
         .sidebar {
             background: var(--bg-secondary);
             padding: 0.6rem;
@@ -118,7 +118,7 @@
             gap: 0.4rem;
             min-height: 0; /* Required for grid children to scroll properly */
         }
-        
+
         .panel {
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
@@ -126,7 +126,7 @@
             overflow: hidden;
             flex-shrink: 0; /* Prevent panels from compressing */
         }
-        
+
         .panel-header {
             padding: 0.4rem 0.6rem;
             background: var(--bg-secondary);
@@ -141,33 +141,33 @@
             cursor: pointer;
             user-select: none;
         }
-        
+
         .panel-header:hover { background: var(--bg-tertiary); }
-        
+
         .panel-header-left {
             display: flex;
             align-items: center;
             gap: 0.35rem;
         }
-        
+
         .panel-header-dot {
             width: 4px; height: 4px;
             background: var(--accent-primary);
             border-radius: 50%;
         }
-        
+
         .panel-toggle {
             font-size: 0.55rem;
             transition: transform 0.2s ease;
         }
-        
+
         .panel.collapsed .panel-toggle { transform: rotate(-90deg); }
         .panel.collapsed .panel-content { display: none; }
-        
+
         .panel-content { padding: 0.55rem; }
-        
+
         .input-group { margin-bottom: 0.55rem; }
-        
+
         label {
             display: block;
             font-size: 0.55rem;
@@ -176,7 +176,7 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-        
+
         input[type="text"], input[type="number"], select {
             width: 100%;
             padding: 0.4rem 0.5rem;
@@ -187,7 +187,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.65rem;
         }
-        
+
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
@@ -196,7 +196,7 @@
             border-radius: 3px;
             border: 1px solid var(--border-color);
         }
-        
+
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -206,7 +206,7 @@
             border-radius: 50%;
             cursor: pointer;
         }
-        
+
         input[type="range"]::-moz-range-thumb {
             width: 14px;
             height: 14px;
@@ -215,18 +215,18 @@
             cursor: pointer;
             border: none;
         }
-        
+
         input:focus, select:focus {
             outline: none;
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 2px var(--accent-glow);
         }
-        
+
         input::placeholder { color: var(--text-secondary); opacity: 0.5; }
-        
+
         .coord-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
         .coord-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.3rem; }
-        
+
         button {
             width: 100%;
             padding: 0.4rem 0.6rem;
@@ -242,48 +242,48 @@
             cursor: pointer;
             margin-top: 0.4rem;
         }
-        
+
         button:hover {
             transform: translateY(-1px);
             box-shadow: 0 3px 10px var(--accent-glow);
         }
-        
+
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-        
+
         .btn-secondary {
             background: var(--bg-primary);
             color: var(--text-primary);
             border: 1px solid var(--border-color);
         }
-        
+
         .btn-secondary:hover {
             border-color: var(--accent-primary);
             color: var(--accent-primary);
         }
-        
+
         .btn-roman { background: linear-gradient(135deg, var(--roman-color), #ff7ae8); }
         .btn-jwst { background: linear-gradient(135deg, var(--jwst-color), #ffe066); }
         .btn-catalog { background: linear-gradient(135deg, var(--success), #7affb5); }
         .btn-sgr { background: linear-gradient(135deg, #ffd24a, #ffe066); }
         .btn-spacing { margin-top: 0.3rem; }
-        
+
         .main-content {
             background: var(--bg-primary);
             display: flex;
             flex-direction: column;
         }
-        
+
         #aladin-container {
             flex: 1;
             min-height: 500px;
             position: relative;
         }
-        
+
         .status-bar {
             padding: 0.35rem 0.75rem;
             background: var(--bg-secondary);
@@ -294,31 +294,31 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .status-indicator {
             display: flex;
             align-items: center;
             gap: 0.35rem;
         }
-        
+
         .status-dot {
             width: 4px; height: 4px;
             background: var(--success);
             border-radius: 50%;
             animation: blink 2s ease-in-out infinite;
         }
-        
+
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
-        
+
         .source-list {
             max-height: 90px;
             overflow-y: auto;
             margin-top: 0.4rem;
         }
-        
+
         .source-item {
             display: flex;
             justify-content: space-between;
@@ -330,10 +330,10 @@
             font-size: 0.55rem;
             border-left: 2px solid var(--accent-primary);
         }
-        
+
         .source-name { color: var(--text-primary); font-weight: 500; }
         .source-coords { color: var(--text-secondary); font-size: 0.5rem; }
-        
+
         .remove-btn {
             width: auto;
             padding: 0.1rem 0.3rem;
@@ -343,29 +343,29 @@
             color: var(--text-secondary);
             border: 1px solid var(--border-color);
         }
-        
+
         .remove-btn:hover {
             color: var(--accent-secondary);
             border-color: var(--accent-secondary);
         }
-        
+
         .divider { height: 1px; background: var(--border-color); margin: 0.4rem 0; }
         .info-text { font-size: 0.5rem; color: var(--text-secondary); line-height: 1.4; }
-        
+
         .color-picker-row {
             display: flex;
             gap: 0.3rem;
             align-items: center;
             margin-top: 0.3rem;
         }
-        
+
         .color-picker-label {
             font-size: 0.5rem;
             color: var(--text-secondary);
             text-transform: uppercase;
             margin-right: 0.3rem;
         }
-        
+
         .color-swatch {
             width: 16px; height: 16px;
             border-radius: 3px;
@@ -373,12 +373,12 @@
             border: 2px solid transparent;
             transition: all 0.2s ease;
         }
-        
+
         .color-swatch:hover, .color-swatch.active {
             border-color: var(--text-primary);
             transform: scale(1.15);
         }
-        
+
         .color-swatch-orange { background: #ff6b4a; }
         .color-swatch-blue { background: #4a9eff; }
         .color-swatch-green { background: #4aff9f; }
@@ -386,7 +386,7 @@
         .color-swatch-pink { background: #ff4adc; }
         .color-swatch-cyan { background: #4afff4; }
         .color-swatch-red { background: #ff4a4a; }
-        
+
         .toast {
             position: fixed;
             bottom: 45px; right: 20px;
@@ -401,24 +401,24 @@
             transition: all 0.3s ease;
             z-index: 1000;
         }
-        
+
         .toast.show { transform: translateY(0); opacity: 1; }
         .toast-success { border-left: 3px solid var(--success); }
         .toast-error { border-left: 3px solid var(--accent-secondary); }
-        
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: var(--bg-primary); }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
-        
+
         .file-input-wrapper { position: relative; }
-        
+
         .file-input-hidden {
             position: absolute;
             opacity: 0;
             width: 100%; height: 100%;
             cursor: pointer;
         }
-        
+
         .file-input-display {
             padding: 0.4rem 0.5rem;
             background: var(--bg-primary);
@@ -428,7 +428,7 @@
             color: var(--text-secondary);
             text-align: center;
         }
-        
+
         .file-input-wrapper:hover .file-input-display {
             border-color: var(--accent-primary);
             color: var(--accent-primary);
@@ -447,9 +447,9 @@
             pointer-events: none;
             transition: opacity 0.3s ease;
         }
-        
+
         .loading-overlay.active { opacity: 1; pointer-events: all; }
-        
+
         .spinner {
             width: 28px; height: 28px;
             border: 3px solid var(--border-color);
@@ -457,15 +457,15 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin { to { transform: rotate(360deg); } }
-        
+
         .loading-text {
             margin-top: 0.6rem;
             font-size: 0.6rem;
             color: var(--text-secondary);
         }
-        
+
         .fits-status {
             display: flex;
             align-items: center;
@@ -476,28 +476,28 @@
             font-size: 0.55rem;
             margin-bottom: 0.45rem;
         }
-        
+
         .fits-status-icon {
             width: 5px; height: 5px;
             border-radius: 50%;
             background: var(--text-secondary);
         }
-        
+
         .fits-status.loaded .fits-status-icon { background: var(--success); }
-        
+
         .fits-status-name {
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        
+
         .footprint-list {
             max-height: 70px;
             overflow-y: auto;
             margin-top: 0.3rem;
         }
-        
+
         .footprint-item {
             display: flex;
             justify-content: space-between;
@@ -508,23 +508,23 @@
             margin-bottom: 0.2rem;
             font-size: 0.5rem;
         }
-        
+
         .footprint-item-roman { border-left: 2px solid var(--roman-color); }
         .footprint-item-jwst { border-left: 2px solid var(--jwst-color); }
-        
+
         .footprint-remove-btn {
             width: auto;
             padding: 0.08rem 0.25rem;
             margin: 0;
             font-size: 0.4rem;
         }
-        
+
         .source-count {
             font-size: 0.55rem;
             color: var(--accent-primary);
             margin-bottom: 0.3rem;
         }
-        
+
         .footer {
             grid-column: 1 / -1;
             background: var(--bg-secondary);
@@ -534,14 +534,14 @@
             color: var(--text-secondary);
             border-top: 1px solid var(--border-color);
         }
-        
+
         .footer a {
             color: var(--accent-primary);
             text-decoration: none;
         }
-        
+
         .footer a:hover { color: var(--accent-secondary); }
-        
+
         .catalog-info {
             font-size: 0.5rem;
             color: var(--text-secondary);
@@ -549,6 +549,56 @@
             padding: 0.3rem;
             background: var(--bg-primary);
             border-radius: 3px;
+        }
+
+        .footprint-count-display {
+            margin-top: 0.5rem;
+            padding: 0.4rem 0.5rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            border-left: 2px solid var(--accent-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footprint-count-label {
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .footprint-count-value {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .footprint-count-value.empty {
+            color: var(--text-secondary);
+        }
+
+        .optimize-status {
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+            padding: 0.25rem 0.4rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            display: none;
+        }
+
+        .optimize-status.active {
+            display: block;
+        }
+
+        .optimize-status.searching {
+            color: var(--warning);
+        }
+
+        .optimize-status.complete {
+            color: var(--success);
         }
     </style>
 </head>
@@ -561,7 +611,7 @@
             </div>
             <div class="header-info">Corona Australis</div>
         </header>
-        
+
         <aside class="sidebar">
             <!-- FITS Image Panel -->
             <div class="panel collapsed" id="panel-fits">
@@ -586,7 +636,7 @@
                     <button class="btn-secondary" onclick="clearFITS()">Clear FITS</button>
                 </div>
             </div>
-            
+
             <!-- Catalog Panel -->
             <div class="panel collapsed" id="panel-catalog">
                 <div class="panel-header" onclick="togglePanel('panel-catalog')">
@@ -598,14 +648,18 @@
                 </div>
                 <div class="panel-content">
                     <button class="btn-catalog" onclick="loadCrACatalog()">Load CrA Substellar (2025)</button>
-                    <button class="btn-sgr btn-spacing" onclick="loadSgrStreamCatalog()">Load Sgr Stream Stars</button>
+                    <div class="input-group btn-spacing">
+                        <label>Sgr Stream Max Sources</label>
+                        <input type="number" id="sgr-max-sources" value="50000" min="1000" max="500000" step="10000">
+                    </div>
+                    <button class="btn-sgr" onclick="loadSgrStreamCatalog()">Load Sgr Stream Stars</button>
                     <div class="catalog-info" id="catalog-info">
                         CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1
                     </div>
                     <button class="btn-secondary btn-spacing" onclick="clearCatalog()">Clear All Catalogs</button>
                 </div>
             </div>
-            
+
             <!-- Instrument Footprints Panel -->
             <div class="panel collapsed" id="panel-footprints">
                 <div class="panel-header" onclick="togglePanel('panel-footprints')">
@@ -639,9 +693,15 @@
                         <button onclick="centerFootprintOnView()">Center on View</button>
                         <button class="btn-secondary" onclick="clearActiveFootprint()">Clear</button>
                     </div>
+                    <button class="btn-roman btn-spacing" id="optimize-btn" onclick="findOptimalOrientation()">Optimal Orientation</button>
+                    <div class="optimize-status" id="optimize-status"></div>
+                    <div class="footprint-count-display" id="footprint-count-display">
+                        <span class="footprint-count-label">Catalog sources in footprint:</span>
+                        <span class="footprint-count-value empty" id="footprint-count-value">—</span>
+                    </div>
                 </div>
             </div>
-            
+
             <!-- Object Lookup Panel -->
             <div class="panel collapsed" id="panel-simbad">
                 <div class="panel-header" onclick="togglePanel('panel-simbad')">
@@ -670,7 +730,7 @@
                     <button onclick="addSimbadSource()">Lookup Object</button>
                 </div>
             </div>
-            
+
             <!-- Manual Coordinates Panel -->
             <div class="panel collapsed" id="panel-manual">
                 <div class="panel-header" onclick="togglePanel('panel-manual')">
@@ -708,7 +768,7 @@
                     <button onclick="addManualSource()">Add Source</button>
                 </div>
             </div>
-            
+
             <!-- Bulk Source Upload Panel -->
             <div class="panel collapsed" id="panel-bulk">
                 <div class="panel-header" onclick="togglePanel('panel-bulk')">
@@ -745,7 +805,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Sources List Panel -->
             <div class="panel collapsed" id="panel-sources">
                 <div class="panel-header" onclick="togglePanel('panel-sources')">
@@ -765,7 +825,7 @@
                 </div>
             </div>
         </aside>
-        
+
         <main class="main-content">
             <div id="aladin-container">
                 <div class="loading-overlay" id="loading-overlay">
@@ -781,19 +841,19 @@
                 <div class="coords-display" id="cursor-coords">RA: --.------ deg | Dec: --.------ deg</div>
             </div>
         </main>
-        
+
         <footer class="footer">
             Created by <a href="https://msoaresfurtado.com" target="_blank">Melinda Soares-Furtado</a> and her honorary postdoc, Claude
         </footer>
     </div>
-    
+
     <div class="toast" id="toast"></div>
-    
+
     <script>
         // CrA center coordinates (R CrA / Coronet cluster)
         var CRA_RA = 285.47;
         var CRA_DEC = -36.95;
-        
+
         var aladin;
         var sources = [];
         var currentFITSLayer = null;
@@ -803,13 +863,16 @@
         var craData = [];
         var sgrData = [];
         var pastObjects = JSON.parse(localStorage.getItem('craPastObjects') || '[]');
-        
+
+        // NEW: footprint count state
+        var catalogInFootprintCount = 0;
+
         var selectedColors = {
             simbad: '#4a9eff',
             manual: '#ff6b4a',
             bulk: '#4aff9f'
         };
-        
+
         // Roman WFI detector positions (flipped 180°)
         var ROMAN_WFI_DETECTORS = [
             [+0.335, -0.18], [+0.335, -0.03], [+0.335, +0.10],
@@ -819,9 +882,9 @@
             [-0.200, -0.11], [-0.200, +0.03], [-0.200, +0.16],
             [-0.335, -0.18], [-0.335, -0.03], [-0.335, +0.10]
         ];
-        
+
         var ROMAN_DET_SIZE = 0.11;
-        
+
         A.init.then(function() {
             aladin = A.aladin('#aladin-container', {
                 survey: 'P/2MASS/color',
@@ -834,30 +897,30 @@
                 reticleColor: '#4a9eff',
                 reticleSize: 22
             });
-            
+
             aladin.on('mouseMove', function(coords) {
                 if (coords) {
-                    document.getElementById('cursor-coords').textContent = 
+                    document.getElementById('cursor-coords').textContent =
                         'RA: ' + coords.ra.toFixed(6) + ' deg | Dec: ' + coords.dec.toFixed(6) + ' deg';
                 }
             });
-            
+
             // Populate past objects datalist
             updatePastObjectsDatalist();
-            
+
             // Initialize footprint controls
             initFootprintControls();
-            
+
             showToast('Viewer initialized · Centered on CrA', 'success');
         });
-        
+
         function updatePastObjectsDatalist() {
             var datalist = document.getElementById('past-objects');
             datalist.innerHTML = pastObjects.map(function(obj) {
                 return '<option value="' + obj + '">';
             }).join('');
         }
-        
+
         function addToPastObjects(name) {
             if (!pastObjects.includes(name)) {
                 pastObjects.unshift(name);
@@ -866,11 +929,11 @@
                 updatePastObjectsDatalist();
             }
         }
-        
+
         function togglePanel(panelId) {
             document.getElementById(panelId).classList.toggle('collapsed');
         }
-        
+
         document.querySelectorAll('.color-swatch').forEach(function(swatch) {
             swatch.addEventListener('click', function() {
                 var panel = swatch.dataset.panel;
@@ -881,48 +944,154 @@
                 selectedColors[panel] = swatch.dataset.color;
             });
         });
-        
+
+        // NEW: point-in-rotated-rectangle test (RA/Dec degrees; small-field approximation)
+        function isPointInRotRect(ra, dec, centerRa, centerDec, widthDeg, heightDeg, paDeg) {
+            // convert RA offset to "true" degrees at this Dec
+            var cosDec = Math.cos(centerDec * Math.PI / 180);
+            var dx = (ra - centerRa) * cosDec;
+            var dy = (dec - centerDec);
+
+            // rotate into detector frame (inverse of drawing rotation sign convention)
+            var rad = paDeg * Math.PI / 180;
+            var x = dx * Math.cos(rad) - dy * Math.sin(rad);
+            var y = dx * Math.sin(rad) + dy * Math.cos(rad);
+
+            return (Math.abs(x) <= widthDeg / 2) && (Math.abs(y) <= heightDeg / 2);
+        }
+
+        // NEW: compute total # catalog sources inside current footprint
+        function computeCatalogCountInActiveFootprint() {
+            // need a footprint and some catalog data
+            if (!activeFootprintOverlay) return 0;
+            var instrument = document.getElementById('footprint-instrument').value;
+            var ra0 = parseFloat(document.getElementById('footprint-ra-slider').value);
+            var dec0 = parseFloat(document.getElementById('footprint-dec-slider').value);
+            var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
+
+            var n = 0;
+
+            function countForDataset(dataset) {
+                if (!dataset || !dataset.length) return 0;
+                var local = 0;
+
+                dataset.forEach(function(d) {
+                    if (instrument === 'roman') {
+                        // union over 18 detectors
+                        for (var i = 0; i < ROMAN_WFI_DETECTORS.length; i++) {
+                            var det = ROMAN_WFI_DETECTORS[i];
+                            var inside = isPointInRotRect(
+                                d.ra, d.dec,
+                                ra0, dec0,
+                                ROMAN_DET_SIZE, ROMAN_DET_SIZE,
+                                pa
+                            );
+
+                            if (!inside) {
+                                // test in detector-centered frame by shifting the point relative to detector center
+                                // easiest: test against rectangle centered at (ra_det, dec_det)
+                                var detCenter = offsetToRaDec(ra0, dec0,
+                                    rotatePoint(det[0], det[1], pa).x,
+                                    rotatePoint(det[0], det[1], pa).y
+                                );
+                                inside = isPointInRotRect(
+                                    d.ra, d.dec,
+                                    detCenter[0], detCenter[1],
+                                    ROMAN_DET_SIZE, ROMAN_DET_SIZE,
+                                    pa
+                                );
+                            }
+
+                            if (inside) { local++; break; }
+                        }
+                    } else {
+                        // JWST NIRCam: two modules
+                        var modSize = 0.037;
+                        var gap = 0.012;
+                        var insideAny = false;
+
+                        [-1, 1].forEach(function(side) {
+                            if (insideAny) return;
+                            var dx = side * (modSize / 2 + gap);
+                            var rot = rotatePoint(dx, 0, pa);
+                            var modCenter = offsetToRaDec(ra0, dec0, rot.x, rot.y);
+
+                            if (isPointInRotRect(d.ra, d.dec, modCenter[0], modCenter[1], modSize, modSize, pa)) {
+                                insideAny = true;
+                            }
+                        });
+
+                        if (insideAny) local++;
+                    }
+                });
+
+                return local;
+            }
+
+            n += countForDataset(craData);
+            n += countForDataset(sgrData);
+
+            return n;
+        }
+
+        // NEW: update persistent display with total count
+        function updateFootprintCatalogCountUI() {
+            catalogInFootprintCount = computeCatalogCountInActiveFootprint();
+            var countEl = document.getElementById('footprint-count-value');
+            
+            if (!activeFootprintOverlay) {
+                countEl.textContent = '—';
+                countEl.classList.add('empty');
+            } else if (craData.length === 0 && sgrData.length === 0) {
+                countEl.textContent = 'No catalog';
+                countEl.classList.add('empty');
+            } else {
+                countEl.textContent = catalogInFootprintCount;
+                countEl.classList.remove('empty');
+            }
+        }
+
         // ==================== FITS ====================
-        
+
         function clearFITS() {
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
                 try { if (currentFITSLayer.remove) currentFITSLayer.remove(); } catch(e) {}
-                
+
                 if (currentFITSUrl) {
                     URL.revokeObjectURL(currentFITSUrl);
                     currentFITSUrl = null;
                 }
-                
+
                 currentFITSLayer = null;
                 document.getElementById('fits-name').textContent = 'No FITS loaded';
                 document.getElementById('fits-status').classList.remove('loaded');
                 document.getElementById('file-input-label').textContent = 'Upload FITS file';
                 document.getElementById('fits-file').value = '';
-                
+
                 showToast('FITS cleared', 'success');
             } else {
                 showToast('No FITS to clear', 'error');
             }
         }
-        
+
         document.getElementById('fits-file').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
-            
+
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
                 if (currentFITSUrl) URL.revokeObjectURL(currentFITSUrl);
             }
-            
+
             showLoading(true, 'Loading FITS...');
-            
+
             try {
                 currentFITSUrl = URL.createObjectURL(file);
-                
-                currentFITSLayer = aladin.createImageFITS(currentFITSUrl, { 
-                    name: file.name, 
-                    opacity: 1.0 
+
+                currentFITSLayer = aladin.createImageFITS(currentFITSUrl, {
+                    name: file.name,
+                    opacity: 1.0
                 }, function(ra, dec, fov) {
                     if (ra && dec) {
                         aladin.gotoRaDec(ra, dec);
@@ -930,7 +1099,7 @@
                     }
                     showLoading(false);
                 });
-                
+
                 aladin.setOverlayImageLayer(currentFITSLayer);
                 document.getElementById('file-input-label').textContent = file.name;
                 document.getElementById('fits-name').textContent = file.name;
@@ -941,46 +1110,48 @@
                 showToast('Error loading FITS', 'error');
             }
         });
-        
+
         // ==================== Catalogs ====================
-        
+
         function loadCrACatalog() {
             showLoading(true, 'Loading CrA catalog...');
-            
+
             if (craCatalogSources) {
                 try { aladin.removeLayers([craCatalogSources]); } catch(e) {}
                 craCatalogSources = null;
             }
             craData = [];
-            
+
             // Use VizieR votable endpoint with CORS-friendly format
             var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?-source=J/A+A/701/A147/tablea1&-out.max=unlimited&-out=_RAJ2000,_DEJ2000,Gaia';
-            
+
             console.log('Fetching CrA:', url);
-            
+
             fetch(url)
-                .then(function(response) { 
+                .then(function(response) {
                     console.log('CrA response status:', response.status);
-                    return response.text(); 
+                    return response.text();
                 })
                 .then(function(text) {
                     console.log('CrA response length:', text.length);
                     console.log('CrA response preview:', text.substring(0, 300));
-                    
+
                     var data = parseVOTableSimple(text);
                     console.log('Parsed CrA data:', data.length, 'sources');
-                    
+
                     if (data.length === 0) {
                         showLoading(false);
                         showToast('No CrA sources found', 'error');
                         return;
                     }
-                    
+
                     craData = data;
                     craCatalogSources = plotCatalogSources(craData, '#4afff4', 'circle', 'CrA Substellar');
-                    
+
                     showLoading(false);
                     updateCatalogInfo();
+                    // NEW: compute count if a footprint is active
+                    updateFootprintCatalogCountUI();
                     showToast('Loaded ' + craData.length + ' CrA substellar objects', 'success');
                 })
                 .catch(function(error) {
@@ -989,45 +1160,50 @@
                     console.error('CrA catalog error:', error);
                 });
         }
-        
+
         function loadSgrStreamCatalog() {
             showLoading(true, 'Loading Sgr stream catalog...');
-            
+
             if (sgrCatalogSources) {
                 try { aladin.removeLayers([sgrCatalogSources]); } catch(e) {}
                 sgrCatalogSources = null;
             }
             sgrData = [];
-            
-            // Load first 50000 sources from catalog
+
+            // Get max sources from input
+            var maxSources = parseInt(document.getElementById('sgr-max-sources').value) || 50000;
+            maxSources = Math.max(1000, Math.min(500000, maxSources)); // Clamp to valid range
+
             var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?-source=J/A+A/666/A64/tablec1' +
-                '&-out.max=50000' +
+                '&-out.max=' + maxSources +
                 '&-out=_RAJ2000,_DEJ2000,GaiaDR3';
-            
+
             console.log('Fetching Sgr:', url);
-            
+
             fetch(url)
-                .then(function(response) { 
+                .then(function(response) {
                     console.log('Sgr response status:', response.status);
-                    return response.text(); 
+                    return response.text();
                 })
                 .then(function(text) {
                     console.log('Sgr response length:', text.length);
-                    
+
                     var data = parseVOTableSimple(text);
                     console.log('Parsed Sgr data:', data.length, 'sources');
-                    
+
                     if (data.length === 0) {
                         showLoading(false);
                         showToast('No Sgr sources found', 'error');
                         return;
                     }
-                    
+
                     sgrData = data;
                     sgrCatalogSources = plotCatalogSources(sgrData, '#ffd24a', 'square', 'Sgr Stream');
-                    
+
                     showLoading(false);
                     updateCatalogInfo();
+                    // NEW: compute count if a footprint is active
+                    updateFootprintCatalogCountUI();
                     showToast('Loaded ' + sgrData.length + ' Sgr stream stars', 'success');
                 })
                 .catch(function(error) {
@@ -1036,82 +1212,82 @@
                     console.error('Sgr catalog error:', error);
                 });
         }
-        
+
         function parseVOTableSimple(text) {
             // Simple regex-based parser for VOTable
             var data = [];
-            
+
             // Find all TR rows
             var trMatch = text.match(/<TR>([\s\S]*?)<\/TR>/gi);
             if (!trMatch) {
                 console.log('No TR elements found');
                 return data;
             }
-            
+
             console.log('Found', trMatch.length, 'TR rows');
-            
+
             trMatch.forEach(function(tr, idx) {
                 var tdMatch = tr.match(/<TD[^>]*>([^<]*)<\/TD>/gi);
                 if (!tdMatch || tdMatch.length < 2) return;
-                
+
                 var values = tdMatch.map(function(td) {
                     return td.replace(/<[^>]*>/g, '').trim();
                 });
-                
+
                 // First two columns should be RA and Dec
                 var ra = parseFloat(values[0]);
                 var dec = parseFloat(values[1]);
-                
+
                 if (isNaN(ra) || isNaN(dec)) return;
-                
+
                 var id = values.length > 2 ? values[2] : '';
-                
+
                 if (idx < 3) {
                     console.log('Sample row', idx, ':', ra, dec, id);
                 }
-                
+
                 data.push({ ra: ra, dec: dec, id: id });
             });
-            
+
             return data;
         }
-        
+
         function updateCatalogInfo() {
             var parts = [];
             if (craData.length > 0) parts.push('CrA Substellar: ' + craData.length);
             if (sgrData.length > 0) parts.push('Sgr Stream: ' + sgrData.length);
-            
+
             if (parts.length === 0) {
                 document.getElementById('catalog-info').innerHTML = 'CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1';
             } else {
                 document.getElementById('catalog-info').textContent = parts.join(' · ') + ' sources';
             }
         }
-        
+
         function plotCatalogSources(data, color, shape, name) {
             console.log('plotCatalogSources called with', data.length, 'sources');
-            
-            var cat = A.catalog({ 
+
+            var cat = A.catalog({
                 name: name,
-                sourceSize: 10, 
-                color: color, 
-                shape: shape 
+                sourceSize: 10,
+                color: color,
+                shape: shape
             });
-            
+
             var aladinSources = data.map(function(d) {
                 return A.source(d.ra, d.dec, { name: d.id || name + ' source' });
             });
-            
-            console.log('Created', aladinSources.length, 'Aladin sources');
-            
+
+            console.log('updateFootprintCatalogCountUI called with', data.length, 'sources');
+
             cat.addSources(aladinSources);
             aladin.addCatalog(cat);
-            
+
             console.log('Catalog added to Aladin');
-            
+
             return cat;
         }
-        
+
         function clearCatalog() {
             if (craCatalogSources) {
                 try { aladin.removeLayers([craCatalogSources]); } catch(e) {}
@@ -1123,50 +1299,51 @@
             }
             craData = [];
             sgrData = [];
-            document.getElementById('catalog-info').innerHTML = 
+            document.getElementById('catalog-info').innerHTML =
                 'CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1';
+            updateFootprintCatalogCountUI();
             showToast('All catalogs cleared', 'success');
         }
-        
+
         // ==================== Footprints ====================
-        
+
         var activeFootprintOverlay = null;
-        
+
         function initFootprintControls() {
             var raSlider = document.getElementById('footprint-ra-slider');
             var decSlider = document.getElementById('footprint-dec-slider');
             var paSlider = document.getElementById('footprint-pa-slider');
             var instrumentSelect = document.getElementById('footprint-instrument');
-            
+
             raSlider.addEventListener('input', updateFootprintRealtime);
             decSlider.addEventListener('input', updateFootprintRealtime);
             paSlider.addEventListener('input', updateFootprintRealtime);
             instrumentSelect.addEventListener('change', updateFootprintRealtime);
-            
+
             // Don't draw initially - wait for user to open panel
         }
-        
+
         function updateFootprintRealtime() {
             var ra = parseFloat(document.getElementById('footprint-ra-slider').value);
             var dec = parseFloat(document.getElementById('footprint-dec-slider').value);
             var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
             var instrument = document.getElementById('footprint-instrument').value;
-            
+
             // Update displays
             document.getElementById('fp-ra-display').textContent = ra.toFixed(4);
             document.getElementById('fp-dec-display').textContent = dec.toFixed(4);
             document.getElementById('fp-pa-display').textContent = pa.toFixed(0);
-            
+
             // Clear existing footprint
             if (activeFootprintOverlay) {
                 try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
             }
-            
+
             // Draw new footprint
             var color = instrument === 'roman' ? '#ff4adc' : '#ffd24a';
             activeFootprintOverlay = A.graphicOverlay({ color: color, lineWidth: 2 });
             aladin.addOverlay(activeFootprintOverlay);
-            
+
             if (instrument === 'roman') {
                 ROMAN_WFI_DETECTORS.forEach(function(det) {
                     var poly = createDetectorPoly(ra, dec, det[0], det[1], ROMAN_DET_SIZE, pa);
@@ -1181,13 +1358,16 @@
                     activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
                 });
             }
+
+            // NEW: recompute count whenever footprint changes
+            updateFootprintCatalogCountUI();
         }
-        
+
         function centerFootprintOnView() {
             var center = aladin.getRaDec();
             document.getElementById('footprint-ra-slider').value = center[0];
             document.getElementById('footprint-dec-slider').value = center[1];
-            
+
             // Update slider ranges to be centered on current view
             var raSlider = document.getElementById('footprint-ra-slider');
             var decSlider = document.getElementById('footprint-dec-slider');
@@ -1195,19 +1375,206 @@
             raSlider.max = center[0] + 5;
             decSlider.min = center[1] - 5;
             decSlider.max = center[1] + 5;
-            
+
             updateFootprintRealtime();
             showToast('Footprint centered on view', 'success');
         }
-        
+
         function clearActiveFootprint() {
             if (activeFootprintOverlay) {
                 try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
                 activeFootprintOverlay = null;
+                // NEW: reset count display
+                catalogInFootprintCount = 0;
+                updateFootprintCatalogCountUI();
                 showToast('Footprint cleared', 'success');
             }
         }
-        
+
+        // Optimization: find optimal RA, Dec, PA for Roman WFI
+        function findOptimalOrientation() {
+            var allData = craData.concat(sgrData);
+            if (allData.length === 0) {
+                showToast('Load a catalog first', 'error');
+                return;
+            }
+
+            // Only works for Roman
+            document.getElementById('footprint-instrument').value = 'roman';
+
+            var statusEl = document.getElementById('optimize-status');
+            var btn = document.getElementById('optimize-btn');
+            btn.disabled = true;
+            statusEl.className = 'optimize-status active searching';
+            statusEl.textContent = 'Analyzing ' + allData.length + ' sources...';
+
+            // Use setTimeout to allow UI to update
+            setTimeout(function() {
+                var result = runOptimization(allData);
+                
+                // Update sliders to optimal values
+                var raSlider = document.getElementById('footprint-ra-slider');
+                var decSlider = document.getElementById('footprint-dec-slider');
+                
+                // Adjust slider ranges to include optimal position
+                raSlider.min = result.ra - 5;
+                raSlider.max = result.ra + 5;
+                decSlider.min = result.dec - 5;
+                decSlider.max = result.dec + 5;
+                
+                raSlider.value = result.ra;
+                decSlider.value = result.dec;
+                document.getElementById('footprint-pa-slider').value = result.pa;
+
+                // Draw the footprint
+                updateFootprintRealtime();
+
+                // Center view on optimal position
+                aladin.gotoRaDec(result.ra, result.dec);
+
+                statusEl.className = 'optimize-status active complete';
+                statusEl.textContent = 'Optimal: RA=' + result.ra.toFixed(3) + '°, Dec=' + result.dec.toFixed(3) + '°, PA=' + result.pa + '° (' + result.count + ' sources)';
+                btn.disabled = false;
+
+                showToast('Found optimal orientation: ' + result.count + ' sources', 'success');
+            }, 50);
+        }
+
+        function runOptimization(data) {
+            var n = data.length;
+            
+            // Adaptive parameters based on catalog size
+            var gridSize, paStep, topCandidates;
+            if (n > 20000) {
+                gridSize = 0.2;      // Very coarse spatial grid
+                paStep = 45;         // Only 4 angles: 0, 45, 90, 135
+                topCandidates = 10;  // Only refine top 10 dense cells
+            } else if (n > 5000) {
+                gridSize = 0.15;
+                paStep = 30;         // 6 angles
+                topCandidates = 20;
+            } else {
+                gridSize = 0.08;
+                paStep = 15;         // 12 angles
+                topCandidates = 50;
+            }
+
+            // Step 1: Bin sources into spatial grid and find densest cells
+            var grid = {};
+            data.forEach(function(d) {
+                var key = Math.floor(d.ra / gridSize) + ',' + Math.floor(d.dec / gridSize);
+                if (!grid[key]) {
+                    grid[key] = { 
+                        ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize,
+                        dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize,
+                        count: 0 
+                    };
+                }
+                grid[key].count++;
+            });
+
+            // Sort cells by density and take top candidates
+            var cells = Object.values(grid);
+            cells.sort(function(a, b) { return b.count - a.count; });
+            var candidates = cells.slice(0, Math.min(topCandidates, cells.length));
+
+            console.log('Optimization: testing ' + candidates.length + ' dense regions, PA step=' + paStep);
+
+            // Step 2: Test each candidate with coarse PA
+            var bestRa = candidates[0].ra;
+            var bestDec = candidates[0].dec;
+            var bestPa = 0;
+            var bestCount = 0;
+
+            var paValues = [];
+            for (var pa = 0; pa < 180; pa += paStep) {
+                paValues.push(pa);
+            }
+
+            candidates.forEach(function(c) {
+                paValues.forEach(function(pa) {
+                    var count = countSourcesInRomanFootprintFast(data, c.ra, c.dec, pa);
+                    if (count > bestCount) {
+                        bestCount = count;
+                        bestRa = c.ra;
+                        bestDec = c.dec;
+                        bestPa = pa;
+                    }
+                });
+            });
+
+            // Step 3: Fine refinement around best position (limited iterations)
+            var offsets = [-0.04, -0.02, 0, 0.02, 0.04];
+            var finePaOffsets = [-10, -5, 0, 5, 10];
+
+            offsets.forEach(function(dra) {
+                offsets.forEach(function(ddec) {
+                    finePaOffsets.forEach(function(dpa) {
+                        var testPa = ((bestPa + dpa) % 360 + 360) % 360;
+                        var count = countSourcesInRomanFootprintFast(data, bestRa + dra, bestDec + ddec, testPa);
+                        if (count > bestCount) {
+                            bestCount = count;
+                            bestRa = bestRa + dra;
+                            bestDec = bestDec + ddec;
+                            bestPa = testPa;
+                        }
+                    });
+                });
+            });
+
+            return { ra: bestRa, dec: bestDec, pa: Math.round(bestPa), count: bestCount };
+        }
+
+        function countSourcesInRomanFootprintFast(data, ra0, dec0, pa) {
+            var count = 0;
+            var cosDec0 = Math.cos(dec0 * Math.PI / 180);
+            
+            // Precompute detector centers
+            var rad = -pa * Math.PI / 180;
+            var cosPA = Math.cos(rad);
+            var sinPA = Math.sin(rad);
+            
+            var detCenters = ROMAN_WFI_DETECTORS.map(function(det) {
+                var rx = det[0] * cosPA - det[1] * sinPA;
+                var ry = det[0] * sinPA + det[1] * cosPA;
+                return [ra0 + rx / cosDec0, dec0 + ry];
+            });
+
+            // Precompute for point-in-rect test
+            var halfSize = ROMAN_DET_SIZE / 2;
+            var testRad = pa * Math.PI / 180;
+            var testCos = Math.cos(testRad);
+            var testSin = Math.sin(testRad);
+
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+                
+                // Quick bounding box rejection (footprint is ~0.8 deg)
+                var dra = (d.ra - ra0) * cosDec0;
+                var ddec = d.dec - dec0;
+                if (dra < -0.5 || dra > 0.5 || ddec < -0.5 || ddec > 0.5) continue;
+
+                // Check each detector
+                for (var j = 0; j < detCenters.length; j++) {
+                    var dc = detCenters[j];
+                    var cosDet = Math.cos(dc[1] * Math.PI / 180);
+                    var dx = (d.ra - dc[0]) * cosDet;
+                    var dy = d.dec - dc[1];
+                    
+                    // Rotate into detector frame
+                    var x = dx * testCos - dy * testSin;
+                    var y = dx * testSin + dy * testCos;
+                    
+                    if (x >= -halfSize && x <= halfSize && y >= -halfSize && y <= halfSize) {
+                        count++;
+                        break;
+                    }
+                }
+            }
+
+            return count;
+        }
+
         function rotatePoint(x, y, paDeg) {
             var rad = -paDeg * Math.PI / 180;
             return {
@@ -1215,12 +1582,12 @@
                 y: x * Math.sin(rad) + y * Math.cos(rad)
             };
         }
-        
+
         function offsetToRaDec(ra, dec, dx, dy) {
             var cosDec = Math.cos(dec * Math.PI / 180);
             return [ra + dx / cosDec, dec + dy];
         }
-        
+
         function createDetectorPoly(ra, dec, centerDx, centerDy, size, pa) {
             var hs = size / 2;
             var corners = [
@@ -1229,7 +1596,7 @@
                 {x: centerDx + hs, y: centerDy + hs},
                 {x: centerDx - hs, y: centerDy + hs}
             ];
-            
+
             var coords = corners.map(function(c) {
                 var rot = rotatePoint(c.x, c.y, pa);
                 return offsetToRaDec(ra, dec, rot.x, rot.y);
@@ -1237,25 +1604,25 @@
             coords.push(coords[0]);
             return coords;
         }
-        
+
         // ==================== Object Resolution ====================
-        
+
         function resolveObject(identifier, callback) {
             var url = 'https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-ox/SNV?' + encodeURIComponent(identifier);
-            
+
             fetch(url)
                 .then(function(r) { return r.text(); })
                 .then(function(text) {
                     var parser = new DOMParser();
                     var xml = parser.parseFromString(text, 'text/xml');
                     var resolvers = xml.querySelectorAll('Resolver');
-                    
+
                     for (var i = 0; i < resolvers.length; i++) {
                         var r = resolvers[i];
                         var jra = r.querySelector('jradeg');
                         var jde = r.querySelector('jdedeg');
                         var oname = r.querySelector('oname');
-                        
+
                         if (jra && jde) {
                             var ra = parseFloat(jra.textContent);
                             var dec = parseFloat(jde.textContent);
@@ -1269,13 +1636,13 @@
                 })
                 .catch(function() { callback(null); });
         }
-        
+
         function addSimbadSource() {
             var id = document.getElementById('simbad-id').value.trim();
             if (!id) { showToast('Enter an identifier', 'error'); return; }
-            
+
             showLoading(true, 'Resolving ' + id + '...');
-            
+
             resolveObject(id, function(result) {
                 showLoading(false);
                 if (result) {
@@ -1295,67 +1662,67 @@
                 }
             });
         }
-        
+
         // ==================== Sources ====================
-        
+
         function addManualSource() {
             var ra = parseFloat(document.getElementById('ra-input').value);
             var dec = parseFloat(document.getElementById('dec-input').value);
             var label = document.getElementById('source-label').value.trim() || ('Source ' + (sources.length + 1));
-            
+
             if (isNaN(ra) || isNaN(dec) || ra < 0 || ra > 360 || dec < -90 || dec > 90) {
                 showToast('Enter valid coordinates', 'error');
                 return;
             }
-            
+
             addSourceToMap({ name: label, ra: ra, dec: dec, color: selectedColors.manual, type: 'manual' });
             document.getElementById('ra-input').value = '';
             document.getElementById('dec-input').value = '';
             document.getElementById('source-label').value = '';
             showToast('Added ' + label, 'success');
         }
-        
+
         function addSourceToMap(source, updateUI) {
             if (updateUI === undefined) updateUI = true;
             source.id = Date.now() + Math.random();
             sources.push(source);
-            
+
             var cat = A.catalog({ name: source.name, sourceSize: 18, color: source.color, shape: 'circle' });
             cat.addSources([A.source(source.ra, source.dec, { name: source.name })]);
             aladin.addCatalog(cat);
             source.catalog = cat;
-            
+
             if (updateUI) {
                 updateSourceList();
                 updateSourceCount();
             }
         }
-        
+
         function updateSourceCount() {
             document.getElementById('source-count').textContent = sources.length + ' sources plotted';
         }
-        
+
         function updateSourceList() {
             var el = document.getElementById('source-list');
             if (!sources.length) {
                 el.innerHTML = '<p class="info-text">No sources added yet.</p>';
                 return;
             }
-            
+
             var display = sources.slice(-12);
             var hidden = sources.length - display.length;
             var html = hidden > 0 ? '<p class="info-text">+' + hidden + ' more</p>' : '';
-            
+
             html += display.map(function(s) {
                 var name = s.name.length > 18 ? s.name.substring(0, 18) + '...' : s.name;
-                return '<div class="source-item"><div><div class="source-name"><span style="color:' + s.color + '">●</span> ' + 
+                return '<div class="source-item"><div><div class="source-name"><span style="color:' + s.color + '">●</span> ' +
                     name + '</div><div class="source-coords">' + s.ra.toFixed(4) + '°, ' + s.dec.toFixed(4) + '°</div></div>' +
                     '<button class="remove-btn" onclick="removeSource(' + s.id + ')">✕</button></div>';
             }).join('');
-            
+
             el.innerHTML = html;
         }
-        
+
         function removeSource(id) {
             var s = sources.find(function(x) { return x.id === id; });
             if (s && s.catalog) aladin.removeLayers([s.catalog]);
@@ -1363,7 +1730,7 @@
             updateSourceList();
             updateSourceCount();
         }
-        
+
         function clearAllSources() {
             sources.forEach(function(s) { if (s.catalog) aladin.removeLayers([s.catalog]); });
             sources = [];
@@ -1371,7 +1738,7 @@
             updateSourceCount();
             showToast('Sources cleared', 'success');
         }
-        
+
         function exportSources() {
             if (!sources.length) { showToast('No sources', 'error'); return; }
             var csv = 'name,ra,dec,type\n' + sources.map(function(s) {
@@ -1383,16 +1750,16 @@
             a.click();
             showToast('Exported', 'success');
         }
-        
+
         // ==================== CSV ====================
-        
+
         document.getElementById('csv-file').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
-            
+
             var format = document.getElementById('csv-format').value;
             showLoading(true, 'Processing...');
-            
+
             var reader = new FileReader();
             reader.onload = function(ev) {
                 var lines = ev.target.result.trim().split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
@@ -1400,7 +1767,7 @@
                 if (first.includes('source') || first.includes('ra') || first.includes('id') || first.includes('name')) {
                     lines = lines.slice(1);
                 }
-                
+
                 if (format === 'simbad') {
                     processSimbadCSV(lines);
                 } else {
@@ -1411,11 +1778,11 @@
             };
             reader.readAsText(file);
         });
-        
+
         function processSimbadCSV(entries) {
             showLoading(true, 'Querying ' + entries.length + ' sources...');
             var success = 0, fail = 0, i = 0;
-            
+
             function next() {
                 if (i >= entries.length) {
                     updateSourceList();
@@ -1424,11 +1791,11 @@
                     showToast('Added ' + success + (fail ? ' (' + fail + ' failed)' : ''), 'success');
                     return;
                 }
-                
+
                 var id = entries[i].replace(/['"]/g, '').trim();
                 i++;
                 if (!id) { next(); return; }
-                
+
                 resolveObject(id, function(result) {
                     if (result) {
                         addSourceToMap({ name: result.name, ra: result.ra, dec: result.dec, color: selectedColors.bulk, type: 'catalog' }, false);
@@ -1439,7 +1806,7 @@
             }
             next();
         }
-        
+
         function processCoordCSV(entries, format) {
             var count = 0;
             entries.forEach(function(line) {
@@ -1455,16 +1822,16 @@
             updateSourceCount();
             showToast('Added ' + count + ' sources', 'success');
         }
-        
+
         // ==================== Utils ====================
-        
+
         function showLoading(show, text) {
             var el = document.getElementById('loading-overlay');
             el.querySelector('.loading-text').textContent = text || 'Loading...';
             if (show) el.classList.add('active');
             else el.classList.remove('active');
         }
-        
+
         function showToast(msg, type) {
             var t = document.getElementById('toast');
             t.textContent = msg;
