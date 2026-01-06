@@ -650,7 +650,7 @@
                     <button class="btn-catalog" onclick="loadCrACatalog()">Load CrA Substellar (2025)</button>
                     <div class="input-group btn-spacing">
                         <label>Sgr Stream Max Sources</label>
-                        <input type="number" id="sgr-max-sources" value="50000" min="1000" max="500000" step="10000">
+                        <input type="number" id="sgr-max-sources" value="50000" min="1000" max="800000" step="10000">
                     </div>
                     <button class="btn-sgr" onclick="loadSgrStreamCatalog()">Load Sgr Stream Stars</button>
                     <div class="catalog-info" id="catalog-info">
@@ -1038,7 +1038,7 @@
         function updateFootprintCatalogCountUI() {
             catalogInFootprintCount = computeCatalogCountInActiveFootprint();
             var countEl = document.getElementById('footprint-count-value');
-            
+
             if (!activeFootprintOverlay) {
                 countEl.textContent = '—';
                 countEl.classList.add('empty');
@@ -1411,17 +1411,17 @@
             // Use setTimeout to allow UI to update
             setTimeout(function() {
                 var result = runOptimization(allData);
-                
+
                 // Update sliders to optimal values
                 var raSlider = document.getElementById('footprint-ra-slider');
                 var decSlider = document.getElementById('footprint-dec-slider');
-                
+
                 // Adjust slider ranges to include optimal position
                 raSlider.min = result.ra - 5;
                 raSlider.max = result.ra + 5;
                 decSlider.min = result.dec - 5;
                 decSlider.max = result.dec + 5;
-                
+
                 raSlider.value = result.ra;
                 decSlider.value = result.dec;
                 document.getElementById('footprint-pa-slider').value = result.pa;
@@ -1442,7 +1442,7 @@
 
         function runOptimization(data) {
             var n = data.length;
-            
+
             // Adaptive parameters based on catalog size
             var gridSize, paStep, topCandidates;
             if (n > 20000) {
@@ -1464,10 +1464,10 @@
             data.forEach(function(d) {
                 var key = Math.floor(d.ra / gridSize) + ',' + Math.floor(d.dec / gridSize);
                 if (!grid[key]) {
-                    grid[key] = { 
+                    grid[key] = {
                         ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize,
                         dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize,
-                        count: 0 
+                        count: 0
                     };
                 }
                 grid[key].count++;
@@ -1528,12 +1528,12 @@
         function countSourcesInRomanFootprintFast(data, ra0, dec0, pa) {
             var count = 0;
             var cosDec0 = Math.cos(dec0 * Math.PI / 180);
-            
+
             // Precompute detector centers
             var rad = -pa * Math.PI / 180;
             var cosPA = Math.cos(rad);
             var sinPA = Math.sin(rad);
-            
+
             var detCenters = ROMAN_WFI_DETECTORS.map(function(det) {
                 var rx = det[0] * cosPA - det[1] * sinPA;
                 var ry = det[0] * sinPA + det[1] * cosPA;
@@ -1548,7 +1548,7 @@
 
             for (var i = 0; i < data.length; i++) {
                 var d = data[i];
-                
+
                 // Quick bounding box rejection (footprint is ~0.8 deg)
                 var dra = (d.ra - ra0) * cosDec0;
                 var ddec = d.dec - dec0;
@@ -1560,11 +1560,11 @@
                     var cosDet = Math.cos(dc[1] * Math.PI / 180);
                     var dx = (d.ra - dc[0]) * cosDet;
                     var dy = d.dec - dc[1];
-                    
+
                     // Rotate into detector frame
                     var x = dx * testCos - dy * testSin;
                     var y = dx * testSin + dy * testCos;
-                    
+
                     if (x >= -halfSize && x <= halfSize && y >= -halfSize && y <= halfSize) {
                         count++;
                         break;
