@@ -1971,8 +1971,8 @@ DATA SOURCES:
     const toiMatch = cleaned.match(/^TOI[-\s]*(\d+\.?\d*)$/i);
     if (toiMatch) variants.push(`TOI-${toiMatch[1]}`, `TOI ${toiMatch[1]}`, `TOI${toiMatch[1]}`);
 
-    const ticMatch = cleaned.match(/^TIC\s*(\d+)$/i);
-    if (ticMatch) variants.push(`TIC ${ticMatch[1]}`, `TIC${ticMatch[1]}`);
+    const ticMatch = cleaned.match(/^TIC[\\s\\-]*(\\d+)$/i);
+    if (ticMatch) variants.push(`TIC-${ticMatch[1]}`, `TIC ${ticMatch[1]}`, `TIC${ticMatch[1]}`);
 
     const hdMatch = cleaned.match(/^HD\s*(\d+)$/i);
     if (hdMatch) variants.push(`HD ${hdMatch[1]}`, `HD${hdMatch[1]}`);
@@ -1994,7 +1994,7 @@ DATA SOURCES:
 
     // EPIC targets (K2 input catalog)
     const epicMatch = cleaned.match(/^EPIC\s*(\d+)$/i);
-    if (epicMatch) variants.push(`EPIC ${epicMatch[1]}`, `EPIC${epicMatch[1]}`);
+    if (epicMatch) variants.push(`EPIC-${epicMatch[1]}`, `EPIC ${epicMatch[1]}`, `EPIC${epicMatch[1]}`);
 
     // Kepler targets (e.g., Kepler-22, Kepler 22)
     const keplerMatch = cleaned.match(/^Kepler[-\s]*(\d+[A-Za-z]?)$/i);
