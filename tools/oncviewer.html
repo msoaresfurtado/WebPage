@@ -107,6 +107,25 @@
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header-btn {
+            padding: 0.3rem 0.6rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.55rem;
+            cursor: pointer;
+        }
+        
+        .header-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
         }
         
         .sidebar {
@@ -386,6 +405,32 @@
         .color-swatch-pink { background: #ff4adc; }
         .color-swatch-cyan { background: #4afff4; }
         .color-swatch-red { background: #ff4a4a; }
+        .color-swatch-white { background: #ffffff; }
+        
+        .marker-select {
+            display: flex;
+            gap: 0.3rem;
+            margin-top: 0.3rem;
+        }
+        
+        .marker-option {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+        
+        .marker-option:hover, .marker-option.active {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
         
         .toast {
             position: fixed;
@@ -550,16 +595,58 @@
             background: var(--bg-primary);
             border-radius: 3px;
         }
+        
+        .footprint-stats {
+            margin-top: 0.4rem;
+            padding: 0.4rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            font-size: 0.5rem;
+        }
+        
+        .footprint-stats-title {
+            color: var(--accent-secondary);
+            margin-bottom: 0.3rem;
+            font-weight: 600;
+        }
+        
+        .footprint-stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.15rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .footprint-stats-row:last-child { border-bottom: none; }
+        .footprint-stats-label { color: var(--text-secondary); }
+        .footprint-stats-value { color: var(--text-primary); font-weight: 500; }
+        
+        .catalog-style-box {
+            margin-bottom: 0.4rem;
+            padding: 0.4rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+        }
+        
+        .catalog-style-title {
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 0.2rem;
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
         <header>
             <div class="logo">
-                <div class="logo-icon">✦</div>
+                <div class="logo-icon">&#10022;</div>
                 <h1>ONC <span class="logo-highlight">Source</span> Viewer</h1>
             </div>
-            <div class="header-info">Orion Nebula Cluster</div>
+            <div class="header-info">
+                <button class="header-btn" onclick="downloadPNG()">Export PNG</button>
+                <span>Orion Nebula Cluster</span>
+            </div>
         </header>
         
         <aside class="sidebar">
@@ -570,7 +657,7 @@
                         <div class="panel-header-dot"></div>
                         <span>FITS Image</span>
                     </div>
-                    <span class="panel-toggle">▼</span>
+                    <span class="panel-toggle">&#9660;</span>
                 </div>
                 <div class="panel-content">
                     <div class="fits-status" id="fits-status">
@@ -595,9 +682,29 @@
                         <div class="panel-header-dot"></div>
                         <span>Catalogs</span>
                     </div>
-                    <span class="panel-toggle">▼</span>
+                    <span class="panel-toggle">&#9660;</span>
                 </div>
                 <div class="panel-content">
+                    <div class="catalog-style-box">
+                        <div class="catalog-style-title">Kim+2019 Style</div>
+                        <div class="color-picker-row">
+                            <span class="color-picker-label">Color:</span>
+                            <div class="color-swatch color-swatch-cyan active" data-color="#4afff4" data-panel="kim"></div>
+                            <div class="color-swatch color-swatch-orange" data-color="#ff6b4a" data-panel="kim"></div>
+                            <div class="color-swatch color-swatch-blue" data-color="#4a9eff" data-panel="kim"></div>
+                            <div class="color-swatch color-swatch-green" data-color="#4aff9f" data-panel="kim"></div>
+                            <div class="color-swatch color-swatch-yellow" data-color="#ffd24a" data-panel="kim"></div>
+                            <div class="color-swatch color-swatch-pink" data-color="#ff4adc" data-panel="kim"></div>
+                        </div>
+                        <div class="marker-select">
+                            <div class="marker-option active" data-marker="circle" data-panel="kim">&#9679;</div>
+                            <div class="marker-option" data-marker="square" data-panel="kim">&#9632;</div>
+                            <div class="marker-option" data-marker="plus" data-panel="kim">+</div>
+                            <div class="marker-option" data-marker="cross" data-panel="kim">&#215;</div>
+                            <div class="marker-option" data-marker="diamond" data-panel="kim">&#9670;</div>
+                            <div class="marker-option" data-marker="triangle" data-panel="kim">&#9650;</div>
+                        </div>
+                    </div>
                     <button class="btn-catalog" onclick="loadKimCatalog()">Load Kim+2019 (PM)</button>
                     <div id="kim-pm-controls" style="display:none; margin-top:0.4rem; padding:0.4rem; background:var(--bg-primary); border-radius:3px;">
                         <div class="coord-row">
@@ -613,9 +720,52 @@
                         <button class="btn-pm" id="btn-pm-arrows" onclick="addPMArrows()">Add PM Arrows</button>
                         <button class="btn-secondary btn-spacing" onclick="clearPMArrows()">Clear PM Arrows</button>
                     </div>
+                    
+                    <div class="catalog-style-box" style="margin-top: 0.4rem;">
+                        <div class="catalog-style-title">COUP Style</div>
+                        <div class="color-picker-row">
+                            <span class="color-picker-label">Color:</span>
+                            <div class="color-swatch color-swatch-orange active" data-color="#ff9f4a" data-panel="coup"></div>
+                            <div class="color-swatch color-swatch-cyan" data-color="#4afff4" data-panel="coup"></div>
+                            <div class="color-swatch color-swatch-blue" data-color="#4a9eff" data-panel="coup"></div>
+                            <div class="color-swatch color-swatch-green" data-color="#4aff9f" data-panel="coup"></div>
+                            <div class="color-swatch color-swatch-yellow" data-color="#ffd24a" data-panel="coup"></div>
+                            <div class="color-swatch color-swatch-pink" data-color="#ff4adc" data-panel="coup"></div>
+                        </div>
+                        <div class="marker-select">
+                            <div class="marker-option" data-marker="circle" data-panel="coup">&#9679;</div>
+                            <div class="marker-option active" data-marker="square" data-panel="coup">&#9632;</div>
+                            <div class="marker-option" data-marker="plus" data-panel="coup">+</div>
+                            <div class="marker-option" data-marker="cross" data-panel="coup">&#215;</div>
+                            <div class="marker-option" data-marker="diamond" data-panel="coup">&#9670;</div>
+                            <div class="marker-option" data-marker="triangle" data-panel="coup">&#9650;</div>
+                        </div>
+                    </div>
                     <button class="btn-coup btn-spacing" onclick="loadCOUPCatalog()">Load COUP (X-ray)</button>
+                    
+                    <div class="catalog-style-box" style="margin-top: 0.4rem;">
+                        <div class="catalog-style-title">ALMA Disks Style</div>
+                        <div class="color-picker-row">
+                            <span class="color-picker-label">Color:</span>
+                            <div class="color-swatch color-swatch-pink active" data-color="#ff4adc" data-panel="alma"></div>
+                            <div class="color-swatch color-swatch-cyan" data-color="#4afff4" data-panel="alma"></div>
+                            <div class="color-swatch color-swatch-blue" data-color="#4a9eff" data-panel="alma"></div>
+                            <div class="color-swatch color-swatch-green" data-color="#4aff9f" data-panel="alma"></div>
+                            <div class="color-swatch color-swatch-yellow" data-color="#ffd24a" data-panel="alma"></div>
+                            <div class="color-swatch color-swatch-orange" data-color="#ff6b4a" data-panel="alma"></div>
+                        </div>
+                        <div class="marker-select">
+                            <div class="marker-option" data-marker="circle" data-panel="alma">&#9679;</div>
+                            <div class="marker-option" data-marker="square" data-panel="alma">&#9632;</div>
+                            <div class="marker-option" data-marker="plus" data-panel="alma">+</div>
+                            <div class="marker-option" data-marker="cross" data-panel="alma">&#215;</div>
+                            <div class="marker-option active" data-marker="diamond" data-panel="alma">&#9670;</div>
+                            <div class="marker-option" data-marker="triangle" data-panel="alma">&#9650;</div>
+                        </div>
+                    </div>
+                    <button class="btn-roman btn-spacing" onclick="loadALMACatalog()">Load ALMA Disks</button>
                     <div class="catalog-info" id="catalog-info">
-                        Kim+2019: J/AJ/157/109 · COUP: J/ApJS/160/319
+                        Kim+2019: J/AJ/157/109 | COUP: J/ApJS/160/319
                     </div>
                     <button class="btn-secondary btn-spacing" onclick="clearCatalog()">Clear All Catalogs</button>
                 </div>
@@ -628,31 +778,40 @@
                         <div class="panel-header-dot"></div>
                         <span>Instrument Footprints</span>
                     </div>
-                    <span class="panel-toggle">▼</span>
+                    <span class="panel-toggle">&#9660;</span>
                 </div>
                 <div class="panel-content">
                     <div class="input-group">
                         <label>Instrument</label>
                         <select id="footprint-instrument">
                             <option value="roman">Roman WFI</option>
-                            <option value="jwst">JWST NIRCam</option>
+                            <option value="jwst">JWST NIRCam (Both)</option>
+                            <option value="jwst-a">JWST NIRCam Module A</option>
+                            <option value="jwst-b">JWST NIRCam Module B</option>
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>RA: <span id="fp-ra-display">83.8187</span>°</label>
-                        <input type="range" id="footprint-ra-slider" min="78" max="88" step="0.001" value="83.8187" style="width:100%;">
+                        <label>RA (deg)</label>
+                        <input type="number" id="footprint-ra-input" value="83.8187" step="0.0001" style="margin-bottom: 0.3rem;">
+                        <input type="range" id="footprint-ra-slider" min="78" max="88" step="0.0001" value="83.8187" style="width:100%;">
                     </div>
                     <div class="input-group">
-                        <label>Dec: <span id="fp-dec-display">-5.3897</span>°</label>
-                        <input type="range" id="footprint-dec-slider" min="-10" max="0" step="0.001" value="-5.3897" style="width:100%;">
+                        <label>Dec (deg)</label>
+                        <input type="number" id="footprint-dec-input" value="-5.3897" step="0.0001" style="margin-bottom: 0.3rem;">
+                        <input type="range" id="footprint-dec-slider" min="-10" max="0" step="0.0001" value="-5.3897" style="width:100%;">
                     </div>
                     <div class="input-group">
-                        <label>PA: <span id="fp-pa-display">0</span>°</label>
+                        <label>PA: <span id="fp-pa-display">0</span> deg</label>
                         <input type="range" id="footprint-pa-slider" min="0" max="360" step="1" value="0" style="width:100%;">
                     </div>
                     <div class="coord-row">
                         <button onclick="centerFootprintOnView()">Center on View</button>
                         <button class="btn-secondary" onclick="clearActiveFootprint()">Clear</button>
+                    </div>
+                    <button class="btn-secondary btn-spacing" onclick="countSourcesInFootprint()">Count Sources in Footprint</button>
+                    <div class="footprint-stats" id="footprint-stats" style="display: none;">
+                        <div class="footprint-stats-title">Sources in Footprint</div>
+                        <div id="footprint-stats-content"></div>
                     </div>
                 </div>
             </div>
@@ -664,7 +823,7 @@
                         <div class="panel-header-dot"></div>
                         <span>Object Lookup</span>
                     </div>
-                    <span class="panel-toggle">▼</span>
+                    <span class="panel-toggle">&#9660;</span>
                 </div>
                 <div class="panel-content">
                     <div class="input-group">
@@ -682,6 +841,14 @@
                         <div class="color-swatch color-swatch-cyan" data-color="#4afff4" data-panel="simbad"></div>
                         <div class="color-swatch color-swatch-red" data-color="#ff4a4a" data-panel="simbad"></div>
                     </div>
+                    <div class="marker-select">
+                        <div class="marker-option active" data-marker="circle" data-panel="simbad">&#9679;</div>
+                        <div class="marker-option" data-marker="square" data-panel="simbad">&#9632;</div>
+                        <div class="marker-option" data-marker="plus" data-panel="simbad">+</div>
+                        <div class="marker-option" data-marker="cross" data-panel="simbad">&#215;</div>
+                        <div class="marker-option" data-marker="diamond" data-panel="simbad">&#9670;</div>
+                        <div class="marker-option" data-marker="triangle" data-panel="simbad">&#9650;</div>
+                    </div>
                     <button onclick="addSimbadSource()">Lookup Object</button>
                 </div>
             </div>
@@ -693,7 +860,7 @@
                         <div class="panel-header-dot"></div>
                         <span>Manual Coordinates</span>
                     </div>
-                    <span class="panel-toggle">▼</span>
+                    <span class="panel-toggle">&#9660;</span>
                 </div>
                 <div class="panel-content">
                     <div class="coord-row">
@@ -720,6 +887,14 @@
                         <div class="color-swatch color-swatch-cyan" data-color="#4afff4" data-panel="manual"></div>
                         <div class="color-swatch color-swatch-red" data-color="#ff4a4a" data-panel="manual"></div>
                     </div>
+                    <div class="marker-select">
+                        <div class="marker-option active" data-marker="circle" data-panel="manual">&#9679;</div>
+                        <div class="marker-option" data-marker="square" data-panel="manual">&#9632;</div>
+                        <div class="marker-option" data-marker="plus" data-panel="manual">+</div>
+                        <div class="marker-option" data-marker="cross" data-panel="manual">&#215;</div>
+                        <div class="marker-option" data-marker="diamond" data-panel="manual">&#9670;</div>
+                        <div class="marker-option" data-marker="triangle" data-panel="manual">&#9650;</div>
+                    </div>
                     <button onclick="addManualSource()">Add Source</button>
                 </div>
             </div>
@@ -731,7 +906,7 @@
                         <div class="panel-header-dot"></div>
                         <span>Bulk Upload</span>
                     </div>
-                    <span class="panel-toggle">▼</span>
+                    <span class="panel-toggle">&#9660;</span>
                 </div>
                 <div class="panel-content">
                     <div class="input-group">
@@ -758,6 +933,14 @@
                         <div class="color-swatch color-swatch-cyan" data-color="#4afff4" data-panel="bulk"></div>
                         <div class="color-swatch color-swatch-red" data-color="#ff4a4a" data-panel="bulk"></div>
                     </div>
+                    <div class="marker-select">
+                        <div class="marker-option active" data-marker="circle" data-panel="bulk">&#9679;</div>
+                        <div class="marker-option" data-marker="square" data-panel="bulk">&#9632;</div>
+                        <div class="marker-option" data-marker="plus" data-panel="bulk">+</div>
+                        <div class="marker-option" data-marker="cross" data-panel="bulk">&#215;</div>
+                        <div class="marker-option" data-marker="diamond" data-panel="bulk">&#9670;</div>
+                        <div class="marker-option" data-marker="triangle" data-panel="bulk">&#9650;</div>
+                    </div>
                 </div>
             </div>
             
@@ -768,7 +951,7 @@
                         <div class="panel-header-dot"></div>
                         <span>Plotted Sources</span>
                     </div>
-                    <span class="panel-toggle">▼</span>
+                    <span class="panel-toggle">&#9660;</span>
                 </div>
                 <div class="panel-content">
                     <div class="source-count" id="source-count">0 sources plotted</div>
@@ -813,14 +996,29 @@
         var catalogOverlay = null;
         var kimCatalogSources = null;
         var coupCatalogSources = null;
+        var almaCatalogSources = null;
         var kimData = [];
         var coupData = [];
+        var almaData = [];
         var pastObjects = JSON.parse(localStorage.getItem('oncPastObjects') || '[]');
+        var currentFootprintPolygons = [];
         
         var selectedColors = {
             simbad: '#4a9eff',
             manual: '#ff6b4a',
-            bulk: '#4aff9f'
+            bulk: '#4aff9f',
+            kim: '#4afff4',
+            coup: '#ff9f4a',
+            alma: '#ff4adc'
+        };
+        
+        var selectedMarkers = {
+            simbad: 'circle',
+            manual: 'circle',
+            bulk: 'circle',
+            kim: 'circle',
+            coup: 'square',
+            alma: 'diamond'
         };
         
         var JWST_FITS_URL = 'https://github.com/msoaresfurtado/WebPage/raw/main/tools/jwst_onc.fits';
@@ -849,7 +1047,6 @@
                 reticleSize: 22
             });
             
-            // Apply viridis colormap after survey loads
             setTimeout(function() {
                 aladin.getBaseImageLayer().setColormap('cividis');
             }, 500);
@@ -861,13 +1058,34 @@
                 }
             });
             
-            // Populate past objects datalist
             updatePastObjectsDatalist();
-            
-            // Initialize footprint controls
             initFootprintControls();
             
-            showToast('Viewer initialized · Centered on ONC', 'success');
+            showToast('Viewer initialized - Centered on ONC', 'success');
+        });
+        
+        // Color swatches
+        document.querySelectorAll('.color-swatch').forEach(function(swatch) {
+            swatch.addEventListener('click', function() {
+                var panel = swatch.dataset.panel;
+                document.querySelectorAll('.color-swatch[data-panel="' + panel + '"]').forEach(function(s) {
+                    s.classList.remove('active');
+                });
+                swatch.classList.add('active');
+                selectedColors[panel] = swatch.dataset.color;
+            });
+        });
+        
+        // Marker options
+        document.querySelectorAll('.marker-option').forEach(function(opt) {
+            opt.addEventListener('click', function() {
+                var panel = opt.dataset.panel;
+                document.querySelectorAll('.marker-option[data-panel="' + panel + '"]').forEach(function(o) {
+                    o.classList.remove('active');
+                });
+                opt.classList.add('active');
+                selectedMarkers[panel] = opt.dataset.marker;
+            });
         });
         
         function updatePastObjectsDatalist() {
@@ -880,7 +1098,7 @@
         function addToPastObjects(name) {
             if (!pastObjects.includes(name)) {
                 pastObjects.unshift(name);
-                if (pastObjects.length > 20) pastObjects.pop(); // Keep max 20
+                if (pastObjects.length > 20) pastObjects.pop();
                 localStorage.setItem('oncPastObjects', JSON.stringify(pastObjects));
                 updatePastObjectsDatalist();
             }
@@ -890,26 +1108,51 @@
             document.getElementById(panelId).classList.toggle('collapsed');
         }
         
-        document.querySelectorAll('.color-swatch').forEach(function(swatch) {
-            swatch.addEventListener('click', function() {
-                var panel = swatch.dataset.panel;
-                document.querySelectorAll('.color-swatch[data-panel="' + panel + '"]').forEach(function(s) {
-                    s.classList.remove('active');
-                });
-                swatch.classList.add('active');
-                selectedColors[panel] = swatch.dataset.color;
-            });
-        });
+        // PNG Export
+        function downloadPNG() {
+            showLoading(true, 'Generating PNG...');
+            try {
+                var container = document.getElementById('aladin-container');
+                var canvases = container.querySelectorAll('canvas');
+                if (canvases.length === 0) {
+                    showLoading(false);
+                    showToast('Could not find canvas', 'error');
+                    return;
+                }
+                
+                // Create a merged canvas with all layers
+                var firstCanvas = canvases[0];
+                var mergedCanvas = document.createElement('canvas');
+                mergedCanvas.width = firstCanvas.width;
+                mergedCanvas.height = firstCanvas.height;
+                var ctx = mergedCanvas.getContext('2d');
+                
+                // Draw each canvas layer in order
+                for (var i = 0; i < canvases.length; i++) {
+                    ctx.drawImage(canvases[i], 0, 0);
+                }
+                
+                var dataUrl = mergedCanvas.toDataURL('image/png');
+                var a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = 'onc_field_' + new Date().toISOString().slice(0,10) + '.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                showLoading(false);
+                showToast('PNG downloaded', 'success');
+            } catch (error) {
+                showLoading(false);
+                showToast('Export failed: ' + error.message, 'error');
+            }
+        }
         
-        // ==================== FITS ====================
-        
+        // FITS
         function loadJWSTFits() {
             showLoading(true, 'Loading JWST ONC image...');
-            
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
             }
-            
             try {
                 currentFITSLayer = aladin.createImageFITS(JWST_FITS_URL, { 
                     name: 'JWST ONC', 
@@ -922,7 +1165,6 @@
                     showLoading(false);
                     showToast('Loaded JWST ONC image', 'success');
                 });
-                
                 aladin.setOverlayImageLayer(currentFITSLayer);
                 document.getElementById('fits-name').textContent = 'JWST ONC (GitHub)';
                 document.getElementById('fits-status').classList.add('loaded');
@@ -936,18 +1178,15 @@
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
                 try { if (currentFITSLayer.remove) currentFITSLayer.remove(); } catch(e) {}
-                
                 if (currentFITSUrl) {
                     URL.revokeObjectURL(currentFITSUrl);
                     currentFITSUrl = null;
                 }
-                
                 currentFITSLayer = null;
                 document.getElementById('fits-name').textContent = 'No FITS loaded';
                 document.getElementById('fits-status').classList.remove('loaded');
                 document.getElementById('file-input-label').textContent = 'Or upload custom FITS';
                 document.getElementById('fits-file').value = '';
-                
                 showToast('FITS cleared', 'success');
             } else {
                 showToast('No FITS to clear', 'error');
@@ -957,17 +1196,13 @@
         document.getElementById('fits-file').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
-            
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
                 if (currentFITSUrl) URL.revokeObjectURL(currentFITSUrl);
             }
-            
             showLoading(true, 'Loading FITS...');
-            
             try {
                 currentFITSUrl = URL.createObjectURL(file);
-                
                 currentFITSLayer = aladin.createImageFITS(currentFITSUrl, { 
                     name: file.name, 
                     opacity: 1.0 
@@ -978,7 +1213,6 @@
                     }
                     showLoading(false);
                 });
-                
                 aladin.setOverlayImageLayer(currentFITSLayer);
                 document.getElementById('file-input-label').textContent = file.name;
                 document.getElementById('fits-name').textContent = file.name;
@@ -990,26 +1224,23 @@
             }
         });
         
-        // ==================== Catalogs ====================
-        
+        // Catalogs
         function loadKimCatalog() {
             showLoading(true, 'Loading Kim+2019 catalog...');
             
-            // Clear only Kim catalog if exists
+            // Only remove Kim catalog if it exists
             if (kimCatalogSources) {
-                try { aladin.removeLayers([kimCatalogSources]); } catch(e) {}
+                try { aladin.removeLayer(kimCatalogSources); } catch(e) {}
                 kimCatalogSources = null;
             }
             kimData = [];
             
-            // Direct VizieR query - unlimited sources
             var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?' +
                 '-source=J/AJ/157/109/table3' +
                 '&-c=83.8187%20-5.3897' +
                 '&-c.rd=0.5' +
                 '&-out.max=unlimited' +
                 '&-out=RAJ2000,DEJ2000,pmRA,pmDE,ID';
-            
             fetch(url)
                 .then(function(response) { 
                     if (!response.ok) throw new Error('Network error');
@@ -1022,10 +1253,8 @@
                         showToast('No Kim+2019 sources found', 'error');
                         return;
                     }
-                    
                     kimData = data;
-                    kimCatalogSources = plotCatalogSources(data, '#4afff4', 'circle', 'Kim+2019');
-                    
+                    kimCatalogSources = plotCatalogSources(data, selectedColors.kim, selectedMarkers.kim, 'Kim+2019');
                     showLoading(false);
                     updateCatalogInfo();
                     document.getElementById('kim-pm-controls').style.display = 'block';
@@ -1034,16 +1263,15 @@
                 .catch(function(error) {
                     showLoading(false);
                     showToast('Error: ' + error.message, 'error');
-                    console.error('Kim catalog error:', error);
                 });
         }
         
         function loadCOUPCatalog() {
             showLoading(true, 'Loading COUP catalog...');
             
-            // Clear only COUP catalog if exists
+            // Only remove COUP catalog if it exists
             if (coupCatalogSources) {
-                try { aladin.removeLayers([coupCatalogSources]); } catch(e) {}
+                try { aladin.removeLayer(coupCatalogSources); } catch(e) {}
                 coupCatalogSources = null;
             }
             coupData = [];
@@ -1054,7 +1282,6 @@
                 '&-c.rd=0.5' +
                 '&-out.max=unlimited' +
                 '&-out=RAJ2000,DEJ2000,Seq,CXOONCJ';
-            
             fetch(url)
                 .then(function(response) { 
                     if (!response.ok) throw new Error('Network error');
@@ -1067,199 +1294,291 @@
                         showToast('No COUP sources found', 'error');
                         return;
                     }
-                    
-                    // COUP has no PM data
                     data.forEach(function(d) { d.pmRA = 0; d.pmDE = 0; });
                     coupData = data;
-                    coupCatalogSources = plotCatalogSources(data, '#ff9f4a', 'square', 'COUP');
-                    
+                    coupCatalogSources = plotCatalogSources(data, selectedColors.coup, selectedMarkers.coup, 'COUP');
                     showLoading(false);
                     updateCatalogInfo();
-                    showToast('Loaded ' + data.length + ' COUP sources', 'success');
+                    showToast('Loaded ' + coupData.length + ' COUP sources', 'success');
                 })
                 .catch(function(error) {
                     showLoading(false);
                     showToast('Error: ' + error.message, 'error');
-                    console.error('COUP catalog error:', error);
                 });
+        }
+        
+        function loadALMACatalog() {
+            showLoading(true, 'Loading ALMA disk catalog...');
+            
+            // Only remove ALMA catalog if it exists
+            if (almaCatalogSources) {
+                try { aladin.removeLayer(almaCatalogSources); } catch(e) {}
+                almaCatalogSources = null;
+            }
+            almaData = [];
+            
+            // Try multiple ALMA catalogs - Eisner 2018 and Otter 2021
+            var catalogs = [
+                'J/ApJ/860/77/table1',    // Eisner et al. 2018 - main ONC ALMA survey
+                'J/ApJ/860/77/table2',    // Eisner et al. 2018 - additional table
+                'J/ApJ/923/221/table2',   // Otter et al. 2021
+                'J/ApJ/923/221/sources'   // Otter et al. 2021
+            ];
+            
+            var fetchPromises = catalogs.map(function(cat) {
+                var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?' +
+                    '-source=' + cat +
+                    '&-c=83.8187%20-5.3897' +
+                    '&-c.rd=0.5' +
+                    '&-out.max=unlimited' +
+                    '&-out.all';
+                return fetch(url)
+                    .then(function(r) { 
+                        if (!r.ok) return '';
+                        return r.text(); 
+                    })
+                    .catch(function() { return ''; });
+            });
+            
+            Promise.all(fetchPromises)
+            .then(function(results) {
+                var allData = [];
+                results.forEach(function(votable, idx) {
+                    if (votable) {
+                        var parsed = parseVOTableFlexible(votable);
+                        console.log('Catalog', catalogs[idx], ':', parsed.length, 'sources');
+                        if (parsed.length > 0) {
+                            console.log('First source:', JSON.stringify(parsed[0]));
+                            console.log('Last source:', JSON.stringify(parsed[parsed.length - 1]));
+                            allData = allData.concat(parsed);
+                        }
+                    }
+                });
+                
+                console.log('Total ALMA sources:', allData.length);
+                
+                if (allData.length === 0) {
+                    showLoading(false);
+                    showToast('No ALMA sources found - check console', 'error');
+                    return;
+                }
+                
+                almaData = allData;
+                almaCatalogSources = plotCatalogSources(allData, selectedColors.alma, selectedMarkers.alma, 'ALMA');
+                showLoading(false);
+                updateCatalogInfo();
+                showToast('Loaded ' + almaData.length + ' ALMA sources', 'success');
+            })
+            .catch(function(error) {
+                showLoading(false);
+                console.error('ALMA load error:', error);
+                showToast('Error: ' + error.message, 'error');
+            });
+        }
+        
+        // More flexible VOTable parser that handles various column naming conventions
+        function parseVOTableFlexible(votable) {
+            if (!votable) return [];
+            try {
+                var parser = new DOMParser();
+                var xml = parser.parseFromString(votable, 'text/xml');
+                
+                // Check for errors in the VOTable
+                var info = xml.querySelector('INFO[value="Error"]');
+                if (info) {
+                    console.log('VOTable error:', info.textContent);
+                    return [];
+                }
+                
+                var tabledata = xml.querySelector('TABLEDATA');
+                if (!tabledata) {
+                    console.log('No TABLEDATA found in VOTable');
+                    return [];
+                }
+                var fields = xml.querySelectorAll('FIELD');
+                var fieldNames = [];
+                fields.forEach(function(f) {
+                    var name = f.getAttribute('name') || f.getAttribute('ID') || '';
+                    fieldNames.push(name.toLowerCase());
+                });
+                console.log('VOTable fields:', fieldNames.join(', '));
+                
+                // Find RA column - try multiple patterns
+                var raIdx = fieldNames.findIndex(function(n) { 
+                    return n === 'raj2000' || n === '_raj2000' || n === 'ra_icrs' || 
+                           n === 'ra' || n === 'radeg' || n === 'ra_j2000' ||
+                           n === 'ra2000' || n === 'raicrs'; 
+                });
+                // Find Dec column - try multiple patterns
+                var decIdx = fieldNames.findIndex(function(n) { 
+                    return n === 'dej2000' || n === '_dej2000' || n === 'de_icrs' || 
+                           n === 'dec' || n === 'dedeg' || n === 'de_j2000' || 
+                           n === 'decj2000' || n === 'de2000' || n === 'deicrs'; 
+                });
+                // Find ID column
+                var idIdx = fieldNames.findIndex(function(n) { 
+                    return n === 'id' || n === 'name' || n === 'source' || 
+                           n === 'seq' || n === 'cxooncj' || n === 'hst' || n === 'proplyd'; 
+                });
+                
+                console.log('Column indices - RA:', raIdx, 'Dec:', decIdx, 'ID:', idIdx);
+                
+                if (raIdx === -1 || decIdx === -1) {
+                    console.log('Could not find RA/Dec columns in:', fieldNames);
+                    return [];
+                }
+                
+                var rows = tabledata.querySelectorAll('TR');
+                var data = [];
+                rows.forEach(function(row, rowIdx) {
+                    var cells = row.querySelectorAll('TD');
+                    if (cells.length <= Math.max(raIdx, decIdx)) return;
+                    var raStr = cells[raIdx].textContent.trim();
+                    var decStr = cells[decIdx].textContent.trim();
+                    
+                    var ra, dec;
+                    
+                    // Check if coordinates are in sexagesimal format (contains colons or spaces)
+                    if (raStr.includes(':') || raStr.includes(' ')) {
+                        ra = parseHMS(raStr) * 15; // Convert hours to degrees
+                        dec = parseDMS(decStr);
+                    } else {
+                        ra = parseFloat(raStr);
+                        dec = parseFloat(decStr);
+                    }
+                    
+                    // Debug first few rows
+                    if (rowIdx < 3) {
+                        console.log('Row', rowIdx, '- RA str:', raStr, '-> ', ra, ', Dec str:', decStr, '->', dec);
+                    }
+                    
+                    if (isNaN(ra) || isNaN(dec)) return;
+                    var id = idIdx >= 0 ? cells[idIdx].textContent.trim() : ('ALMA-' + (data.length + 1));
+                    data.push({ ra: ra, dec: dec, pmRA: 0, pmDE: 0, id: id });
+                });
+                console.log('Parsed', data.length, 'sources');
+                return data;
+            } catch (e) {
+                console.error('VOTable parse error:', e);
+                return [];
+            }
+        }
+        
+        // Parse hours:minutes:seconds to decimal hours
+        function parseHMS(hms) {
+            var parts = hms.split(/[:\s]+/);
+            if (parts.length < 2) return parseFloat(hms);
+            var h = parseFloat(parts[0]) || 0;
+            var m = parseFloat(parts[1]) || 0;
+            var s = parseFloat(parts[2]) || 0;
+            var sign = hms.trim().startsWith('-') ? -1 : 1;
+            return sign * (Math.abs(h) + m / 60 + s / 3600);
+        }
+        
+        // Parse degrees:minutes:seconds to decimal degrees
+        function parseDMS(dms) {
+            var parts = dms.split(/[:\s]+/);
+            if (parts.length < 2) return parseFloat(dms);
+            var d = parseFloat(parts[0]) || 0;
+            var m = parseFloat(parts[1]) || 0;
+            var s = parseFloat(parts[2]) || 0;
+            var sign = dms.trim().startsWith('-') ? -1 : 1;
+            return sign * (Math.abs(d) + m / 60 + s / 3600);
         }
         
         function updateCatalogInfo() {
             var parts = [];
             if (kimData.length > 0) parts.push('Kim: ' + kimData.length);
             if (coupData.length > 0) parts.push('COUP: ' + coupData.length);
-            
+            if (almaData.length > 0) parts.push('ALMA: ' + almaData.length);
             if (parts.length === 0) {
                 document.getElementById('catalog-info').textContent = 'No catalogs loaded';
             } else {
-                document.getElementById('catalog-info').textContent = parts.join(' · ') + ' sources';
+                document.getElementById('catalog-info').textContent = parts.join(' | ') + ' sources';
             }
         }
         
         function parseVOTable(votable) {
             var parser = new DOMParser();
             var xml = parser.parseFromString(votable, 'text/xml');
-            
             var tabledata = xml.querySelector('TABLEDATA');
-            if (!tabledata) {
-                console.error('No TABLEDATA found in VOTable');
-                return [];
-            }
-            
+            if (!tabledata) return [];
             var fields = xml.querySelectorAll('FIELD');
             var fieldNames = [];
             fields.forEach(function(f) {
                 fieldNames.push(f.getAttribute('name') || f.getAttribute('ID') || '');
             });
-            
-            console.log('VOTable fields:', fieldNames);
-            
-            // Find column indices - more flexible matching
             var raIdx = fieldNames.findIndex(function(n) { return n.match(/RAJ2000|_RAJ2000|RA_ICRS/i); });
             var decIdx = fieldNames.findIndex(function(n) { return n.match(/DEJ2000|_DEJ2000|DE_ICRS/i); });
             var pmRaIdx = fieldNames.findIndex(function(n) { return n.match(/^pmRA$/i); });
             var pmDeIdx = fieldNames.findIndex(function(n) { return n.match(/^pmDE$/i); });
-            var idIdx = fieldNames.findIndex(function(n) { return n.match(/^(ID|Seq|CXOONCJ)$/); });
-            
-            console.log('Column indices - RA:', raIdx, 'Dec:', decIdx, 'pmRA:', pmRaIdx, 'pmDE:', pmDeIdx, 'ID:', idIdx);
-            
-            if (raIdx === -1 || decIdx === -1) {
-                console.error('Could not find RA/Dec columns');
-                return [];
-            }
-            
+            var idIdx = fieldNames.findIndex(function(n) { return n.match(/^(ID|Seq|CXOONCJ|Name)$/i); });
+            if (raIdx === -1 || decIdx === -1) return [];
             var rows = tabledata.querySelectorAll('TR');
             var data = [];
-            var pmCount = 0;
-            
             rows.forEach(function(row) {
                 var cells = row.querySelectorAll('TD');
                 if (cells.length <= Math.max(raIdx, decIdx)) return;
-                
                 var ra = parseFloat(cells[raIdx].textContent);
                 var dec = parseFloat(cells[decIdx].textContent);
-                
                 if (isNaN(ra) || isNaN(dec)) return;
-                
                 var pmRA = pmRaIdx >= 0 ? parseFloat(cells[pmRaIdx].textContent) : 0;
                 var pmDE = pmDeIdx >= 0 ? parseFloat(cells[pmDeIdx].textContent) : 0;
-                
-                // Handle NaN
                 if (isNaN(pmRA)) pmRA = 0;
                 if (isNaN(pmDE)) pmDE = 0;
-                
-                if (pmRA !== 0 || pmDE !== 0) pmCount++;
-                
                 var id = idIdx >= 0 ? cells[idIdx].textContent.trim() : '';
-                
                 data.push({ ra: ra, dec: dec, pmRA: pmRA, pmDE: pmDE, id: id });
             });
-            
-            console.log('Parsed', data.length, 'sources,', pmCount, 'with PM data');
-            if (data.length > 0) {
-                console.log('Sample source:', data[0]);
-            }
-            
             return data;
         }
         
         function plotCatalogSources(data, color, shape, name) {
-            var cat = A.catalog({ 
-                name: name, 
-                sourceSize: 10, 
-                color: color, 
-                shape: shape 
-            });
-            
+            var cat = A.catalog({ name: name, sourceSize: 10, color: color, shape: shape });
             var aladinSources = data.map(function(d) {
                 return A.source(d.ra, d.dec, { name: d.id || name + ' source', pmRA: d.pmRA, pmDE: d.pmDE });
             });
-            
             cat.addSources(aladinSources);
             aladin.addCatalog(cat);
             return cat;
         }
         
         function addPMArrows() {
-            console.log('addPMArrows called, kimData length:', kimData.length);
-            
             if (kimData.length === 0) {
                 showToast('Load Kim+2019 catalog first', 'error');
                 return;
             }
-            
-            // Remove existing overlay
             if (catalogOverlay) {
                 try { aladin.removeLayer(catalogOverlay); } catch(e) {}
                 catalogOverlay = null;
             }
-            
             var scale = parseFloat(document.getElementById('pm-scale').value) || 50;
             var timeYr = parseFloat(document.getElementById('pm-time').value) || 1000;
-            
-            console.log('PM arrow params - scale:', scale, 'timeYr:', timeYr);
-            
-            // Create new overlay
             catalogOverlay = A.graphicOverlay({ color: '#00b4d8', lineWidth: 2 });
             aladin.addOverlay(catalogOverlay);
-            
             var arrowCount = 0;
-            var sampleLogged = 0;
-            
             kimData.forEach(function(src) {
-                // Check if has PM data
                 if (src.pmRA === 0 && src.pmDE === 0) return;
-                
-                // Convert PM from mas/yr to degrees, scaled for visibility
-                // mas/yr * (1 deg / 3,600,000 mas) * years * scale
                 var pmRaDeg = src.pmRA * timeYr * scale / 3600000;
                 var pmDeDeg = src.pmDE * timeYr * scale / 3600000;
-                
-                // Correct RA for cos(dec)
                 var cosDec = Math.cos(src.dec * Math.PI / 180);
-                
                 var endRa = src.ra + pmRaDeg / cosDec;
                 var endDec = src.dec + pmDeDeg;
-                
-                // Log first few arrows for debugging
-                if (sampleLogged < 5) {
-                    console.log('Arrow ' + sampleLogged + ': (' + src.ra.toFixed(4) + ', ' + src.dec.toFixed(4) + ') -> (' + 
-                        endRa.toFixed(4) + ', ' + endDec.toFixed(4) + ') pmRA=' + src.pmRA + ' pmDE=' + src.pmDE);
-                    sampleLogged++;
-                }
-                
-                // Draw the main arrow line
                 try {
-                    var line = A.polyline([[src.ra, src.dec], [endRa, endDec]], {
-                        color: '#00b4d8',
-                        lineWidth: 2
-                    });
-                    catalogOverlay.add(line);
-                    
-                    // Draw arrowhead (two short lines at ~25 degree angles)
+                    catalogOverlay.add(A.polyline([[src.ra, src.dec], [endRa, endDec]], {color: '#00b4d8', lineWidth: 2}));
                     var arrowSize = Math.sqrt(pmRaDeg*pmRaDeg + pmDeDeg*pmDeDeg) * 0.3;
                     if (arrowSize < 0.001) arrowSize = 0.001;
-                    
                     var angle = Math.atan2(pmDeDeg, pmRaDeg / cosDec);
-                    var head1Angle = angle + Math.PI - 0.4;  // ~23 degrees back
+                    var head1Angle = angle + Math.PI - 0.4;
                     var head2Angle = angle + Math.PI + 0.4;
-                    
                     var head1Ra = endRa + arrowSize * Math.cos(head1Angle) / cosDec;
                     var head1Dec = endDec + arrowSize * Math.sin(head1Angle);
                     var head2Ra = endRa + arrowSize * Math.cos(head2Angle) / cosDec;
                     var head2Dec = endDec + arrowSize * Math.sin(head2Angle);
-                    
                     catalogOverlay.add(A.polyline([[endRa, endDec], [head1Ra, head1Dec]], {color: '#00b4d8', lineWidth: 2}));
                     catalogOverlay.add(A.polyline([[endRa, endDec], [head2Ra, head2Dec]], {color: '#00b4d8', lineWidth: 2}));
-                    
                     arrowCount++;
-                } catch(e) {
-                    console.error('Error drawing arrow:', e);
-                }
+                } catch(e) {}
             });
-            
-            console.log('Total arrows drawn:', arrowCount);
-            
             if (arrowCount === 0) {
                 showToast('No PM data found in catalog', 'error');
             } else {
@@ -1279,12 +1598,16 @@
         
         function clearCatalog() {
             if (kimCatalogSources) {
-                try { aladin.removeLayers([kimCatalogSources]); } catch(e) {}
+                try { aladin.removeLayer(kimCatalogSources); } catch(e) {}
                 kimCatalogSources = null;
             }
             if (coupCatalogSources) {
-                try { aladin.removeLayers([coupCatalogSources]); } catch(e) {}
+                try { aladin.removeLayer(coupCatalogSources); } catch(e) {}
                 coupCatalogSources = null;
+            }
+            if (almaCatalogSources) {
+                try { aladin.removeLayer(almaCatalogSources); } catch(e) {}
+                almaCatalogSources = null;
             }
             if (catalogOverlay) {
                 try { aladin.removeLayer(catalogOverlay); } catch(e) {}
@@ -1292,78 +1615,116 @@
             }
             kimData = [];
             coupData = [];
-            document.getElementById('catalog-info').textContent = 
-                'Kim+2019: J/AJ/157/109 · COUP: J/ApJS/160/319';
+            almaData = [];
+            document.getElementById('catalog-info').textContent = 'No catalogs loaded';
             document.getElementById('kim-pm-controls').style.display = 'none';
             showToast('All catalogs cleared', 'success');
         }
         
-        // ==================== Footprints ====================
-        
+        // Footprints
         var activeFootprintOverlay = null;
         
         function initFootprintControls() {
             var raSlider = document.getElementById('footprint-ra-slider');
             var decSlider = document.getElementById('footprint-dec-slider');
+            var raInput = document.getElementById('footprint-ra-input');
+            var decInput = document.getElementById('footprint-dec-input');
             var paSlider = document.getElementById('footprint-pa-slider');
             var instrumentSelect = document.getElementById('footprint-instrument');
             
-            raSlider.addEventListener('input', updateFootprintRealtime);
-            decSlider.addEventListener('input', updateFootprintRealtime);
+            // Slider changes update input
+            raSlider.addEventListener('input', function() {
+                raInput.value = raSlider.value;
+                updateFootprintRealtime();
+            });
+            decSlider.addEventListener('input', function() {
+                decInput.value = decSlider.value;
+                updateFootprintRealtime();
+            });
+            
+            // Input changes update slider and footprint
+            raInput.addEventListener('input', function() {
+                var val = parseFloat(raInput.value);
+                if (!isNaN(val)) {
+                    raSlider.value = val;
+                    updateFootprintRealtime();
+                }
+            });
+            decInput.addEventListener('input', function() {
+                var val = parseFloat(decInput.value);
+                if (!isNaN(val)) {
+                    decSlider.value = val;
+                    updateFootprintRealtime();
+                }
+            });
+            
             paSlider.addEventListener('input', updateFootprintRealtime);
             instrumentSelect.addEventListener('change', updateFootprintRealtime);
         }
         
         function updateFootprintRealtime() {
-            var ra = parseFloat(document.getElementById('footprint-ra-slider').value);
-            var dec = parseFloat(document.getElementById('footprint-dec-slider').value);
+            var ra = parseFloat(document.getElementById('footprint-ra-input').value);
+            var dec = parseFloat(document.getElementById('footprint-dec-input').value);
             var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
             var instrument = document.getElementById('footprint-instrument').value;
-            
-            // Update displays
-            document.getElementById('fp-ra-display').textContent = ra.toFixed(4);
-            document.getElementById('fp-dec-display').textContent = dec.toFixed(4);
             document.getElementById('fp-pa-display').textContent = pa.toFixed(0);
-            
-            // Clear existing footprint
+            if (isNaN(ra) || isNaN(dec)) return;
             if (activeFootprintOverlay) {
                 try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
             }
-            
-            // Draw new footprint
+            currentFootprintPolygons = [];
             var color = instrument === 'roman' ? '#ff4adc' : '#ffd24a';
             activeFootprintOverlay = A.graphicOverlay({ color: color, lineWidth: 2 });
             aladin.addOverlay(activeFootprintOverlay);
-            
             if (instrument === 'roman') {
                 ROMAN_WFI_DETECTORS.forEach(function(det) {
                     var poly = createDetectorPoly(ra, dec, det[0], det[1], ROMAN_DET_SIZE, pa);
+                    currentFootprintPolygons.push(poly);
                     activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
                 });
-            } else {
+            } else if (instrument === 'jwst') {
                 var modSize = 0.037;
                 var gap = 0.012;
                 [-1, 1].forEach(function(side) {
                     var dx = side * (modSize / 2 + gap);
                     var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
+                    currentFootprintPolygons.push(poly);
                     activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
                 });
+            } else if (instrument === 'jwst-a') {
+                var modSize = 0.037;
+                var gap = 0.012;
+                var dx = (modSize / 2 + gap);
+                var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
+                currentFootprintPolygons.push(poly);
+                activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
+            } else if (instrument === 'jwst-b') {
+                var modSize = 0.037;
+                var gap = 0.012;
+                var dx = -(modSize / 2 + gap);
+                var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
+                currentFootprintPolygons.push(poly);
+                activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 2}));
+            }
+            
+            // Update count in realtime if stats panel is visible
+            if (document.getElementById('footprint-stats').style.display !== 'none') {
+                updateFootprintCount();
             }
         }
         
         function centerFootprintOnView() {
             var center = aladin.getRaDec();
+            document.getElementById('footprint-ra-input').value = center[0].toFixed(5);
+            document.getElementById('footprint-dec-input').value = center[1].toFixed(5);
             document.getElementById('footprint-ra-slider').value = center[0];
             document.getElementById('footprint-dec-slider').value = center[1];
-            
-            // Update slider ranges to be centered on current view
             var raSlider = document.getElementById('footprint-ra-slider');
             var decSlider = document.getElementById('footprint-dec-slider');
-            raSlider.min = center[0] - 5;
-            raSlider.max = center[0] + 5;
-            decSlider.min = center[1] - 5;
-            decSlider.max = center[1] + 5;
-            
+            raSlider.min = center[0] - 0.5;
+            raSlider.max = center[0] + 0.5;
+            decSlider.min = center[1] - 0.5;
+            decSlider.max = center[1] + 0.5;
             updateFootprintRealtime();
             showToast('Footprint centered on view', 'success');
         }
@@ -1372,16 +1733,15 @@
             if (activeFootprintOverlay) {
                 try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
                 activeFootprintOverlay = null;
+                currentFootprintPolygons = [];
+                document.getElementById('footprint-stats').style.display = 'none';
                 showToast('Footprint cleared', 'success');
             }
         }
         
         function rotatePoint(x, y, paDeg) {
             var rad = -paDeg * Math.PI / 180;
-            return {
-                x: x * Math.cos(rad) - y * Math.sin(rad),
-                y: x * Math.sin(rad) + y * Math.cos(rad)
-            };
+            return { x: x * Math.cos(rad) - y * Math.sin(rad), y: x * Math.sin(rad) + y * Math.cos(rad) };
         }
         
         function offsetToRaDec(ra, dec, dx, dy) {
@@ -1397,7 +1757,6 @@
                 {x: centerDx + hs, y: centerDy + hs},
                 {x: centerDx - hs, y: centerDy + hs}
             ];
-            
             var coords = corners.map(function(c) {
                 var rot = rotatePoint(c.x, c.y, pa);
                 return offsetToRaDec(ra, dec, rot.x, rot.y);
@@ -1406,24 +1765,103 @@
             return coords;
         }
         
-        // ==================== Object Resolution ====================
+        // Source counting
+        function pointInPolygon(point, polygon) {
+            var x = point[0], y = point[1];
+            var inside = false;
+            for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                var xi = polygon[i][0], yi = polygon[i][1];
+                var xj = polygon[j][0], yj = polygon[j][1];
+                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
         
+        function isPointInFootprint(ra, dec) {
+            for (var i = 0; i < currentFootprintPolygons.length; i++) {
+                if (pointInPolygon([ra, dec], currentFootprintPolygons[i])) return true;
+            }
+            return false;
+        }
+        
+        function updateFootprintCount() {
+            if (currentFootprintPolygons.length === 0) return;
+            
+            var counts = { kim: 0, coup: 0, alma: 0, manual: 0, total: 0 };
+            
+            kimData.forEach(function(src) {
+                if (isPointInFootprint(src.ra, src.dec)) { counts.kim++; counts.total++; }
+            });
+            coupData.forEach(function(src) {
+                if (isPointInFootprint(src.ra, src.dec)) { counts.coup++; counts.total++; }
+            });
+            almaData.forEach(function(src) {
+                if (isPointInFootprint(src.ra, src.dec)) { counts.alma++; counts.total++; }
+            });
+            sources.forEach(function(src) {
+                if (isPointInFootprint(src.ra, src.dec)) { counts.manual++; counts.total++; }
+            });
+            
+            var contentDiv = document.getElementById('footprint-stats-content');
+            var html = '';
+            if (kimData.length > 0) {
+                var kimPct = ((counts.kim / kimData.length) * 100).toFixed(1);
+                html += '<div class="footprint-stats-row"><span class="footprint-stats-label">Kim+2019:</span><span class="footprint-stats-value">' + counts.kim + ' / ' + kimData.length + ' (' + kimPct + '%)</span></div>';
+            }
+            if (coupData.length > 0) {
+                var coupPct = ((counts.coup / coupData.length) * 100).toFixed(1);
+                html += '<div class="footprint-stats-row"><span class="footprint-stats-label">COUP:</span><span class="footprint-stats-value">' + counts.coup + ' / ' + coupData.length + ' (' + coupPct + '%)</span></div>';
+            }
+            if (almaData.length > 0) {
+                var almaPct = ((counts.alma / almaData.length) * 100).toFixed(1);
+                html += '<div class="footprint-stats-row"><span class="footprint-stats-label">ALMA:</span><span class="footprint-stats-value">' + counts.alma + ' / ' + almaData.length + ' (' + almaPct + '%)</span></div>';
+            }
+            if (sources.length > 0) {
+                var manualPct = ((counts.manual / sources.length) * 100).toFixed(1);
+                html += '<div class="footprint-stats-row"><span class="footprint-stats-label">Custom:</span><span class="footprint-stats-value">' + counts.manual + ' / ' + sources.length + ' (' + manualPct + '%)</span></div>';
+            }
+            var totalSources = kimData.length + coupData.length + almaData.length + sources.length;
+            if (totalSources > 0) {
+                var totalPct = ((counts.total / totalSources) * 100).toFixed(1);
+                html += '<div class="footprint-stats-row" style="border-top: 1px solid var(--accent-secondary); margin-top: 0.2rem; padding-top: 0.2rem;"><span class="footprint-stats-label"><strong>Total:</strong></span><span class="footprint-stats-value"><strong>' + counts.total + ' / ' + totalSources + ' (' + totalPct + '%)</strong></span></div>';
+            }
+            if (html === '') html = '<div class="footprint-stats-row"><span class="footprint-stats-label">No catalogs loaded</span></div>';
+            contentDiv.innerHTML = html;
+        }
+        
+        function countSourcesInFootprint() {
+            if (currentFootprintPolygons.length === 0) {
+                showToast('No footprint defined', 'error');
+                return;
+            }
+            updateFootprintCount();
+            document.getElementById('footprint-stats').style.display = 'block';
+            
+            // Get total for toast
+            var total = 0;
+            kimData.forEach(function(src) { if (isPointInFootprint(src.ra, src.dec)) total++; });
+            coupData.forEach(function(src) { if (isPointInFootprint(src.ra, src.dec)) total++; });
+            almaData.forEach(function(src) { if (isPointInFootprint(src.ra, src.dec)) total++; });
+            sources.forEach(function(src) { if (isPointInFootprint(src.ra, src.dec)) total++; });
+            showToast('Counted ' + total + ' sources in footprint', 'success');
+        }
+        
+        // Object resolution
         function resolveObject(identifier, callback) {
             var url = 'https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-ox/SNV?' + encodeURIComponent(identifier);
-            
             fetch(url)
                 .then(function(r) { return r.text(); })
                 .then(function(text) {
                     var parser = new DOMParser();
                     var xml = parser.parseFromString(text, 'text/xml');
                     var resolvers = xml.querySelectorAll('Resolver');
-                    
                     for (var i = 0; i < resolvers.length; i++) {
                         var r = resolvers[i];
                         var jra = r.querySelector('jradeg');
                         var jde = r.querySelector('jdedeg');
                         var oname = r.querySelector('oname');
-                        
                         if (jra && jde) {
                             var ra = parseFloat(jra.textContent);
                             var dec = parseFloat(jde.textContent);
@@ -1441,9 +1879,7 @@
         function addSimbadSource() {
             var id = document.getElementById('simbad-id').value.trim();
             if (!id) { showToast('Enter an identifier', 'error'); return; }
-            
             showLoading(true, 'Resolving ' + id + '...');
-            
             resolveObject(id, function(result) {
                 showLoading(false);
                 if (result) {
@@ -1452,6 +1888,7 @@
                         ra: result.ra,
                         dec: result.dec,
                         color: selectedColors.simbad,
+                        marker: selectedMarkers.simbad,
                         type: 'catalog'
                     });
                     aladin.gotoRaDec(result.ra, result.dec);
@@ -1464,19 +1901,16 @@
             });
         }
         
-        // ==================== Sources ====================
-        
+        // Sources
         function addManualSource() {
             var ra = parseFloat(document.getElementById('ra-input').value);
             var dec = parseFloat(document.getElementById('dec-input').value);
             var label = document.getElementById('source-label').value.trim() || ('Source ' + (sources.length + 1));
-            
             if (isNaN(ra) || isNaN(dec) || ra < 0 || ra > 360 || dec < -90 || dec > 90) {
                 showToast('Enter valid coordinates', 'error');
                 return;
             }
-            
-            addSourceToMap({ name: label, ra: ra, dec: dec, color: selectedColors.manual, type: 'manual' });
+            addSourceToMap({ name: label, ra: ra, dec: dec, color: selectedColors.manual, marker: selectedMarkers.manual, type: 'manual' });
             document.getElementById('ra-input').value = '';
             document.getElementById('dec-input').value = '';
             document.getElementById('source-label').value = '';
@@ -1487,12 +1921,11 @@
             if (updateUI === undefined) updateUI = true;
             source.id = Date.now() + Math.random();
             sources.push(source);
-            
-            var cat = A.catalog({ name: source.name, sourceSize: 18, color: source.color, shape: 'circle' });
+            var shape = source.marker || 'circle';
+            var cat = A.catalog({ name: source.name, sourceSize: 18, color: source.color, shape: shape });
             cat.addSources([A.source(source.ra, source.dec, { name: source.name })]);
             aladin.addCatalog(cat);
             source.catalog = cat;
-            
             if (updateUI) {
                 updateSourceList();
                 updateSourceCount();
@@ -1509,31 +1942,34 @@
                 el.innerHTML = '<p class="info-text">No sources added yet.</p>';
                 return;
             }
-            
             var display = sources.slice(-12);
             var hidden = sources.length - display.length;
             var html = hidden > 0 ? '<p class="info-text">+' + hidden + ' more</p>' : '';
-            
             html += display.map(function(s) {
                 var name = s.name.length > 18 ? s.name.substring(0, 18) + '...' : s.name;
-                return '<div class="source-item"><div><div class="source-name"><span style="color:' + s.color + '">●</span> ' + 
-                    name + '</div><div class="source-coords">' + s.ra.toFixed(4) + '°, ' + s.dec.toFixed(4) + '°</div></div>' +
-                    '<button class="remove-btn" onclick="removeSource(' + s.id + ')">✕</button></div>';
+                return '<div class="source-item"><div><div class="source-name"><span style="color:' + s.color + '">&#9679;</span> ' + 
+                    name + '</div><div class="source-coords">' + s.ra.toFixed(4) + ' deg, ' + s.dec.toFixed(4) + ' deg</div></div>' +
+                    '<button class="remove-btn" onclick="removeSource(' + s.id + ')">&#10005;</button></div>';
             }).join('');
-            
             el.innerHTML = html;
         }
         
         function removeSource(id) {
             var s = sources.find(function(x) { return x.id === id; });
-            if (s && s.catalog) aladin.removeLayers([s.catalog]);
+            if (s && s.catalog) {
+                try { aladin.removeLayer(s.catalog); } catch(e) {}
+            }
             sources = sources.filter(function(x) { return x.id !== id; });
             updateSourceList();
             updateSourceCount();
         }
         
         function clearAllSources() {
-            sources.forEach(function(s) { if (s.catalog) aladin.removeLayers([s.catalog]); });
+            sources.forEach(function(s) { 
+                if (s.catalog) {
+                    try { aladin.removeLayer(s.catalog); } catch(e) {}
+                }
+            });
             sources = [];
             updateSourceList();
             updateSourceCount();
@@ -1552,15 +1988,12 @@
             showToast('Exported', 'success');
         }
         
-        // ==================== CSV ====================
-        
+        // CSV
         document.getElementById('csv-file').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
-            
             var format = document.getElementById('csv-format').value;
             showLoading(true, 'Processing...');
-            
             var reader = new FileReader();
             reader.onload = function(ev) {
                 var lines = ev.target.result.trim().split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
@@ -1568,7 +2001,6 @@
                 if (first.includes('source') || first.includes('ra') || first.includes('id') || first.includes('name')) {
                     lines = lines.slice(1);
                 }
-                
                 if (format === 'simbad') {
                     processSimbadCSV(lines);
                 } else {
@@ -1583,7 +2015,6 @@
         function processSimbadCSV(entries) {
             showLoading(true, 'Querying ' + entries.length + ' sources...');
             var success = 0, fail = 0, i = 0;
-            
             function next() {
                 if (i >= entries.length) {
                     updateSourceList();
@@ -1592,14 +2023,12 @@
                     showToast('Added ' + success + (fail ? ' (' + fail + ' failed)' : ''), 'success');
                     return;
                 }
-                
                 var id = entries[i].replace(/['"]/g, '').trim();
                 i++;
                 if (!id) { next(); return; }
-                
                 resolveObject(id, function(result) {
                     if (result) {
-                        addSourceToMap({ name: result.name, ra: result.ra, dec: result.dec, color: selectedColors.bulk, type: 'catalog' }, false);
+                        addSourceToMap({ name: result.name, ra: result.ra, dec: result.dec, color: selectedColors.bulk, marker: selectedMarkers.bulk, type: 'catalog' }, false);
                         success++;
                     } else { fail++; }
                     setTimeout(next, 120);
@@ -1616,7 +2045,7 @@
                 var ra = parseFloat(parts[0]), dec = parseFloat(parts[1]);
                 if (isNaN(ra) || isNaN(dec)) return;
                 var name = format === 'radec_name' && parts[2] ? parts[2] : 'Source ' + (sources.length + 1);
-                addSourceToMap({ name: name, ra: ra, dec: dec, color: selectedColors.bulk, type: 'csv' }, false);
+                addSourceToMap({ name: name, ra: ra, dec: dec, color: selectedColors.bulk, marker: selectedMarkers.bulk, type: 'csv' }, false);
                 count++;
             });
             updateSourceList();
@@ -1624,8 +2053,7 @@
             showToast('Added ' + count + ' sources', 'success');
         }
         
-        // ==================== Utils ====================
-        
+        // Utils
         function showLoading(show, text) {
             var el = document.getElementById('loading-overlay');
             el.querySelector('.loading-text').textContent = text || 'Loading...';
