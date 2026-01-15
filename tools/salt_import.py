@@ -349,7 +349,7 @@ def import_night(night_dir, catalog, dry_run=False):
                 'ra_deg': obs_data['ra_deg'],
                 'dec_deg': obs_data['dec_deg'],
                 'g_mag': None,
-                'program': 'Engulfment Survey',
+                'program': 'Sheffler UMa Survey',
                 'notes': None,
                 'observations': []
             }
