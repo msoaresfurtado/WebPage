@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soares-Furtado Team Observation Query</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="site-badge">
+                <a href="https://www.salt.ac.za/" target="_blank">SALT HRS</a> · 2023-2-SCI-018
+            </div>
+            <h1>Soares-Furtado Team Observation Query</h1>
+            <p class="subtitle">Search spectra from the Engulfment Survey</p>
+        </header>
+
+        <section class="search-section">
+            <label class="search-label" for="gaia-id">Gaia DR3 Source ID</label>
+            <div class="search-wrapper">
+                <input type="text" id="gaia-id" class="search-input" placeholder="e.g., 4654969496256092032" autocomplete="off">
+                <button class="search-btn" onclick="searchTarget()">Search</button>
+            </div>
+            <div class="search-links">
+                <a href="#" onclick="showAllTargets(); return false;">Browse all targets</a>
+                <span class="vizier-link" id="vizier-link">
+                    · <a href="#" id="vizier-url" target="_blank">View on VizieR ↗</a>
+                </span>
+            </div>
+            
+            <div class="recent-searches" id="recent-searches" style="display: none;">
+                <div class="recent-searches-label">Recent searches</div>
+                <div class="recent-tags" id="recent-tags"></div>
+            </div>
+        </section>
+
+        <section id="results" class="results-section"></section>
+
+        <div class="info-box">
+            <strong>Data Access:</strong> Files are stored in the shared Dropbox folder 
+            <code>SALT_data/2023-2-SCI-018/</code>. 
+            Click "Copy Path" to get the file location, then navigate there in Finder.
+            
+            <div class="help-toggle" onclick="toggleHelp()">
+                ⓘ Dropbox folder not syncing? Click for help
+            </div>
+            
+            <div class="help-content" id="help-content">
+                <p><strong>To access the FITS files, the Dropbox folder must be synced locally on your computer.</strong></p>
+                <ol>
+                    <li>Open the <strong>Dropbox app</strong> on your Mac (not just the website)</li>
+                    <li>In the Dropbox menu bar icon, click <strong>Preferences</strong> (gear icon)</li>
+                    <li>Go to the <strong>Sync</strong> tab</li>
+                    <li>Click <strong>Select folders to sync</strong></li>
+                    <li>Make sure <code>Data/SALT_data/2023-2-SCI-018</code> is checked</li>
+                    <li>Click <strong>Update</strong> and wait for sync to complete</li>
+                </ol>
+                <p style="margin-top: 0.75rem;">
+                    Once synced, files will appear in <code>~/Dropbox/Data/SALT_data/2023-2-SCI-018/</code> on your Mac.
+                    <br><br>
+                    Questions? Contact <a href="mailto:soares-furtado@wisc.edu">soares-furtado@wisc.edu</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="total-targets">0</div>
+                <div class="stat-label">Targets</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="total-obs">0</div>
+                <div class="stat-label">Observations</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="total-nights">0</div>
+                <div class="stat-label">Nights</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DROPBOX_FOLDER = '2023-2-SCI-018';
+        const MAX_RECENT_SEARCHES = 8;
+        let catalogData = null;
+        let currentGaiaId = null;
+
+        // ============================================
+        // Recent searches (localStorage)
+        // ============================================
+        
+        function getRecentSearches() {
+            try {
+                const stored = localStorage.getItem('saltRecentSearches');
+                return stored ? JSON.parse(stored) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveRecentSearch(gaiaId) {
+            try {
+                let recent = getRecentSearches();
+                // Remove if already exists, add to front
+                recent = recent.filter(id => id !== gaiaId);
+                recent.unshift(gaiaId);
+                // Keep only the most recent
+                recent = recent.slice(0, MAX_RECENT_SEARCHES);
+                localStorage.setItem('saltRecentSearches', JSON.stringify(recent));
+                renderRecentSearches();
+            } catch {
+                // localStorage not available
+            }
+        }
+
+        function renderRecentSearches() {
+            const recent = getRecentSearches();
+            const container = document.getElementById('recent-searches');
+            const tagsContainer = document.getElementById('recent-tags');
+            
+            if (recent.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            tagsContainer.innerHTML = recent.map(id => 
+                `<span class="recent-tag" onclick="selectTarget('${id}')">${id}</span>`
+            ).join('');
+        }
+
+        // ============================================
+        // VizieR link
+        // ============================================
+        
+        function showVizierLink(gaiaId) {
+            const vizierContainer = document.getElementById('vizier-link');
+            const vizierUrl = document.getElementById('vizier-url');
+            
+            // VizieR URL for Gaia DR3 source
+            const url = `https://vizier.cds.unistra.fr/viz-bin/VizieR-4?-source=I/355/gaiadr3&Source=${gaiaId}`;
+            vizierUrl.href = url;
+            vizierContainer.classList.add('visible');
+            currentGaiaId = gaiaId;
+        }
+
+        function hideVizierLink() {
+            document.getElementById('vizier-link').classList.remove('visible');
+            currentGaiaId = null;
+        }
+
+        // ============================================
+        // Help toggle
+        // ============================================
+        
+        function toggleHelp() {
+            document.getElementById('help-content').classList.toggle('visible');
+        }
+
+        // ============================================
+        // Catalog loading
+        // ============================================
+        
+        async function loadCatalog() {
+            try {
+                const response = await fetch('./index.json');
+                if (!response.ok) throw new Error('Catalog not found');
+                catalogData = await response.json();
+                
+                document.getElementById('total-targets').textContent = catalogData.targets.length;
+                const totalObs = catalogData.targets.reduce((sum, t) => sum + t.observations.length, 0);
+                document.getElementById('total-obs').textContent = totalObs;
+                
+                const nights = new Set();
+                catalogData.targets.forEach(t => t.observations.forEach(o => nights.add(o.date)));
+                document.getElementById('total-nights').textContent = nights.size;
+                
+                renderRecentSearches();
+            } catch (error) {
+                console.error('Error loading catalog:', error);
+                showStatus('Unable to load observation catalog.', true);
+            }
+        }
+
+        // ============================================
+        // Search
+        // ============================================
+        
+        function searchTarget() {
+            const gaiaId = document.getElementById('gaia-id').value.trim();
+            if (!gaiaId) { 
+                showStatus('Please enter a Gaia DR3 source ID.', true); 
+                hideVizierLink();
+                return; 
+            }
+            if (!catalogData) { 
+                showStatus('Catalog not loaded. Please refresh.', true); 
+                return; 
+            }
+
+            const target = catalogData.targets.find(t => t.gaia_dr3_id === gaiaId);
+            if (!target) { 
+                showStatus(`No observations found for Gaia DR3 ${gaiaId}`, true); 
+                hideVizierLink();
+                return; 
+            }
+
+            saveRecentSearch(gaiaId);
+            showVizierLink(gaiaId);
+            displayResults(target);
+        }
+
+        // ============================================
+        // Display results
+        // ============================================
+        
+        function displayResults(target) {
+            const resultsSection = document.getElementById('results');
+            
+            const obsHtml = target.observations.map((obs, idx) => {
+                const allFiles = obs.all_files || [obs.filename];
+                const mainFile = obs.filename;
+                const dropboxPath = obs.dropbox_path || '';
+                const fullPath = `${DROPBOX_FOLDER}/${dropboxPath}`;
+                
+                const conditionsHtml = obs.conditions ? 
+                    `<div class="obs-conditions">☁ ${obs.conditions}${obs.seeing ? ` · Seeing: ${obs.seeing}"` : ''}</div>` : 
+                    (obs.seeing ? `<div class="obs-conditions">Seeing: ${obs.seeing}"</div>` : '');
+                
+                return `
+                    <div class="obs-item">
+                        <div class="obs-header" onclick="toggleFiles(${idx})">
+                            <div class="obs-info">
+                                <div class="obs-date">${obs.date}</div>
+                                <div class="obs-details">
+                                    ${obs.instrument} · ${obs.mode || 'Standard'} · ${obs.exposure_time}s · ${allFiles.length} files
+                                </div>
+                                ${conditionsHtml}
+                            </div>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="obs-files" id="files-${idx}">
+                            <div class="dropbox-path">
+                                <code>${fullPath}/</code>
+                                <button class="copy-btn" onclick="copyPath('${fullPath}/', this); event.stopPropagation();">Copy Path</button>
+                            </div>
+                            <div class="files-grid">
+                                ${allFiles.map(f => {
+                                    const isMain = f === mainFile;
+                                    const badge = getFileBadge(f);
+                                    return `<div class="file-item">${badge ? `<span class="file-badge ${isMain ? 'main' : ''}">${badge}</span>` : ''}<span>${f}</span></div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            resultsSection.innerHTML = `
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="target-name">Gaia DR3 ${target.gaia_dr3_id}</div>
+                        <div class="coords">
+                            RA: ${target.ra_deg?.toFixed(6) || 'N/A'}° · Dec: ${target.dec_deg?.toFixed(6) || 'N/A'}°
+                            ${target.common_name ? ` · ${target.common_name}` : ''}
+                        </div>
+                    </div>
+                    <div class="result-body">
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <div class="meta-label">G mag</div>
+                                <div class="meta-value">${target.g_mag?.toFixed(2) || 'N/A'}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Observations</div>
+                                <div class="meta-value">${target.observations.length}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Program</div>
+                                <div class="meta-value">${target.program || 'General'}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Notes</div>
+                                <div class="meta-value">${target.notes || 'None'}</div>
+                            </div>
+                        </div>
+                        <div class="observations-header">Observations</div>
+                        ${obsHtml}
+                    </div>
+                </div>
+            `;
+            resultsSection.classList.add('visible');
+        }
+
+        // ============================================
+        // All targets view
+        // ============================================
+        
+        function showAllTargets() {
+            if (!catalogData) return;
+            hideVizierLink();
+            
+            const resultsSection = document.getElementById('results');
+            const sortedTargets = [...catalogData.targets].sort((a, b) => 
+                b.observations.length - a.observations.length
+            );
+            
+            resultsSection.innerHTML = `
+                <div class="all-targets">
+                    <h2>All Targets (${catalogData.targets.length})</h2>
+                    <div class="target-list">
+                        ${sortedTargets.map(t => `
+                            <div class="target-item" onclick="selectTarget('${t.gaia_dr3_id}')">
+                                <div class="gaia-id">${t.gaia_dr3_id}</div>
+                                <div class="obs-count">${t.observations.length} obs</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            resultsSection.classList.add('visible');
+        }
+
+        function selectTarget(gaiaId) {
+            document.getElementById('gaia-id').value = gaiaId;
+            searchTarget();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============================================
+        // Utilities
+        // ============================================
+        
+        function toggleFiles(idx) {
+            const filesDiv = document.getElementById(`files-${idx}`);
+            const header = filesDiv.previousElementSibling;
+            filesDiv.classList.toggle('expanded');
+            header.classList.toggle('expanded');
+        }
+
+        function copyPath(path, btn) {
+            navigator.clipboard.writeText(path).then(() => {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => { 
+                    btn.textContent = 'Copy Path'; 
+                    btn.classList.remove('copied'); 
+                }, 2000);
+            });
+        }
+
+        function getFileBadge(filename) {
+            if (filename.includes('_uwm')) return 'merged';
+            if (filename.includes('_1wm') || filename.includes('_2wm')) return 'merged';
+            if (filename.includes('_1we') || filename.includes('_2we')) return 'extracted';
+            if (filename.includes('_1w.') || filename.includes('_2w.')) return 'wavelength';
+            if (filename.includes('SNR')) return 'SNR';
+            return null;
+        }
+
+        function showStatus(message, isError = false) {
+            const resultsSection = document.getElementById('results');
+            resultsSection.innerHTML = `<div class="status ${isError ? 'error' : ''}"><p>${message}</p></div>`;
+            resultsSection.classList.add('visible');
+        }
+
+        // ============================================
+        // Init
+        // ============================================
+        
+        document.getElementById('gaia-id').addEventListener('keypress', e => { 
+            if (e.key === 'Enter') searchTarget(); 
+        });
+        
+        loadCatalog();
+    </script>
+</body>
+</html>
