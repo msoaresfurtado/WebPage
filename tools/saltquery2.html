@@ -110,32 +110,6 @@
         </div>
     </div>
 
-    <!-- Quality Note Modal -->
-    <div class="modal-overlay" id="note-modal" onclick="closeNoteModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3>Add Quality Note</h3>
-            <p class="modal-subtitle" id="modal-obs-info"></p>
-            
-            <label class="modal-label">Your Name</label>
-            <input type="text" id="note-author" class="modal-input" placeholder="e.g., Julia Sheffler">
-            
-            <label class="modal-label">Quality Assessment</label>
-            <select id="note-quality" class="modal-select">
-                <option value="Good">Good - Usable data</option>
-                <option value="Poor">Poor - Quality issues</option>
-                <option value="Unusable">Unusable - Should not use</option>
-            </select>
-            
-            <label class="modal-label">Notes (optional)</label>
-            <textarea id="note-text" class="modal-textarea" placeholder="Describe any issues you observed..."></textarea>
-            
-            <div class="modal-buttons">
-                <button class="modal-btn cancel" onclick="closeNoteModal()">Cancel</button>
-                <button class="modal-btn save" onclick="saveQualityNote()">Save Note</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         const DROPBOX_FOLDER = '2023-2-SCI-018';
         const MAX_RECENT_SEARCHES = 4;
