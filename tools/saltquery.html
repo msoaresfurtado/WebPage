@@ -886,14 +886,6 @@
                         </div>
                     </div>
                     <div class="result-body">
-                        <div id="stellar-section-container">
-                            <div class="stellar-section-placeholder">
-                                <button id="load-cmd-btn" class="load-cmd-btn" onclick="loadStellarData('${target.gaia_dr3_id}')">
-                                    Load CMD &amp; Stellar Parameters
-                                </button>
-                            </div>
-                        </div>
-                        
                         <div class="meta-grid">
                             <div class="meta-item">
                                 <div class="meta-label">Observations</div>
@@ -914,6 +906,14 @@
                         </div>
                         <div class="observations-header">Observations</div>
                         ${obsHtml}
+                        
+                        <div id="stellar-section-container">
+                            <div class="stellar-section-placeholder">
+                                <button id="load-cmd-btn" class="load-cmd-btn" onclick="loadStellarData('${target.gaia_dr3_id}')">
+                                    Load CMD &amp; Stellar Parameters
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
