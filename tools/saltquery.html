@@ -283,8 +283,18 @@
                     }
                     
                     const dateObserved = cols[1].trim();
-                    const usable = cols[2].trim().toLowerCase() === 'yes';
+                    const usableValue = cols[2].trim().toLowerCase();
                     const repeatInFall = cols.length > 3 ? cols[3].trim().toLowerCase() === 'yes' : false;
+                    
+                    // Only create an entry if the usable column has a value
+                    // Empty = not yet reviewed (no entry)
+                    // "yes" = usable
+                    // "no" = team rejected
+                    if (usableValue === '') {
+                        continue; // Skip - not yet reviewed
+                    }
+                    
+                    const usable = usableValue === 'yes';
                     
                     // Create lookup key: gaiaId_date
                     // Date in sheet is YYMMDD, observation dates in catalog are also YYMMDD (e.g., "231205")
