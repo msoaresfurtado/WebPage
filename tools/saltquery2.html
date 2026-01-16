@@ -40,9 +40,29 @@
         </section>
         
         <style>
+            .search-section {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            .search-wrapper {
+                display: flex;
+                gap: 0;
+                align-items: stretch;
+            }
             .input-container {
                 position: relative;
                 flex: 1;
+            }
+            .search-input {
+                width: 100%;
+                box-sizing: border-box;
+                border-radius: 8px 0 0 8px;
+                border-right: none;
+            }
+            .search-btn {
+                border-radius: 0 8px 8px 0;
+                padding: 0 24px;
+                white-space: nowrap;
             }
             .search-dropdown {
                 display: none;
@@ -86,6 +106,10 @@
             }
             .dropdown-item:last-child {
                 border-radius: 0 0 6px 6px;
+            }
+            .search-links {
+                margin-top: 10px;
+                text-align: center;
             }
         </style>
 
