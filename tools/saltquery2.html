@@ -362,64 +362,69 @@
         // Stellar data fetching from Gaia archive
         // ============================================
         
-        async function fetchStellarData(gaiaId) {
-            if (stellarDataCache[gaiaId] !== undefined) {
-                return stellarDataCache[gaiaId];
-            }
-            
-            try {
-                const query = encodeURIComponent(`
-                    SELECT 
-                        source_id,
-                        phot_g_mean_mag,
-                        phot_bp_mean_mag,
-                        phot_rp_mean_mag,
-                        parallax,
-                        parallax_error,
-                        teff_gspphot,
-                        radial_velocity,
-                        radial_velocity_error,
-                        ruwe
-                    FROM gaiadr3.gaia_source 
-                    WHERE source_id = ${gaiaId}
-                `.replace(/\s+/g, ' ').trim());
-                
-                const url = `https://gea.esac.esa.int/tap-server/tap/sync?REQUEST=doQuery&LANG=ADQL&FORMAT=json&QUERY=${query}`;
-                
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Gaia query failed');
-                
-                const data = await response.json();
-                
-                if (data.data && data.data.length > 0) {
-                    const row = data.data[0];
-                    const result = {
-                        source_id: row[0],
-                        g_mag: row[1],
-                        bp_mag: row[2],
-                        rp_mag: row[3],
-                        parallax: row[4],
-                        parallax_error: row[5],
-                        teff: row[6],
-                        rv: row[7],
-                        rv_error: row[8],
-                        ruwe: row[9],
-                        // Derived values
-                        bp_rp: (row[2] && row[3]) ? row[2] - row[3] : null,
-                        distance: row[4] > 0 ? 1000 / row[4] : null,  // pc
-                        abs_g: (row[1] && row[4] > 0) ? row[1] - 5 * Math.log10(1000 / row[4]) + 5 : null
-                    };
-                    stellarDataCache[gaiaId] = result;
-                    return result;
-                }
-            } catch (error) {
-                console.warn('Could not fetch stellar data from Gaia:', error);
-            }
-            
-            stellarDataCache[gaiaId] = null;
-            return null;
-        }
-
+// ============================================
+// Stellar data fetching from VizieR (CORS-enabled)
+// ============================================
+async function fetchStellarData(gaiaId) {
+  if (stellarDataCache[gaiaId] !== undefined) {
+    return stellarDataCache[gaiaId];
+  }
+  
+  try {
+    const url = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
+    
+    // Query using VizieR catalog identifiers instead of ESA's
+    const query = `
+      SELECT "Source", "Gmag", "BPmag", "RPmag", "Plx", "e_Plx", "Teff", "RV", "e_RV", "RUWE"
+      FROM "I/355/gaiadr3"
+      WHERE "Source" = '${gaiaId}'
+    `;
+    
+    const params = new URLSearchParams({
+      REQUEST: 'doQuery',
+      LANG: 'ADQL',
+      FORMAT: 'json',
+      QUERY: query.replace(/\\s+/g, ' ').trim()
+    });
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    });
+    
+    if (!response.ok) throw new Error('VizieR query failed');
+    
+    const data = await response.json();
+    
+    if (data.data && data.data.length > 0) {
+      const row = data.data[0];
+      const result = {
+        source_id: String(row[0]),
+        g_mag: row[1],
+        bp_mag: row[2],
+        rp_mag: row[3],
+        parallax: row[4],
+        parallax_error: row[5],
+        teff: row[6],
+        rv: row[7],
+        rv_error: row[8],
+        ruwe: row[9],
+        // Derived values
+        bp_rp: (row[2] && row[3]) ? row[2] - row[3] : null,
+        distance: row[4] > 0 ? 1000 / row[4] : null, // pc
+        abs_g: (row[1] && row[4] > 0) ? row[1] - 5 * Math.log10(1000 / row[4]) + 5 : null
+      };
+      stellarDataCache[gaiaId] = result;
+      return result;
+    }
+  } catch (error) {
+    console.warn('Could not fetch stellar data from VizieR:', error);
+  }
+  
+  stellarDataCache[gaiaId] = null;
+  return null;
+}
         // ============================================
         // CMD Drawing
         // ============================================
