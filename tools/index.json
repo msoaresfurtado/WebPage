@@ -2,7 +2,7 @@
   "catalog_info": {
     "name": "Soares-Furtado Group SALT Observations",
     "description": "Spectroscopic observations from SALT HRS",
-    "last_updated": "2026-01-14",
+    "last_updated": "2026-01-15",
     "contact": "soares-furtado@wisc.edu",
     "dropbox_folder": "2023-2-SCI-018"
   },
@@ -13,7 +13,7 @@
       "ra_deg": 66.047917,
       "dec_deg": -57.071944,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -56,7 +56,9 @@
           "snr": null,
           "seeing": "2.5",
           "conditions": "Thick cloud surrounding, thin overhead",
-          "block_id": "97762"
+          "block_id": "97762",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-07-25",
@@ -98,7 +100,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99946"
+          "block_id": "99946",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -108,7 +112,7 @@
       "ra_deg": 83.430833,
       "dec_deg": -27.230556,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -151,7 +155,9 @@
           "snr": null,
           "seeing": "2.7",
           "conditions": "Thin cloud",
-          "block_id": "97779"
+          "block_id": "97779",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-10-09",
@@ -193,7 +199,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Thin Cloud",
-          "block_id": "99955"
+          "block_id": "99955",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -203,7 +211,7 @@
       "ra_deg": 71.045417,
       "dec_deg": -70.323333,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -246,7 +254,9 @@
           "snr": null,
           "seeing": "2.5",
           "conditions": null,
-          "block_id": "97763"
+          "block_id": "97763",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -256,7 +266,7 @@
       "ra_deg": 112.92625,
       "dec_deg": -7.063333,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -299,7 +309,9 @@
           "snr": null,
           "seeing": "2.6",
           "conditions": null,
-          "block_id": "97775"
+          "block_id": "97775",
+          "quality_status": "Rejected",
+          "quality_reason": "Instrument technical problems"
         },
         {
           "date": "2023-12-17",
@@ -341,7 +353,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97775"
+          "block_id": "97775",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-10-30",
@@ -383,7 +397,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99953"
+          "block_id": "99953",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -393,7 +409,7 @@
       "ra_deg": 76.962083,
       "dec_deg": -5.086389,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -436,7 +452,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Thin cloud, guider fwhm~2.5\"",
-          "block_id": "97772"
+          "block_id": "97772",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-09-26",
@@ -478,7 +496,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Thin cloud",
-          "block_id": "99951"
+          "block_id": "99951",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -488,7 +508,7 @@
       "ra_deg": 102.079167,
       "dec_deg": -1.318889,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -531,7 +551,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97774"
+          "block_id": "97774",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-10-01",
@@ -573,7 +595,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99952"
+          "block_id": "99952",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -583,7 +607,7 @@
       "ra_deg": 102.872083,
       "dec_deg": 3.971667,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -626,7 +650,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97773"
+          "block_id": "97773",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -636,7 +662,7 @@
       "ra_deg": 118.199167,
       "dec_deg": -5.428056,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -679,7 +705,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97776"
+          "block_id": "97776",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -689,7 +717,7 @@
       "ra_deg": 128.555417,
       "dec_deg": 8.452222,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -732,7 +760,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97755"
+          "block_id": "97755",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -742,7 +772,7 @@
       "ra_deg": 199.730417,
       "dec_deg": -23.171389,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -785,7 +815,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97754"
+          "block_id": "97754",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-04-27",
@@ -827,7 +859,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99942"
+          "block_id": "99942",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -837,7 +871,7 @@
       "ra_deg": 30.47875,
       "dec_deg": -26.570278,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -880,7 +914,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "H/R16: 2400s, LR. Guider 2.5\". Clear or maybe some thin cloud.",
-          "block_id": "97761"
+          "block_id": "97761",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -890,7 +926,7 @@
       "ra_deg": 139.480417,
       "dec_deg": -3.387222,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -933,7 +969,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97768"
+          "block_id": "97768",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-04-27",
@@ -975,7 +1013,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99949"
+          "block_id": "99949",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -985,7 +1025,7 @@
       "ra_deg": 179.966667,
       "dec_deg": 0.130833,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1028,7 +1068,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97767"
+          "block_id": "97767",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-05-01",
@@ -1070,7 +1112,9 @@
           "snr": null,
           "seeing": "2.2",
           "conditions": "Thin cloud",
-          "block_id": "99948"
+          "block_id": "99948",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1080,7 +1124,7 @@
       "ra_deg": 141.624167,
       "dec_deg": -31.158889,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1123,7 +1167,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Thin Cloud",
-          "block_id": "97760"
+          "block_id": "97760",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1133,7 +1179,7 @@
       "ra_deg": 88.679167,
       "dec_deg": -10.589167,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1176,7 +1222,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Thin Cloud",
-          "block_id": "97777"
+          "block_id": "97777",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-10-25",
@@ -1218,7 +1266,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99954"
+          "block_id": "99954",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1228,7 +1278,7 @@
       "ra_deg": 176.320833,
       "dec_deg": 8.258056,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1271,7 +1321,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97766"
+          "block_id": "97766",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2025-05-16",
@@ -1313,7 +1365,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104225"
+          "block_id": "104225",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1323,7 +1377,7 @@
       "ra_deg": 168.105,
       "dec_deg": -17.775556,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1366,7 +1420,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97771"
+          "block_id": "97771",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-05-01",
@@ -1408,7 +1464,9 @@
           "snr": null,
           "seeing": "2.3",
           "conditions": "Thin cloud",
-          "block_id": "99950"
+          "block_id": "99950",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2025-05-16",
@@ -1450,7 +1508,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104230"
+          "block_id": "104230",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1460,7 +1520,7 @@
       "ra_deg": 190.00125,
       "dec_deg": -3.533889,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1503,7 +1563,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97770"
+          "block_id": "97770",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2025-05-19",
@@ -1545,7 +1607,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104228"
+          "block_id": "104228",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1555,7 +1619,7 @@
       "ra_deg": 184.529583,
       "dec_deg": 3.661111,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1598,7 +1662,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97769"
+          "block_id": "97769",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1608,7 +1674,7 @@
       "ra_deg": 141.207917,
       "dec_deg": -24.384444,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1651,7 +1717,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97759"
+          "block_id": "97759",
+          "quality_status": "Rejected",
+          "quality_reason": "Observing conditions not met"
         },
         {
           "date": "2024-02-18",
@@ -1693,7 +1761,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97759"
+          "block_id": "97759",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1703,7 +1773,7 @@
       "ra_deg": 140.57,
       "dec_deg": -8.869444,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1746,7 +1816,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97757"
+          "block_id": "97757",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1756,7 +1828,7 @@
       "ra_deg": 269.056667,
       "dec_deg": -41.098889,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1799,7 +1871,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97756"
+          "block_id": "97756",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-04-30",
@@ -1841,7 +1915,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99943"
+          "block_id": "99943",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2025-05-19",
@@ -1883,7 +1959,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104193"
+          "block_id": "104193",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1893,7 +1971,7 @@
       "ra_deg": 136.639583,
       "dec_deg": -26.448889,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -1936,7 +2014,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97758"
+          "block_id": "97758",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-05-09",
@@ -1978,7 +2058,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99945"
+          "block_id": "99945",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -1988,7 +2070,7 @@
       "ra_deg": 228.59,
       "dec_deg": -1.310278,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2031,7 +2113,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97764"
+          "block_id": "97764",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2041,7 +2125,7 @@
       "ra_deg": 265.709583,
       "dec_deg": -7.183889,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2084,7 +2168,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "97765"
+          "block_id": "97765",
+          "quality_status": "Accepted",
+          "quality_reason": null
         },
         {
           "date": "2024-05-04",
@@ -2126,7 +2212,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99947"
+          "block_id": "99947",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2136,7 +2224,7 @@
       "ra_deg": 290.019583,
       "dec_deg": -37.281667,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2179,7 +2267,9 @@
           "snr": null,
           "seeing": "2.5",
           "conditions": null,
-          "block_id": "99941"
+          "block_id": "99941",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2189,7 +2279,7 @@
       "ra_deg": 325.85,
       "dec_deg": -6.996667,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2232,7 +2322,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "99956"
+          "block_id": "99956",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2242,7 +2334,7 @@
       "ra_deg": 133.873333,
       "dec_deg": -7.97,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2285,7 +2377,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104201"
+          "block_id": "104201",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2295,7 +2389,7 @@
       "ra_deg": 155.43125,
       "dec_deg": -9.774167,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2338,7 +2432,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104226"
+          "block_id": "104226",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2348,7 +2444,7 @@
       "ra_deg": 175.038333,
       "dec_deg": -4.9475,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2391,7 +2487,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104229"
+          "block_id": "104229",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2401,7 +2499,7 @@
       "ra_deg": 203.532917,
       "dec_deg": 3.658889,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2444,7 +2542,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104227"
+          "block_id": "104227",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2454,7 +2554,7 @@
       "ra_deg": 246.98875,
       "dec_deg": -64.057778,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2497,7 +2597,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104191"
+          "block_id": "104191",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2507,7 +2609,7 @@
       "ra_deg": 249.6725,
       "dec_deg": -36.076389,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2550,7 +2652,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104200"
+          "block_id": "104200",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2560,7 +2664,7 @@
       "ra_deg": 292.25375,
       "dec_deg": 1.950278,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2603,7 +2707,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104206"
+          "block_id": "104206",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2613,7 +2719,7 @@
       "ra_deg": 134.94875,
       "dec_deg": -35.795,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2656,7 +2762,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104197"
+          "block_id": "104197",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2666,7 +2774,7 @@
       "ra_deg": 174.463333,
       "dec_deg": -65.767222,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2709,7 +2817,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104210"
+          "block_id": "104210",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2719,7 +2829,7 @@
       "ra_deg": 151.0425,
       "dec_deg": -42.676389,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2762,7 +2872,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104204"
+          "block_id": "104204",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2772,7 +2884,7 @@
       "ra_deg": 234.977083,
       "dec_deg": -19.768889,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2815,7 +2927,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104189"
+          "block_id": "104189",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2825,7 +2939,7 @@
       "ra_deg": 175.452083,
       "dec_deg": -58.586389,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2868,7 +2982,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104192"
+          "block_id": "104192",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2878,7 +2994,7 @@
       "ra_deg": 246.51875,
       "dec_deg": -7.441944,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2921,7 +3037,9 @@
           "snr": null,
           "seeing": null,
           "conditions": "Transparency: Thin clouds",
-          "block_id": "104214"
+          "block_id": "104214",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2931,7 +3049,7 @@
       "ra_deg": 116.369583,
       "dec_deg": -14.686111,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -2974,7 +3092,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "104235"
+          "block_id": "104235",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -2984,7 +3104,7 @@
       "ra_deg": 109.296667,
       "dec_deg": -25.865556,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -3027,7 +3147,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "104203"
+          "block_id": "104203",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     },
@@ -3037,7 +3159,7 @@
       "ra_deg": 141.987917,
       "dec_deg": -66.103333,
       "g_mag": null,
-      "program": "Sheffler UMa Survey",
+      "program": "UMa Spectral Survey",
       "notes": null,
       "observations": [
         {
@@ -3080,7 +3202,9 @@
           "snr": null,
           "seeing": null,
           "conditions": null,
-          "block_id": "104188"
+          "block_id": "104188",
+          "quality_status": "Accepted",
+          "quality_reason": null
         }
       ]
     }
