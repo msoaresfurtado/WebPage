@@ -20,9 +20,9 @@
         </header>
 
         <section class="search-section">
-            <label class="search-label" for="gaia-id">Gaia DR3 Source ID</label>
+            <label class="search-label" for="target-identifier">Target Identifier (Gaia DR3 ID or Name)</label>
             <div class="search-wrapper">
-                <input type="text" id="gaia-id" class="search-input" placeholder="e.g., 4654969496256092032" autocomplete="off">
+                <input type="text" id="target-identifier" class="search-input" placeholder="e.g., 4654969496256092032 or target name" autocomplete="off">
                 <button class="search-btn" onclick="searchTarget()">Search</button>
             </div>
             <div class="search-links">
@@ -31,7 +31,6 @@
                     · <a href="#" id="vizier-url" target="_blank">View on VizieR ↗</a>
                 </span>
             </div>
-            
             <div class="recent-searches" id="recent-searches" style="display: none;">
                 <div class="recent-searches-label">Recent searches</div>
                 <div class="recent-tags" id="recent-tags"></div>
@@ -41,14 +40,10 @@
         <section id="results" class="results-section"></section>
 
         <div class="info-box">
-            <strong>Data Access:</strong> Files are stored in the shared Dropbox folder 
-            <code>SALT_data/2023-2-SCI-018/</code>. 
-            Click "Copy Path" to get the file location, then navigate there in Finder.
-            
+            <strong>Data Access:</strong> Files are stored in the shared Dropbox folder <code>SALT_data/2023-2-SCI-018/</code>. Click "Copy Path" to get the file location, then navigate there in Finder.
             <div class="help-toggle" onclick="toggleHelp()">
                 ⓘ Dropbox folder not syncing? Click for help
             </div>
-            
             <div class="help-content" id="help-content">
                 <p><strong>To access the FITS files, the Dropbox folder must be synced locally on your computer.</strong></p>
                 <ol>
@@ -90,9 +85,54 @@
         let currentGaiaId = null;
 
         // ============================================
+        // Target Resolution Function (from chronostar.html)
+        // ============================================
+        async function resolveIdentifier(identifier) {
+            // Try to match against Gaia DR3 ID first
+            const gaiaMatch = catalogData.targets.find(t => 
+                t.gaia_dr3_id === identifier
+            );
+            if (gaiaMatch) {
+                return gaiaMatch;
+            }
+
+            // Try to match against common names
+            const nameMatch = catalogData.targets.find(t => 
+                t.common_name && t.common_name.toLowerCase() === identifier.toLowerCase()
+            );
+            if (nameMatch) {
+                return nameMatch;
+            }
+
+            // Try partial matching on common names
+            const partialMatch = catalogData.targets.find(t => 
+                t.common_name && t.common_name.toLowerCase().includes(identifier.toLowerCase())
+            );
+            if (partialMatch) {
+                return partialMatch;
+            }
+
+            return null;
+        }
+
+        // ============================================
+        // Command-line style formatting (matching chronostar.html pattern)
+        // ============================================
+        function formatTargetCommand(target) {
+            const cmd = `resolveIdentifier("${target.gaia_dr3_id}") → {\\n` +
+                        `  "common_name": "${target.common_name || 'N/A'}",\\n` +
+                        `  "ra_deg": ${target.ra_deg?.toFixed(6) || 'N/A'},\\n` +
+                        `  "dec_deg": ${target.dec_deg?.toFixed(6) || 'N/A'},\\n` +
+                        `  "g_mag": ${target.g_mag?.toFixed(2) || 'N/A'},\\n` +
+                        `  "observations": ${target.observations.length},\\n` +
+                        `  "program": "${target.program || 'General'}"\\n` +
+                        `}`;
+            return cmd;
+        }
+
+        // ============================================
         // Recent searches (localStorage)
         // ============================================
-        
         function getRecentSearches() {
             try {
                 const stored = localStorage.getItem('saltRecentSearches');
@@ -102,13 +142,11 @@
             }
         }
 
-        function saveRecentSearch(gaiaId) {
+        function saveRecentSearch(identifier) {
             try {
                 let recent = getRecentSearches();
-                // Remove if already exists, add to front
-                recent = recent.filter(id => id !== gaiaId);
-                recent.unshift(gaiaId);
-                // Keep only the most recent
+                recent = recent.filter(id => id !== identifier);
+                recent.unshift(identifier);
                 recent = recent.slice(0, MAX_RECENT_SEARCHES);
                 localStorage.setItem('saltRecentSearches', JSON.stringify(recent));
                 renderRecentSearches();
@@ -121,12 +159,10 @@
             const recent = getRecentSearches();
             const container = document.getElementById('recent-searches');
             const tagsContainer = document.getElementById('recent-tags');
-            
             if (recent.length === 0) {
                 container.style.display = 'none';
                 return;
             }
-            
             container.style.display = 'block';
             tagsContainer.innerHTML = recent.map(id => 
                 `<span class="recent-tag" onclick="selectTarget('${id}')">${id}</span>`
@@ -136,12 +172,9 @@
         // ============================================
         // VizieR link
         // ============================================
-        
         function showVizierLink(gaiaId) {
             const vizierContainer = document.getElementById('vizier-link');
             const vizierUrl = document.getElementById('vizier-url');
-            
-            // VizieR URL for Gaia DR3 source
             const url = `https://vizier.cds.unistra.fr/viz-bin/VizieR-4?-source=I/355/gaiadr3&Source=${gaiaId}`;
             vizierUrl.href = url;
             vizierContainer.classList.add('visible');
@@ -156,7 +189,6 @@
         // ============================================
         // Help toggle
         // ============================================
-        
         function toggleHelp() {
             document.getElementById('help-content').classList.toggle('visible');
         }
@@ -164,21 +196,17 @@
         // ============================================
         // Catalog loading
         // ============================================
-        
         async function loadCatalog() {
             try {
                 const response = await fetch('./index.json');
                 if (!response.ok) throw new Error('Catalog not found');
                 catalogData = await response.json();
-                
                 document.getElementById('total-targets').textContent = catalogData.targets.length;
                 const totalObs = catalogData.targets.reduce((sum, t) => sum + t.observations.length, 0);
                 document.getElementById('total-obs').textContent = totalObs;
-                
                 const nights = new Set();
                 catalogData.targets.forEach(t => t.observations.forEach(o => nights.add(o.date)));
                 document.getElementById('total-nights').textContent = nights.size;
-                
                 renderRecentSearches();
             } catch (error) {
                 console.error('Error loading catalog:', error);
@@ -187,46 +215,44 @@
         }
 
         // ============================================
-        // Search
+        // Search - Updated to use resolveIdentifier
         // ============================================
-        
-        function searchTarget() {
-            const gaiaId = document.getElementById('gaia-id').value.trim();
-            if (!gaiaId) { 
-                showStatus('Please enter a Gaia DR3 source ID.', true); 
+        async function searchTarget() {
+            const identifier = document.getElementById('target-identifier').value.trim();
+            if (!identifier) {
+                showStatus('Please enter a target identifier.', true);
                 hideVizierLink();
-                return; 
+                return;
             }
-            if (!catalogData) { 
-                showStatus('Catalog not loaded. Please refresh.', true); 
-                return; 
+            if (!catalogData) {
+                showStatus('Catalog not loaded. Please refresh.', true);
+                return;
             }
 
-            const target = catalogData.targets.find(t => t.gaia_dr3_id === gaiaId);
-            if (!target) { 
-                showStatus(`No observations found for Gaia DR3 ${gaiaId}`, true); 
+            const target = await resolveIdentifier(identifier);
+            if (!target) {
+                showStatus(`No observations found for identifier "${identifier}"`, true);
                 hideVizierLink();
-                return; 
+                return;
             }
 
-            saveRecentSearch(gaiaId);
-            showVizierLink(gaiaId);
+            saveRecentSearch(identifier);
+            showVizierLink(target.gaia_dr3_id);
             displayResults(target);
         }
 
         // ============================================
-        // Display results
+        // Display results - with cmd output
         // ============================================
-        
         function displayResults(target) {
             const resultsSection = document.getElementById('results');
+            const cmd = formatTargetCommand(target);
             
             const obsHtml = target.observations.map((obs, idx) => {
                 const allFiles = obs.all_files || [obs.filename];
                 const mainFile = obs.filename;
                 const dropboxPath = obs.dropbox_path || '';
                 const fullPath = `${DROPBOX_FOLDER}/${dropboxPath}`;
-                
                 const conditionsHtml = obs.conditions ? 
                     `<div class="obs-conditions">☁ ${obs.conditions}${obs.seeing ? ` · Seeing: ${obs.seeing}"` : ''}</div>` : 
                     (obs.seeing ? `<div class="obs-conditions">Seeing: ${obs.seeing}"</div>` : '');
@@ -288,6 +314,9 @@
                                 <div class="meta-value">${target.notes || 'None'}</div>
                             </div>
                         </div>
+                        <div class="cmd-output" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 0.85rem; margin: 1rem 0; overflow-x: auto;">
+                            <pre>${cmd}</pre>
+                        </div>
                         <div class="observations-header">Observations</div>
                         ${obsHtml}
                     </div>
@@ -299,16 +328,13 @@
         // ============================================
         // All targets view
         // ============================================
-        
         function showAllTargets() {
             if (!catalogData) return;
             hideVizierLink();
-            
             const resultsSection = document.getElementById('results');
             const sortedTargets = [...catalogData.targets].sort((a, b) => 
                 b.observations.length - a.observations.length
             );
-            
             resultsSection.innerHTML = `
                 <div class="all-targets">
                     <h2>All Targets (${catalogData.targets.length})</h2>
@@ -326,7 +352,7 @@
         }
 
         function selectTarget(gaiaId) {
-            document.getElementById('gaia-id').value = gaiaId;
+            document.getElementById('target-identifier').value = gaiaId;
             searchTarget();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -334,7 +360,6 @@
         // ============================================
         // Utilities
         // ============================================
-        
         function toggleFiles(idx) {
             const filesDiv = document.getElementById(`files-${idx}`);
             const header = filesDiv.previousElementSibling;
@@ -346,9 +371,9 @@
             navigator.clipboard.writeText(path).then(() => {
                 btn.textContent = 'Copied!';
                 btn.classList.add('copied');
-                setTimeout(() => { 
-                    btn.textContent = 'Copy Path'; 
-                    btn.classList.remove('copied'); 
+                setTimeout(() => {
+                    btn.textContent = 'Copy Path';
+                    btn.classList.remove('copied');
                 }, 2000);
             });
         }
@@ -371,11 +396,9 @@
         // ============================================
         // Init
         // ============================================
-        
-        document.getElementById('gaia-id').addEventListener('keypress', e => { 
-            if (e.key === 'Enter') searchTarget(); 
+        document.getElementById('target-identifier').addEventListener('keypress', e => {
+            if (e.key === 'Enter') searchTarget();
         });
-        
         loadCatalog();
     </script>
 </body>
