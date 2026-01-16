@@ -357,204 +357,209 @@
             document.getElementById('simbad-link').classList.remove('visible');
             document.getElementById('vizier-link').classList.remove('visible');
         }
-        
+    
         // ============================================
-        // Stellar data fetching from Gaia archive
+        // Stellar data fetching from VizieR (CORS-enabled)
         // ============================================
-        
-// ============================================
-// Stellar data fetching from VizieR (CORS-enabled)
-// ============================================
-async function fetchStellarData(gaiaId) {
-  if (stellarDataCache[gaiaId] !== undefined) {
-    return stellarDataCache[gaiaId];
-  }
-  
-  try {
-    const url = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
-    
-    // Query using VizieR catalog identifiers instead of ESA's
-    const query = `
-      SELECT "Source", "Gmag", "BPmag", "RPmag", "Plx", "e_Plx", "Teff", "RV", "e_RV", "RUWE"
-      FROM "I/355/gaiadr3"
-      WHERE "Source" = '${gaiaId}'
-    `;
-    
-    const params = new URLSearchParams({
-      REQUEST: 'doQuery',
-      LANG: 'ADQL',
-      FORMAT: 'json',
-      QUERY: query.replace(/\\s+/g, ' ').trim()
-    });
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params
-    });
-    
-    if (!response.ok) throw new Error('VizieR query failed');
-    
-    const data = await response.json();
-    
-    if (data.data && data.data.length > 0) {
-      const row = data.data[0];
-      const result = {
-        source_id: String(row[0]),
-        g_mag: row[1],
-        bp_mag: row[2],
-        rp_mag: row[3],
-        parallax: row[4],
-        parallax_error: row[5],
-        teff: row[6],
-        rv: row[7],
-        rv_error: row[8],
-        ruwe: row[9],
-        // Derived values
-        bp_rp: (row[2] && row[3]) ? row[2] - row[3] : null,
-        distance: row[4] > 0 ? 1000 / row[4] : null, // pc
-        abs_g: (row[1] && row[4] > 0) ? row[1] - 5 * Math.log10(1000 / row[4]) + 5 : null
-      };
-      stellarDataCache[gaiaId] = result;
-      return result;
-    }
-  } catch (error) {
-    console.warn('Could not fetch stellar data from VizieR:', error);
-  }
-  
-  stellarDataCache[gaiaId] = null;
-  return null;
-}
-        // ============================================
-        // CMD Drawing
-        // ============================================
-        
-        function drawCMD(canvas, stellarData) {
-            const ctx = canvas.getContext('2d');
-            const width = canvas.width;
-            const height = canvas.height;
+        async function fetchStellarData(gaiaId) {
+          if (stellarDataCache[gaiaId] !== undefined) {
+            return stellarDataCache[gaiaId];
+          }
+          
+          try {
+            const url = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
             
-            // Clear
-            ctx.fillStyle = '#1e2022';
-            ctx.fillRect(0, 0, width, height);
+            // Query using VizieR catalog identifiers
+            const query = `
+              SELECT "Source", "Gmag", "BPmag", "RPmag", "Plx", "e_Plx", "Teff", "RV", "e_RV", "RUWE"
+              FROM "I/355/gaiadr3"
+              WHERE "Source" = '${gaiaId}'
+            `;
             
-            // CMD bounds (typical for nearby stars)
-            const bpRpMin = -0.5, bpRpMax = 4.0;
-            const magMin = -2, magMax = 14;
+            const params = new URLSearchParams({
+              REQUEST: 'doQuery',
+              LANG: 'ADQL',
+              FORMAT: 'json',
+              QUERY: query.replace(/\\s+/g, ' ').trim()
+            });
             
-            // Padding
-            const pad = { left: 45, right: 15, top: 15, bottom: 35 };
-            const plotWidth = width - pad.left - pad.right;
-            const plotHeight = height - pad.top - pad.bottom;
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params
+            });
             
-            // Scale functions
-            const xScale = (bpRp) => pad.left + ((bpRp - bpRpMin) / (bpRpMax - bpRpMin)) * plotWidth;
-            const yScale = (mag) => pad.top + ((mag - magMin) / (magMax - magMin)) * plotHeight;
+            if (!response.ok) throw new Error('VizieR query failed');
             
-            // Draw grid
-            ctx.strokeStyle = '#333638';
-            ctx.lineWidth = 1;
+            const data = await response.json();
             
-            // Vertical grid lines
-            for (let bp = 0; bp <= 4; bp++) {
-                const x = xScale(bp);
-                ctx.beginPath();
-                ctx.moveTo(x, pad.top);
-                ctx.lineTo(x, height - pad.bottom);
-                ctx.stroke();
+            if (data.data && data.data.length > 0) {
+              const row = data.data[0];
+              const result = {
+                source_id: String(row[0]),
+                g_mag: row[1],
+                bp_mag: row[2],
+                rp_mag: row[3],
+                parallax: row[4],
+                parallax_error: row[5],
+                teff: row[6],
+                rv: row[7],
+                rv_error: row[8],
+                ruwe: row[9],
+                bp_rp: (row[2] && row[3]) ? row[2] - row[3] : null,
+                distance: row[4] > 0 ? 1000 / row[4] : null,
+                abs_g: (row[1] && row[4] > 0) ? row[1] - 5 * Math.log10(1000 / row[4]) + 5 : null
+              };
+              stellarDataCache[gaiaId] = result;
+              return result;
             }
-            
-            // Horizontal grid lines
-            for (let m = 0; m <= 12; m += 2) {
-                const y = yScale(m);
-                ctx.beginPath();
-                ctx.moveTo(pad.left, y);
-                ctx.lineTo(width - pad.right, y);
-                ctx.stroke();
-            }
-            
-            // Draw axes
-            ctx.strokeStyle = '#7d7873';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(pad.left, pad.top);
-            ctx.lineTo(pad.left, height - pad.bottom);
-            ctx.lineTo(width - pad.right, height - pad.bottom);
-            ctx.stroke();
-            
-            // Axis labels
-            ctx.fillStyle = '#b8b2ad';
-            ctx.font = '11px "DM Sans", sans-serif';
-            ctx.textAlign = 'center';
-            
-            // X axis label
-            ctx.fillText('BP − RP', width / 2, height - 5);
-            
-            // X axis ticks
-            ctx.font = '9px "DM Mono", monospace';
-            for (let bp = 0; bp <= 4; bp++) {
-                ctx.fillText(bp.toString(), xScale(bp), height - pad.bottom + 15);
-            }
-            
-            // Y axis label
-            ctx.save();
-            ctx.translate(12, height / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.font = '11px "DM Sans", sans-serif';
-            ctx.fillText('Mɢ', 0, 0);
-            ctx.restore();
-            
-            // Y axis ticks
-            ctx.textAlign = 'right';
-            ctx.font = '9px "DM Mono", monospace';
-            for (let m = 0; m <= 12; m += 2) {
-                ctx.fillText(m.toString(), pad.left - 5, yScale(m) + 3);
-            }
-            
-            // Draw approximate main sequence (for reference)
-            ctx.strokeStyle = 'rgba(232, 165, 152, 0.2)';
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(xScale(-0.3), yScale(-1));
-            ctx.bezierCurveTo(
-                xScale(0.5), yScale(2),
-                xScale(1.5), yScale(6),
-                xScale(3.5), yScale(12)
-            );
-            ctx.stroke();
-            
-            // Plot the star if we have data
-            if (stellarData && stellarData.bp_rp !== null && stellarData.abs_g !== null) {
-                const x = xScale(stellarData.bp_rp);
-                const y = yScale(stellarData.abs_g);
-                
-                // Check if in bounds
-                if (x >= pad.left && x <= width - pad.right && y >= pad.top && y <= height - pad.bottom) {
-                    // Glow effect
-                    const gradient = ctx.createRadialGradient(x, y, 0, x, y, 12);
-                    gradient.addColorStop(0, 'rgba(232, 165, 152, 0.8)');
-                    gradient.addColorStop(0.5, 'rgba(232, 165, 152, 0.3)');
-                    gradient.addColorStop(1, 'rgba(232, 165, 152, 0)');
-                    ctx.fillStyle = gradient;
-                    ctx.beginPath();
-                    ctx.arc(x, y, 12, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Star point
-                    ctx.fillStyle = '#e8a598';
-                    ctx.beginPath();
-                    ctx.arc(x, y, 5, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // White center
-                    ctx.fillStyle = '#fff';
-                    ctx.beginPath();
-                    ctx.arc(x, y, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
+          } catch (error) {
+            console.warn('Could not fetch stellar data from VizieR:', error);
+          }
+          
+          stellarDataCache[gaiaId] = null;
+          return null;
         }
-
+    function displayCMD(candidates, target) {
+      const container = document.getElementById('cmd-plot');
+      
+      // Prepare data
+      const bprp = candidates.map(c => c.bp_rp).filter(x => x != null);
+      const absG = candidates.map(c => calculateAbsMag(c.phot_g_mean_mag, c.parallax)).filter(x => x != null);
+      const targetBpRp = target.bp_rp;
+      const targetAbsMag = calculateAbsMag(target.phot_g_mean_mag, target.parallax);
+      
+      // Spectral type background regions (like Chronostar)
+      const spectralTypeColors = [
+        { range: [-0.3, -0.038], color: 'rgba(91, 124, 255, 0.12)', label: 'B' },
+        { range: [-0.038, 0.327], color: 'rgba(147, 170, 255, 0.12)', label: 'A' },
+        { range: [0.327, 0.767], color: 'rgba(221, 222, 255, 0.15)', label: 'F' },
+        { range: [0.767, 0.984], color: 'rgba(255, 235, 223, 0.18)', label: 'G' },
+        { range: [0.984, 1.85], color: 'rgba(255, 200, 124, 0.15)', label: 'K' },
+        { range: [1.85, 3.5], color: 'rgba(255, 150, 80, 0.12)', label: 'M' }
+      ];
+      
+      // PARSEC Isochrones (100 Myr and 1 Gyr)
+      const myr100_bp_rp = [-0.180,-0.186,-0.192,-0.194,-0.198,-0.203,-0.204,-0.205,-0.205,-0.205,-0.206,-0.205,-0.204,-0.203,-0.202,-0.199,-0.196,-0.195,-0.189,-0.187,-0.183,-0.177,-0.173,-0.167,-0.165,-0.164,-0.156,-0.152,-0.141,-0.136,-0.129,-0.118,-0.117,-0.097,-0.084,-0.070,-0.053,-0.053,-0.043,-0.032,-0.021,-0.021,-0.008,0.006,0.023,0.041,0.063,0.088,0.118,0.127,0.154,0.197,0.243,0.252,0.293,0.345,0.398,0.448,0.490,0.530,0.568,0.605,0.648,0.691,0.724,0.741,0.795,0.802,0.823,0.916,0.988,1.066,1.069,1.160,1.271,1.448,1.449,1.571,1.586,1.600,1.663,1.767,2.001,2.010,2.141,2.240,2.398,2.527,2.652,2.781,2.831,2.944,3.120,3.205,3.209];
+      const myr100_mg = [-1.967,-1.839,-1.710,-1.672,-1.569,-1.423,-1.325,-1.305,-1.186,-1.043,-1.042,-0.952,-0.852,-0.792,-0.770,-0.653,-0.566,-0.529,-0.394,-0.350,-0.261,-0.143,-0.085,0.020,0.062,0.081,0.201,0.271,0.413,0.485,0.569,0.705,0.721,0.937,1.051,1.183,1.307,1.313,1.381,1.450,1.520,1.525,1.593,1.668,1.746,1.827,1.914,2.005,2.102,2.130,2.208,2.323,2.447,2.471,2.578,2.721,2.869,3.029,3.195,3.374,3.564,3.766,3.978,4.201,4.365,4.443,4.691,4.720,4.815,5.226,5.518,5.837,5.847,6.186,6.569,7.041,7.045,7.368,7.406,7.442,7.586,7.818,8.397,8.420,8.764,9.015,9.468,9.862,10.231,10.602,10.736,11.019,11.384,11.565,11.572];
+      
+      const gyr1_bp_rp = [0.210,0.230,0.269,0.310,0.352,0.394,0.436,0.475,0.483,0.500,0.490,0.460,0.430,0.414,0.392,0.358,0.336,0.333,0.305,0.291,0.288,0.272,0.268,0.264,0.261,0.260,0.261,0.264,0.265,0.271,0.276,0.283,0.294,0.309,0.316,0.326,0.342,0.347,0.374,0.410,0.419,0.450,0.458,0.490,0.526,0.554,0.562,0.596,0.598,0.637,0.681,0.707,0.728,0.780,0.819,0.840,0.843,0.905,0.971,0.982,1.062,1.158,1.160,1.275,1.278,1.457,1.469,1.675,1.719,1.800,1.859,2.005,2.046,2.183,2.216,2.355,2.479,2.606,2.613,2.685,2.701,2.887];
+      const gyr1_mg = [0.353,0.374,0.422,0.471,0.517,0.560,0.605,0.657,0.674,0.711,0.741,0.798,0.840,0.864,0.902,0.966,1.020,1.029,1.113,1.180,1.195,1.294,1.343,1.401,1.489,1.506,1.594,1.667,1.680,1.775,1.827,1.891,1.986,2.102,2.146,2.220,2.308,2.335,2.472,2.641,2.683,2.820,2.857,3.006,3.200,3.363,3.404,3.609,3.619,3.844,4.082,4.220,4.329,4.588,4.760,4.860,4.868,5.146,5.411,5.453,5.786,6.141,6.149,6.537,6.546,7.008,7.036,7.558,7.683,7.919,8.084,8.503,8.617,9.035,9.134,9.615,10.071,10.523,10.543,10.787,10.843,11.466];
+      
+      const traces = [];
+      
+      // Build spectral type background shapes
+      const shapes = spectralTypeColors.map(band => ({
+        type: 'rect',
+        xref: 'x',
+        yref: 'paper',
+        x0: band.range[0],
+        x1: band.range[1],
+        y0: 0,
+        y1: 1,
+        fillcolor: band.color,
+        line: { width: 0 },
+        layer: 'below'
+      }));
+      
+      // 100 Myr isochrone
+      traces.push({
+        x: myr100_bp_rp,
+        y: myr100_mg,
+        mode: 'lines',
+        name: '100 Myr (PARSEC)',
+        line: { color: 'rgba(0,0,0,0.6)', width: 1.5 }
+      });
+      
+      // 1 Gyr isochrone
+      traces.push({
+        x: gyr1_bp_rp,
+        y: gyr1_mg,
+        mode: 'lines',
+        name: '1 Gyr (PARSEC)',
+        line: { color: 'rgba(0,0,0,0.4)', width: 1.5, dash: 'dot' }
+      });
+      
+      // Sun reference
+      traces.push({
+        x: [0.874],
+        y: [4.902],
+        mode: 'markers',
+        name: 'Sun',
+        marker: { size: 12, color: 'rgba(0,0,0,0)', symbol: 'circle-open-dot', line: { color: 'rgba(0,0,0,0.6)', width: 2 } },
+        hovertemplate: '<b>Sun</b><br>BP-RP: 0.874<br>M_G: 4.902<extra></extra>'
+      });
+            
+      // Target star
+      if (targetBpRp != null && targetAbsMag != null) {
+        traces.push({
+          x: [targetBpRp],
+          y: [targetAbsMag],
+          mode: 'markers',
+          name: target._resolvedName || 'Target',
+          marker: {
+            size: 16,
+            color: '#3b82f6',
+            symbol: 'star',
+            line: { color: '#000', width: 2 }
+          },
+          hovertemplate: '<b>' + (target._resolvedName || 'Target') + '</b><br>BP-RP: %{x:.3f}<br>M_G: %{y:.2f}<extra></extra>'
+        });
+      }
+      
+      // Spectral type labels
+      const annotations = spectralTypeColors
+        .filter(band => band.range[0] >= -0.3 && band.range[1] <= 3.5)
+        .map(band => ({
+          x: (band.range[0] + band.range[1]) / 2,
+          y: -3.5,
+          text: band.label,
+          showarrow: false,
+          font: { size: 12, color: 'rgba(0,0,0,0.5)', family: 'Crimson Text' },
+          xanchor: 'center',
+          yanchor: 'bottom'
+        }));
+      
+      const layout = {
+        paper_bgcolor: '#ffffff',
+        plot_bgcolor: '#ffffff',
+        font: { color: '#1a1a2e', family: 'Crimson Text, serif', size: 12 },
+        xaxis: {
+          title: { text: 'BP − RP (mag)', font: { size: 13 } },
+          range: [-0.5, 3.5],
+          dtick: 0.5,
+          gridcolor: 'rgba(100,100,100,0.15)',
+          zeroline: false,
+          showline: true,
+          linewidth: 1,
+          linecolor: '#000'
+        },
+        yaxis: {
+          title: { text: 'M<sub>G</sub> (mag)', font: { size: 13 } },
+          range: [16, -4],
+          dtick: 2,
+          gridcolor: 'rgba(100,100,100,0.15)',
+          zeroline: false,
+          showline: true,
+          linewidth: 1,
+          linecolor: '#000'
+        },
+        shapes: shapes,
+        annotations: annotations,
+        legend: {
+          x: 0.02,
+          y: 0.02,
+          bgcolor: 'rgba(255,255,255,0.95)',
+          bordercolor: 'rgba(0,0,0,0.2)',
+          borderwidth: 1,
+          font: { size: 10 }
+        },
+        margin: { t: 20, r: 40, b: 50, l: 60 },
+        hovermode: 'closest'
+      };
+      
+      Plotly.newPlot(container, traces, layout, { responsive: true });
+    }
         // ============================================
         // Help toggle
         // ============================================
