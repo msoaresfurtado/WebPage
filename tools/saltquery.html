@@ -149,6 +149,28 @@
                 text-align: center;
                 padding: 1rem;
             }
+            
+            /* Collapse CMD button */
+            .stellar-header {
+                display: flex;
+                justify-content: flex-end;
+                margin-bottom: 0.5rem;
+            }
+            .collapse-cmd-btn {
+                background: transparent;
+                border: 1px solid #475569;
+                color: #94a3b8;
+                padding: 0.25rem 0.75rem;
+                border-radius: 4px;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            .collapse-cmd-btn:hover {
+                background: #334155;
+                color: #e2e8f0;
+            }
         </style>
 
         <section id="results" class="results-section"></section>
@@ -301,7 +323,14 @@
         
         // Check if an observation was rejected by team inspection
         function getTeamInspectionStatus(gaiaId, obsDate) {
-            const key = `${gaiaId}_${obsDate}`;
+            // Convert obs date format (could be "2023-12-12" or "231212") to YYMMDD
+            let dateKey = obsDate;
+            if (obsDate.includes('-')) {
+                // Convert "2023-12-12" to "231212"
+                const parts = obsDate.split('-');
+                dateKey = parts[0].slice(2) + parts[1] + parts[2];
+            }
+            const key = `${gaiaId}_${dateKey}`;
             return teamInspectionData[key] || null;
         }
 
@@ -718,6 +747,9 @@
             // Replace placeholder with actual stellar section
             container.innerHTML = `
                 <div class="stellar-section">
+                    <div class="stellar-header">
+                        <button class="collapse-cmd-btn" onclick="collapseStellarSection('${gaiaId}')">Hide</button>
+                    </div>
                     <div class="cmd-container">
                         <canvas id="cmd-canvas" width="280" height="260"></canvas>
                     </div>
@@ -760,6 +792,17 @@
                 drawCMD(canvas, stellarData);
             }
         }
+        
+        function collapseStellarSection(gaiaId) {
+            const container = document.getElementById('stellar-section-container');
+            container.innerHTML = `
+                <div class="stellar-section-placeholder">
+                    <button id="load-cmd-btn" class="load-cmd-btn" onclick="loadStellarData('${gaiaId}')">
+                        Load CMD &amp; Stellar Parameters
+                    </button>
+                </div>
+            `;
+        }
 
         // ============================================
         // Display results
@@ -769,7 +812,14 @@
             const resultsSection = document.getElementById('results');
             const dqmPassCount = getDQMPassCount(target);
             
-            const obsHtml = target.observations.map((obs, idx) => {
+            // Sort observations chronologically (oldest first)
+            const sortedObs = [...target.observations].sort((a, b) => {
+                const dateA = a.date.includes('-') ? a.date : `20${a.date.slice(0,2)}-${a.date.slice(2,4)}-${a.date.slice(4,6)}`;
+                const dateB = b.date.includes('-') ? b.date : `20${b.date.slice(0,2)}-${b.date.slice(2,4)}-${b.date.slice(4,6)}`;
+                return dateA.localeCompare(dateB);
+            });
+            
+            const obsHtml = sortedObs.map((obs, idx) => {
                 const allFiles = obs.all_files || [obs.filename];
                 const mainFile = obs.filename;
                 const dropboxPath = obs.dropbox_path || '';
