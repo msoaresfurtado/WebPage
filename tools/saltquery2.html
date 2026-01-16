@@ -65,20 +65,24 @@
             .dropdown-label {
                 padding: 8px 12px;
                 font-size: 11px;
-                color: #888;
+                color: #555;
+                font-weight: 600;
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid #ddd;
+                background: #f8f8f8;
             }
             .dropdown-item {
                 padding: 10px 12px;
                 cursor: pointer;
                 font-family: 'DM Mono', monospace;
                 font-size: 13px;
+                color: #1a1a2e;
                 transition: background 0.15s;
             }
             .dropdown-item:hover {
-                background: #f5f5f5;
+                background: #e8f0fe;
+                color: #1a56db;
             }
             .dropdown-item:last-child {
                 border-radius: 0 0 6px 6px;
@@ -167,6 +171,146 @@
             if (teff >= 3700) return 'K';
             if (teff >= 2400) return 'M';
             return 'L';
+        }
+
+        // Draw a simple CMD on canvas
+        function drawCMD(canvas, data) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            // Clear canvas
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, w, h);
+            
+            // Plot ranges: BP-RP from -0.5 to 3.5, M_G from -2 to 14
+            const xMin = -0.5, xMax = 3.5;
+            const yMin = -2, yMax = 14;
+            const margin = { top: 15, right: 15, bottom: 35, left: 45 };
+            const plotW = w - margin.left - margin.right;
+            const plotH = h - margin.top - margin.bottom;
+            
+            function toX(bprp) { return margin.left + (bprp - xMin) / (xMax - xMin) * plotW; }
+            function toY(mg) { return margin.top + (mg - yMin) / (yMax - yMin) * plotH; }
+            
+            // Spectral type bands
+            const bands = [
+                { range: [-0.3, 0.33], color: 'rgba(147, 170, 255, 0.15)', label: 'A/F' },
+                { range: [0.33, 0.98], color: 'rgba(255, 235, 200, 0.25)', label: 'F/G' },
+                { range: [0.98, 1.85], color: 'rgba(255, 200, 124, 0.2)', label: 'K' },
+                { range: [1.85, 3.5], color: 'rgba(255, 150, 80, 0.15)', label: 'M' }
+            ];
+            
+            for (const band of bands) {
+                ctx.fillStyle = band.color;
+                const x1 = toX(Math.max(band.range[0], xMin));
+                const x2 = toX(Math.min(band.range[1], xMax));
+                ctx.fillRect(x1, margin.top, x2 - x1, plotH);
+            }
+            
+            // Main sequence approximation (simplified)
+            const msPoints = [
+                [-0.3, -1], [0.0, 1], [0.3, 2.5], [0.6, 3.5], [0.8, 4.5],
+                [1.0, 5.5], [1.3, 6.5], [1.6, 8], [2.0, 9.5], [2.5, 11], [3.2, 13]
+            ];
+            
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            for (let i = 0; i < msPoints.length; i++) {
+                const x = toX(msPoints[i][0]);
+                const y = toY(msPoints[i][1]);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(margin.left, margin.top);
+            ctx.lineTo(margin.left, h - margin.bottom);
+            ctx.lineTo(w - margin.right, h - margin.bottom);
+            ctx.stroke();
+            
+            // Axis labels
+            ctx.fillStyle = '#333';
+            ctx.font = '11px "DM Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('BP − RP', w / 2, h - 8);
+            
+            ctx.save();
+            ctx.translate(12, h / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('M_G (mag)', 0, 0);
+            ctx.restore();
+            
+            // Tick marks
+            ctx.font = '9px "DM Sans", sans-serif';
+            ctx.textAlign = 'center';
+            for (let bp = 0; bp <= 3; bp++) {
+                const x = toX(bp);
+                ctx.beginPath();
+                ctx.moveTo(x, h - margin.bottom);
+                ctx.lineTo(x, h - margin.bottom + 4);
+                ctx.stroke();
+                ctx.fillText(bp.toString(), x, h - margin.bottom + 14);
+            }
+            
+            ctx.textAlign = 'right';
+            for (let mg = 0; mg <= 12; mg += 4) {
+                const y = toY(mg);
+                ctx.beginPath();
+                ctx.moveTo(margin.left - 4, y);
+                ctx.lineTo(margin.left, y);
+                ctx.stroke();
+                ctx.fillText(mg.toString(), margin.left - 8, y + 3);
+            }
+            
+            // Sun marker
+            const sunX = toX(0.82);
+            const sunY = toY(4.83);
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 5, 0, Math.PI * 2);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fill();
+            
+            // Target star
+            if (data && data.bp_rp != null && data.abs_g != null) {
+                const starX = toX(data.bp_rp);
+                const starY = toY(data.abs_g);
+                
+                // Star marker
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                const r = 7;
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 4 * Math.PI / 5) - Math.PI / 2;
+                    const x = starX + r * Math.cos(angle);
+                    const y = starY + r * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#1e40af';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            } else {
+                // No data message
+                ctx.fillStyle = '#888';
+                ctx.font = '11px "DM Sans", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No Gaia data', w / 2, h / 2);
+            }
         }
 
         // ============================================
@@ -268,7 +412,7 @@
               REQUEST: 'doQuery',
               LANG: 'ADQL',
               FORMAT: 'json',
-              QUERY: query.replace(/\\s+/g, ' ').trim()
+              QUERY: query.replace(/\s+/g, ' ').trim()
             });
             
             const response = await fetch(url, {
