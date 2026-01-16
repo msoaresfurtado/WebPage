@@ -82,13 +82,6 @@
                 </p>
             </div>
         </div>
-        
-        <!-- Quality notes export section -->
-        <div class="info-box" id="notes-export-box" style="display: none;">
-            <strong>Your Quality Notes:</strong>
-            <p style="margin-top: 0.5rem;">You have added quality notes. Click below to copy them for review.</p>
-            <button class="export-btn" onclick="exportNotes()">Copy All Notes</button>
-        </div>
 
         <div class="stats-bar">
             <div class="stat">
@@ -115,7 +108,6 @@
         const MAX_RECENT_SEARCHES = 4;
         let catalogData = null;
         let currentGaiaId = null;
-        let currentNoteObsKey = null;
         
         // Cache for stellar data fetched from Gaia
         const stellarDataCache = {};
@@ -131,142 +123,6 @@
             if (teff >= 3700) return 'K';
             if (teff >= 2400) return 'M';
             return 'L';
-        }
-
-        // ============================================
-        // Quality Notes (localStorage)
-        // ============================================
-        
-        function getQualityNotes() {
-            try {
-                const stored = localStorage.getItem('saltQualityNotes');
-                return stored ? JSON.parse(stored) : {};
-            } catch {
-                return {};
-            }
-        }
-        
-        function saveQualityNoteToStorage(obsKey, note) {
-            try {
-                const notes = getQualityNotes();
-                notes[obsKey] = note;
-                localStorage.setItem('saltQualityNotes', JSON.stringify(notes));
-                updateNotesExportBox();
-            } catch {
-                console.error('Could not save note');
-            }
-        }
-        
-        function getObsKey(gaiaId, date) {
-            return `${gaiaId}_${date}`;
-        }
-        
-        function updateNotesExportBox() {
-            const notes = getQualityNotes();
-            const box = document.getElementById('notes-export-box');
-            if (Object.keys(notes).length > 0) {
-                box.style.display = 'block';
-            } else {
-                box.style.display = 'none';
-            }
-        }
-        
-        function exportNotes() {
-            const notes = getQualityNotes();
-            let exportText = "SALT Quality Notes Export\n";
-            exportText += "========================\n\n";
-            
-            for (const [key, note] of Object.entries(notes)) {
-                const [gaiaId, date] = key.split('_');
-                exportText += `Gaia DR3 ${gaiaId}\n`;
-                exportText += `Date: ${date}\n`;
-                exportText += `Reviewer: ${note.author}\n`;
-                exportText += `Assessment: ${note.quality}\n`;
-                if (note.text) {
-                    exportText += `Notes: ${note.text}\n`;
-                }
-                exportText += `Reviewed: ${note.timestamp}\n`;
-                exportText += "\n---\n\n";
-            }
-            
-            navigator.clipboard.writeText(exportText).then(() => {
-                alert('Notes copied to clipboard! You can paste them in an email to mmsoares@wisc.edu');
-            });
-        }
-        
-        function openNoteModal(gaiaId, date, obsInfo) {
-            currentNoteObsKey = getObsKey(gaiaId, date);
-            document.getElementById('modal-obs-info').textContent = `Gaia DR3 ${gaiaId} — ${date}`;
-            
-            const notes = getQualityNotes();
-            const existing = notes[currentNoteObsKey];
-            if (existing) {
-                document.getElementById('note-author').value = existing.author || '';
-                document.getElementById('note-quality').value = existing.quality || 'Good';
-                document.getElementById('note-text').value = existing.text || '';
-            } else {
-                document.getElementById('note-author').value = localStorage.getItem('saltUserName') || '';
-                document.getElementById('note-quality').value = 'Good';
-                document.getElementById('note-text').value = '';
-            }
-            
-            document.getElementById('note-modal').classList.add('visible');
-        }
-        
-        function closeNoteModal(event) {
-            if (event && event.target !== document.getElementById('note-modal')) return;
-            document.getElementById('note-modal').classList.remove('visible');
-            currentNoteObsKey = null;
-        }
-        
-        function saveQualityNote() {
-            const author = document.getElementById('note-author').value.trim();
-            const quality = document.getElementById('note-quality').value;
-            const text = document.getElementById('note-text').value.trim();
-            
-            if (!author) {
-                alert('Please enter your name');
-                return;
-            }
-            
-            localStorage.setItem('saltUserName', author);
-            
-            const note = {
-                author: author,
-                quality: quality,
-                text: text,
-                timestamp: new Date().toISOString().split('T')[0]
-            };
-            
-            saveQualityNoteToStorage(currentNoteObsKey, note);
-            closeNoteModal();
-            
-            // Update high-quality count
-            updateHQCount();
-            
-            if (currentGaiaId) {
-                const target = catalogData.targets.find(t => t.gaia_dr3_id === currentGaiaId);
-                if (target) displayResults(target);
-            }
-        }
-        
-        function updateHQCount() {
-            if (!catalogData) return;
-            const qualityNotes = getQualityNotes();
-            let hqCount = 0;
-            catalogData.targets.forEach(t => {
-                t.observations.forEach(obs => {
-                    const obsKey = getObsKey(t.gaia_dr3_id, obs.date);
-                    const userNote = qualityNotes[obsKey];
-                    const catalogStatus = obs.quality_status || 'Accepted';
-                    if (catalogStatus === 'Accepted') {
-                        if (!userNote || userNote.quality === 'Good') {
-                            hqCount++;
-                        }
-                    }
-                });
-            });
-            document.getElementById('total-hq').textContent = hqCount;
         }
 
         // ============================================
@@ -556,20 +412,13 @@
                 const totalObs = catalogData.targets.reduce((sum, t) => sum + t.observations.length, 0);
                 document.getElementById('total-obs').textContent = totalObs;
                 
-                // Calculate high-quality observations
-                const qualityNotes = getQualityNotes();
+                // Calculate high-quality observations (catalog status only)
                 let hqCount = 0;
                 catalogData.targets.forEach(t => {
                     t.observations.forEach(obs => {
-                        const obsKey = getObsKey(t.gaia_dr3_id, obs.date);
-                        const userNote = qualityNotes[obsKey];
                         const catalogStatus = obs.quality_status || 'Accepted';
-                        
-                        // High quality if: catalog says Accepted AND (no user note OR user says Good)
                         if (catalogStatus === 'Accepted') {
-                            if (!userNote || userNote.quality === 'Good') {
-                                hqCount++;
-                            }
+                            hqCount++;
                         }
                     });
                 });
@@ -580,7 +429,6 @@
                 document.getElementById('total-nights').textContent = nights.size;
                 
                 renderRecentSearches();
-                updateNotesExportBox();
             } catch (error) {
                 console.error('Error loading catalog:', error);
                 showStatus('Unable to load observation catalog.', true);
@@ -621,19 +469,12 @@
         // ============================================
         
         function getDQMPassCount(target) {
-            const qualityNotes = getQualityNotes();
             let passCount = 0;
             
             for (const obs of target.observations) {
-                const obsKey = getObsKey(target.gaia_dr3_id, obs.date);
-                const userNote = qualityNotes[obsKey];
                 const catalogStatus = obs.quality_status || 'Accepted';
-                
-                // Pass if: catalog says Accepted AND (no user note OR user says Good)
                 if (catalogStatus === 'Accepted') {
-                    if (!userNote || userNote.quality === 'Good') {
-                        passCount++;
-                    }
+                    passCount++;
                 }
             }
             
@@ -646,7 +487,6 @@
         
         async function displayResults(target) {
             const resultsSection = document.getElementById('results');
-            const qualityNotes = getQualityNotes();
             const dqmPassCount = getDQMPassCount(target);
             
             const obsHtml = target.observations.map((obs, idx) => {
@@ -654,8 +494,6 @@
                 const mainFile = obs.filename;
                 const dropboxPath = obs.dropbox_path || '';
                 const fullPath = `${DROPBOX_FOLDER}/${dropboxPath}`;
-                const obsKey = getObsKey(target.gaia_dr3_id, obs.date);
-                const userNote = qualityNotes[obsKey];
                 
                 let qualityHtml = '';
                 const catalogStatus = obs.quality_status || 'Accepted';
@@ -663,9 +501,6 @@
                 
                 if (catalogStatus === 'Rejected') {
                     qualityHtml = `<span class="quality-badge rejected">Rejected${catalogReason ? `: ${catalogReason}` : ''}</span>`;
-                } else if (userNote) {
-                    const noteClass = userNote.quality === 'Good' ? 'good' : (userNote.quality === 'Poor' ? 'poor' : 'unusable');
-                    qualityHtml = `<span class="quality-badge ${noteClass}">${userNote.quality} (${userNote.author})</span>`;
                 } else {
                     qualityHtml = `<span class="quality-badge accepted">Accepted</span>`;
                 }
@@ -697,17 +532,6 @@
                                     const badge = getFileBadge(f);
                                     return `<div class="file-item">${badge ? `<span class="file-badge ${isMain ? 'main' : ''}">${badge}</span>` : ''}<span>${f}</span></div>`;
                                 }).join('')}
-                            </div>
-                            <div class="note-section">
-                                ${userNote ? `
-                                    <div class="user-note">
-                                        <strong>${userNote.author}</strong> marked as <strong>${userNote.quality}</strong> on ${userNote.timestamp}
-                                        ${userNote.text ? `<br><em>"${userNote.text}"</em>` : ''}
-                                    </div>
-                                ` : ''}
-                                <button class="add-note-btn" onclick="openNoteModal('${target.gaia_dr3_id}', '${obs.date}'); event.stopPropagation();">
-                                    ${userNote ? '✎ Edit Note' : '+ Add Quality Note'}
-                                </button>
                             </div>
                         </div>
                     </div>
