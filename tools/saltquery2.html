@@ -22,7 +22,10 @@
         <section class="search-section">
             <label class="search-label" for="gaia-id">Gaia DR3 Source ID</label>
             <div class="search-wrapper">
-                <input type="text" id="gaia-id" class="search-input" placeholder="e.g., 4654969496256092032" autocomplete="off">
+                <div class="input-container">
+                    <input type="text" id="gaia-id" class="search-input" placeholder="e.g., 4654969496256092032" autocomplete="off">
+                    <div class="search-dropdown" id="search-dropdown"></div>
+                </div>
                 <button class="search-btn" onclick="searchTarget()">Search</button>
             </div>
             <div class="search-links">
@@ -34,12 +37,53 @@
                     · <a href="#" id="vizier-url" target="_blank">VizieR ↗</a>
                 </span>
             </div>
-            
-            <div class="recent-searches" id="recent-searches" style="display: none;">
-                <div class="recent-searches-label">Recent searches</div>
-                <div class="recent-tags" id="recent-tags"></div>
-            </div>
         </section>
+        
+        <style>
+            .input-container {
+                position: relative;
+                flex: 1;
+            }
+            .search-dropdown {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-top: none;
+                border-radius: 0 0 6px 6px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                z-index: 100;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            .search-dropdown.visible {
+                display: block;
+            }
+            .dropdown-label {
+                padding: 8px 12px;
+                font-size: 11px;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-bottom: 1px solid #eee;
+            }
+            .dropdown-item {
+                padding: 10px 12px;
+                cursor: pointer;
+                font-family: 'DM Mono', monospace;
+                font-size: 13px;
+                transition: background 0.15s;
+            }
+            .dropdown-item:hover {
+                background: #f5f5f5;
+            }
+            .dropdown-item:last-child {
+                border-radius: 0 0 6px 6px;
+            }
+        </style>
 
         <section id="results" class="results-section"></section>
 
@@ -151,18 +195,32 @@
 
         function renderRecentSearches() {
             const recent = getRecentSearches();
-            const container = document.getElementById('recent-searches');
-            const tagsContainer = document.getElementById('recent-tags');
+            const dropdown = document.getElementById('search-dropdown');
             
             if (recent.length === 0) {
-                container.style.display = 'none';
+                dropdown.innerHTML = '';
                 return;
             }
             
-            container.style.display = 'block';
-            tagsContainer.innerHTML = recent.map(id => 
-                `<span class="recent-tag" onclick="selectTarget('${id}')">${id}</span>`
-            ).join('');
+            dropdown.innerHTML = `
+                <div class="dropdown-label">Recent searches</div>
+                ${recent.map(id => 
+                    `<div class="dropdown-item" onmousedown="selectTarget('${id}')">${id}</div>`
+                ).join('')}
+            `;
+        }
+        
+        function showDropdown() {
+            const dropdown = document.getElementById('search-dropdown');
+            const recent = getRecentSearches();
+            if (recent.length > 0) {
+                dropdown.classList.add('visible');
+            }
+        }
+        
+        function hideDropdown() {
+            const dropdown = document.getElementById('search-dropdown');
+            dropdown.classList.remove('visible');
         }
 
         // ============================================
@@ -427,8 +485,6 @@
                 const nights = new Set();
                 catalogData.targets.forEach(t => t.observations.forEach(o => nights.add(o.date)));
                 document.getElementById('total-nights').textContent = nights.size;
-                
-                renderRecentSearches();
             } catch (error) {
                 console.error('Error loading catalog:', error);
                 showStatus('Unable to load observation catalog.', true);
@@ -710,8 +766,20 @@
         // Init
         // ============================================
         
-        document.getElementById('gaia-id').addEventListener('keypress', e => { 
+        const gaiaInput = document.getElementById('gaia-id');
+        
+        gaiaInput.addEventListener('keypress', e => { 
             if (e.key === 'Enter') searchTarget(); 
+        });
+        
+        gaiaInput.addEventListener('focus', () => {
+            renderRecentSearches();
+            showDropdown();
+        });
+        
+        gaiaInput.addEventListener('blur', () => {
+            // Small delay to allow click on dropdown items
+            setTimeout(hideDropdown, 150);
         });
         
         loadCatalog();
