@@ -111,6 +111,14 @@
                 margin-top: 10px;
                 text-align: center;
             }
+            
+            /* Team Rejected badge styling */
+            .quality-badge.team-rejected {
+                background: #fef2f2;
+                color: #b91c1c;
+                border: 1px solid #fecaca;
+                font-weight: 500;
+            }
         </style>
 
         <section id="results" class="results-section"></section>
@@ -178,11 +186,94 @@
     <script>
         const DROPBOX_FOLDER = '2023-2-SCI-018';
         const MAX_RECENT_SEARCHES = 4;
+        const TEAM_INSPECTION_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTbg5XWBsfv8V74hLfu7e2cllY_FESOslL67pBSTQv51ZHL2ypGZC1iQyvi7QBCB_c-NWJ4HSrJRXja/pub?gid=0&single=true&output=csv';
+        
         let catalogData = null;
         let currentGaiaId = null;
+        let teamInspectionData = {}; // Map of "gaiaId_date" -> {usable: bool, repeatInFall: bool}
         
         // Cache for stellar data fetched from Gaia
         const stellarDataCache = {};
+
+        // ============================================
+        // Team Inspection Data (from Google Sheet)
+        // ============================================
+        
+        async function loadTeamInspection() {
+            try {
+                const response = await fetch(TEAM_INSPECTION_CSV_URL);
+                if (!response.ok) {
+                    console.warn('Could not load team inspection data');
+                    return;
+                }
+                
+                const csvText = await response.text();
+                const lines = csvText.split('\n');
+                
+                // Skip header row
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    // Parse CSV (handle potential quoted fields)
+                    const cols = parseCSVLine(line);
+                    if (cols.length < 3) continue;
+                    
+                    // Column A: Gaia DR3 ID (e.g., "Gaia DR3 4418202522042094080")
+                    // Column B: Date Observed (YYMMDD)
+                    // Column C: Usable Data? (Yes/No)
+                    // Column D: Repeat in Fall? (Yes/No)
+                    
+                    let gaiaId = cols[0].trim();
+                    // Strip "Gaia DR3 " prefix if present
+                    if (gaiaId.startsWith('Gaia DR3 ')) {
+                        gaiaId = gaiaId.substring(9);
+                    }
+                    
+                    const dateObserved = cols[1].trim();
+                    const usable = cols[2].trim().toLowerCase() === 'yes';
+                    const repeatInFall = cols.length > 3 ? cols[3].trim().toLowerCase() === 'yes' : false;
+                    
+                    // Create lookup key: gaiaId_date
+                    // Date in sheet is YYMMDD, observation dates in catalog are also YYMMDD (e.g., "231205")
+                    const key = `${gaiaId}_${dateObserved}`;
+                    teamInspectionData[key] = { usable, repeatInFall };
+                }
+                
+                console.log(`Loaded team inspection data for ${Object.keys(teamInspectionData).length} observations`);
+            } catch (error) {
+                console.warn('Error loading team inspection data:', error);
+            }
+        }
+        
+        // Simple CSV line parser that handles quoted fields
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            
+            return result;
+        }
+        
+        // Check if an observation was rejected by team inspection
+        function getTeamInspectionStatus(gaiaId, obsDate) {
+            const key = `${gaiaId}_${obsDate}`;
+            return teamInspectionData[key] || null;
+        }
 
         // Spectral type lookup from Teff (approximate)
         function getSpectralType(teff) {
@@ -630,20 +721,30 @@
         
         async function loadCatalog() {
             try {
-                const response = await fetch('./index.json');
-                if (!response.ok) throw new Error('Catalog not found');
-                catalogData = await response.json();
+                // Load both catalog and team inspection data in parallel
+                const [catalogResponse] = await Promise.all([
+                    fetch('./index.json'),
+                    loadTeamInspection()
+                ]);
+                
+                if (!catalogResponse.ok) throw new Error('Catalog not found');
+                catalogData = await catalogResponse.json();
                 
                 document.getElementById('total-targets').textContent = catalogData.targets.length;
                 const totalObs = catalogData.targets.reduce((sum, t) => sum + t.observations.length, 0);
                 document.getElementById('total-obs').textContent = totalObs;
                 
-                // Calculate high-quality observations (catalog status only)
+                // Calculate high-quality observations (catalog status AND team inspection)
                 let hqCount = 0;
                 catalogData.targets.forEach(t => {
                     t.observations.forEach(obs => {
                         const catalogStatus = obs.quality_status || 'Accepted';
-                        if (catalogStatus === 'Accepted') {
+                        const teamStatus = getTeamInspectionStatus(t.gaia_dr3_id, obs.date);
+                        
+                        // High quality = catalog accepted AND (no team review OR team says usable)
+                        const passesTeamInspection = !teamStatus || teamStatus.usable;
+                        
+                        if (catalogStatus === 'Accepted' && passesTeamInspection) {
                             hqCount++;
                         }
                     });
@@ -697,7 +798,10 @@
             
             for (const obs of target.observations) {
                 const catalogStatus = obs.quality_status || 'Accepted';
-                if (catalogStatus === 'Accepted') {
+                const teamStatus = getTeamInspectionStatus(target.gaia_dr3_id, obs.date);
+                const passesTeamInspection = !teamStatus || teamStatus.usable;
+                
+                if (catalogStatus === 'Accepted' && passesTeamInspection) {
                     passCount++;
                 }
             }
@@ -719,12 +823,20 @@
                 const dropboxPath = obs.dropbox_path || '';
                 const fullPath = `${DROPBOX_FOLDER}/${dropboxPath}`;
                 
-                let qualityHtml = '';
+                // Check catalog status
                 const catalogStatus = obs.quality_status || 'Accepted';
                 const catalogReason = obs.quality_reason;
                 
+                // Check team inspection status
+                const teamStatus = getTeamInspectionStatus(target.gaia_dr3_id, obs.date);
+                
+                // Build quality badges
+                let qualityHtml = '';
+                
                 if (catalogStatus === 'Rejected') {
                     qualityHtml = `<span class="quality-badge rejected">Rejected${catalogReason ? `: ${catalogReason}` : ''}</span>`;
+                } else if (teamStatus && !teamStatus.usable) {
+                    qualityHtml = `<span class="quality-badge team-rejected">Team Rejected</span>`;
                 } else {
                     qualityHtml = `<span class="quality-badge accepted">Accepted</span>`;
                 }
