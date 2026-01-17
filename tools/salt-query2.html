@@ -941,13 +941,15 @@
             const targetZ = Math.sin(dec);
             
             // Earth's velocity direction is perpendicular to Sun direction, in the ecliptic plane
-            // Velocity is roughly 90 degrees ahead of Earth's position (behind the Sun)
-            const vDirRA = raSun + Math.PI / 2;
+            // Earth orbits counterclockwise (as seen from north), so velocity is 90° behind the Sun direction
+            // If Sun is at RA_sun from Earth, Earth's velocity points toward RA_sun - 90°
+            const vDirRA = raSun - Math.PI / 2;
             const vDirX = Math.cos(vDirRA);
             const vDirY = Math.sin(vDirRA);
             const vDirZ = 0; // Simplified: assume motion in ecliptic plane
             
             // Project Earth's velocity onto the line of sight to the target
+            // Positive = Earth moving toward target = observed wavelengths blueshifted
             const vBary = vOrb * (vDirX * targetX + vDirY * targetY + vDirZ * targetZ);
             
             // Add approximate correction for Earth's rotation (smaller effect)
@@ -1811,13 +1813,15 @@
                 console.log(`Best chunk: ${bestResult.chunkMin}-${bestResult.chunkMax}Å with CCF peak=${bestResult.peakCCF.toFixed(4)}`);
                 
                 const rv = bestResult.rv;
+                // Barycentric correction: RV_helio = RV_observed + v_bary
+                // v_bary is positive when Earth moves toward target (blueshifts observed light)
                 const rvBary = rv + baryCorr;
                 const gaussFit = bestResult.gaussFit;
                 
                 console.log(`=== FINAL RV RESULT ===`);
                 console.log(`  Observed RV: ${rv.toFixed(2)} km/s`);
                 console.log(`  Barycentric correction: ${baryCorr.toFixed(2)} km/s (${applyBaryCorr ? 'enabled' : 'disabled'})`);
-                console.log(`  RV (bary): ${rvBary.toFixed(2)} km/s`);
+                console.log(`  RV (bary) = observed + bary = ${rv.toFixed(2)} + ${baryCorr.toFixed(2)} = ${rvBary.toFixed(2)} km/s`);
                 console.log(`  CCF peak: ${bestResult.peakCCF.toFixed(4)}`);
                 if (gaussFit.success) {
                     console.log(`  Gaussian σ: ${gaussFit.sigma.toFixed(2)} km/s`);
