@@ -701,6 +701,10 @@
                         <option value="7250_spec.FITS">7250 K (F-type)</option>
                     </select>
                 </div>
+                <div class="control-group" title="Manual barycentric correction from barycorrpy (leave empty to auto-compute)">
+                    <label>Bary (km/s):</label>
+                    <input type="number" id="manual-bary" step="0.01" style="width: 70px;" placeholder="auto">
+                </div>
                 <button class="spectrum-btn rv-btn" onclick="computeCCF()" title="Compute cross-correlation and radial velocity">
                     Compute RV
                 </button>
@@ -729,6 +733,7 @@
                     </ul>
                     
                     <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
+                        <strong>Bary (km/s)</strong> = Enter barycentric correction from barycorrpy for precision (leave empty to auto-compute).<br>
                         <strong>Show Template</strong> overlays the RV-shifted template on the flattened spectrum (use to verify the fit).<br>
                         <strong>RV Corr</strong> shifts the spectrum to rest frame (useful to check if lines align with markers).<br>
                         <strong>Flatten</strong> removes the continuum shape for easier line comparison.<br>
@@ -892,7 +897,7 @@
         }
         
         // Calculate barycentric velocity correction
-        // This is a simplified calculation accounting for Earth's orbital motion
+        // Uses the standard heliocentric velocity formula
         function calculateBarycentricVelocity(jd, raDeg, decDeg) {
             if (!jd || raDeg === null || decDeg === null) {
                 return 0;
@@ -902,7 +907,6 @@
             const ra = degToRad(raDeg);
             const dec = degToRad(decDeg);
             
-            // Calculate mean longitude of the Sun
             // Days since J2000.0
             const d = jd - 2451545.0;
             
@@ -912,62 +916,68 @@
             
             // Mean longitude of the Sun (degrees)
             const L = 280.459 + 0.98564736 * d;
-            const LRad = degToRad(L % 360);
             
-            // Ecliptic longitude of the Sun
+            // Ecliptic longitude of the Sun (degrees)
             const lambdaSun = L + 1.915 * Math.sin(gRad) + 0.020 * Math.sin(2 * gRad);
-            const lambdaSunRad = degToRad(lambdaSun % 360);
+            const lambdaSunRad = degToRad(lambdaSun);
             
             // Obliquity of the ecliptic
             const epsilon = degToRad(23.439 - 0.0000004 * d);
             
-            // Sun's position in equatorial coordinates
-            const raSun = Math.atan2(Math.cos(epsilon) * Math.sin(lambdaSunRad), Math.cos(lambdaSunRad));
-            const decSun = Math.asin(Math.sin(epsilon) * Math.sin(lambdaSunRad));
-            
-            // Earth's orbital velocity (approximately 29.78 km/s)
+            // Earth's orbital velocity (km/s)
             const vOrb = 29.78;
             
-            // Earth's orbital velocity is perpendicular to the Sun direction
-            // We need the component along the line of sight to the target
+            // Standard heliocentric velocity formula
+            // v_helio = projection of Earth's velocity onto line of sight to star
+            // Positive when Earth moves TOWARD the star (blueshifts observed light)
+            const cosEps = Math.cos(epsilon);
+            const sinEps = Math.sin(epsilon);
+            const cosLambda = Math.cos(lambdaSunRad);
+            const sinLambda = Math.sin(lambdaSunRad);
+            const cosRA = Math.cos(ra);
+            const sinRA = Math.sin(ra);
+            const cosDec = Math.cos(dec);
+            const sinDec = Math.sin(dec);
             
-            // Direction to the Sun (from Earth)
-            const sunX = Math.cos(decSun) * Math.cos(raSun);
-            const sunY = Math.cos(decSun) * Math.sin(raSun);
-            const sunZ = Math.sin(decSun);
+            // Earth's velocity in equatorial coordinates
+            // Earth orbits counterclockwise (from N), velocity points toward λ_sun + 270° = λ_sun - 90°
+            // In ecliptic: vx = v*sin(λ), vy = -v*cos(λ), vz = 0
+            // Transform to equatorial coordinates
+            const vx = vOrb * sinLambda;
+            const vy = -vOrb * cosLambda * cosEps;
+            const vz = -vOrb * cosLambda * sinEps;
             
-            // Direction to the target
-            const targetX = Math.cos(dec) * Math.cos(ra);
-            const targetY = Math.cos(dec) * Math.sin(ra);
-            const targetZ = Math.sin(dec);
+            // Unit vector toward star
+            const starX = cosDec * cosRA;
+            const starY = cosDec * sinRA;
+            const starZ = sinDec;
             
-            // Earth's velocity direction is perpendicular to Sun direction, in the ecliptic plane
-            // Earth orbits counterclockwise (as seen from north), so velocity is 90° behind the Sun direction
-            // If Sun is at RA_sun from Earth, Earth's velocity points toward RA_sun - 90°
-            const vDirRA = raSun - Math.PI / 2;
-            const vDirX = Math.cos(vDirRA);
-            const vDirY = Math.sin(vDirRA);
-            const vDirZ = 0; // Simplified: assume motion in ecliptic plane
+            // Heliocentric velocity = dot product
+            const vHelio = vx * starX + vy * starY + vz * starZ;
             
-            // Project Earth's velocity onto the line of sight to the target
-            // Positive = Earth moving toward target = observed wavelengths blueshifted
-            const vBary = vOrb * (vDirX * targetX + vDirY * targetY + vDirZ * targetZ);
+            console.log(`Barycentric calc: JD=${jd.toFixed(2)}, RA=${raDeg.toFixed(2)}°, Dec=${decDeg.toFixed(2)}°`);
+            console.log(`  Sun ecliptic longitude: ${(lambdaSun % 360).toFixed(1)}°`);
+            console.log(`  Earth velocity components: vx=${vx.toFixed(2)}, vy=${vy.toFixed(2)}, vz=${vz.toFixed(2)} km/s`);
+            console.log(`  Heliocentric velocity: ${vHelio.toFixed(2)} km/s`);
             
-            // Add approximate correction for Earth's rotation (smaller effect)
+            // Add approximate correction for Earth's rotation (diurnal velocity)
             const lst = (L / 15 + SALT_LONG / 15) % 24; // Local sidereal time (hours, approximate)
             const lstRad = degToRad(lst * 15);
             const latRad = degToRad(SALT_LAT);
             
-            // Rotational velocity at SALT latitude
+            // Rotational velocity at SALT latitude (equatorial velocity × cos(lat))
             const vRot = 0.4651 * Math.cos(latRad); // km/s at Earth's surface
             
             // Hour angle
             const ha = lstRad - ra;
             
-            // Rotational component along line of sight
-            const vRotProj = vRot * Math.cos(dec) * Math.sin(ha);
+            // Diurnal component along line of sight
+            const vDiurnal = vRot * cosDec * Math.sin(ha);
             
-            return vBary + vRotProj;
+            console.log(`  Diurnal velocity: ${vDiurnal.toFixed(2)} km/s`);
+            console.log(`  Total barycentric: ${(vHelio + vDiurnal).toFixed(2)} km/s`);
+            
+            return vHelio + vDiurnal;
         }
         
         // Apply barycentric correction to wavelength array
@@ -1074,11 +1084,35 @@
             
             // Apply barycentric correction first (to observed wavelengths)
             if (applyBaryCorr) {
-                const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
-                const coords = getTargetCoords(gaiaId, header);
+                let vBary = 0;
                 
-                if (jd && coords) {
-                    const vBary = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
+                // If we have a stored baryCorr from CCF, use that (it was computed with proper priority)
+                if (currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.baryCorr !== undefined) {
+                    vBary = currentSpectrum.lastCCF.baryCorr;
+                } else {
+                    // Otherwise compute using same priority as CCF
+                    const manualBary = parseFloat(document.getElementById('manual-bary').value);
+                    
+                    if (!isNaN(manualBary)) {
+                        vBary = manualBary;
+                    } else {
+                        // Check header for pre-computed value
+                        const headerBary = header['VHELIO'] || header['VCORR'] || header['VBARY'] || header['BVC'] || header['BARYVEL'];
+                        if (headerBary !== undefined && !isNaN(headerBary)) {
+                            vBary = Math.abs(headerBary) > 1000 ? headerBary / 1000 : headerBary;
+                        } else {
+                            // Compute from scratch
+                            const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
+                            const coords = getTargetCoords(gaiaId, header);
+                            
+                            if (jd && coords) {
+                                vBary = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
+                            }
+                        }
+                    }
+                }
+                
+                if (vBary !== 0) {
                     console.log(`Applying barycentric correction: ${vBary.toFixed(3)} km/s`);
                     correctedWl = applyBarycentricCorrection(correctedWl, vBary);
                 }
@@ -1785,12 +1819,70 @@
                 // Calculate barycentric correction
                 let baryCorr = 0;
                 if (applyBaryCorr) {
-                    const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
-                    const coords = getTargetCoords(currentSpectrum.gaiaId, header);
+                    // Priority order for barycentric correction:
+                    // 1. Manual input field (from barycorrpy)
+                    // 2. Catalog value (pre-computed)
+                    // 3. FITS header keyword
+                    // 4. Computed (simplified)
                     
-                    if (jd && coords) {
-                        baryCorr = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
-                        console.log('Barycentric correction:', baryCorr.toFixed(3), 'km/s');
+                    const manualBary = parseFloat(document.getElementById('manual-bary').value);
+                    
+                    if (!isNaN(manualBary)) {
+                        // Use manually entered value (from barycorrpy)
+                        baryCorr = manualBary;
+                        console.log('Using MANUAL barycentric correction:', baryCorr.toFixed(3), 'km/s');
+                    } else {
+                        // Check catalog for pre-computed value
+                        let catalogBary = null;
+                        if (catalogData && currentSpectrum.gaiaId) {
+                            const target = catalogData.targets.find(t => t.gaia_dr3_id === currentSpectrum.gaiaId);
+                            if (target && target.observations) {
+                                const obs = target.observations.find(o => 
+                                    o.date === currentSpectrum.obsDate || 
+                                    o.filename === currentSpectrum.filename ||
+                                    (o.blue_file && currentSpectrum.filename && currentSpectrum.filename.includes(o.blue_file.replace('.fits', '')))
+                                );
+                                if (obs && obs.bary_corr !== undefined) {
+                                    catalogBary = obs.bary_corr;
+                                }
+                            }
+                        }
+                        
+                        if (catalogBary !== null && !isNaN(catalogBary)) {
+                            baryCorr = catalogBary;
+                            console.log('Using CATALOG barycentric correction:', baryCorr.toFixed(3), 'km/s');
+                        } else {
+                            // Check FITS header
+                            console.log('Header keywords for barycentric:');
+                            console.log('  VHELIO:', header['VHELIO']);
+                            console.log('  VCORR:', header['VCORR']);
+                            console.log('  VBARY:', header['VBARY']);
+                            console.log('  BVC:', header['BVC']);
+                            console.log('  BARYVEL:', header['BARYVEL']);
+                            
+                            const headerBary = header['VHELIO'] || header['VCORR'] || header['VBARY'] || header['BVC'] || header['BARYVEL'];
+                            
+                            if (headerBary !== undefined && !isNaN(headerBary)) {
+                                // Header value - check units (could be m/s or km/s)
+                                baryCorr = Math.abs(headerBary) > 1000 ? headerBary / 1000 : headerBary;
+                                console.log('Using HEADER barycentric correction:', baryCorr.toFixed(3), 'km/s');
+                            } else {
+                                // Compute from scratch (simplified)
+                                const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
+                                const coords = getTargetCoords(currentSpectrum.gaiaId, header);
+                                
+                                console.log('Computing barycentric correction (simplified):');
+                                console.log('  JD:', jd);
+                                console.log('  DATE-OBS:', header['DATE-OBS']);
+                                console.log('  Coords:', coords);
+                                
+                                if (jd && coords) {
+                                    baryCorr = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
+                                    console.log('COMPUTED barycentric correction:', baryCorr.toFixed(3), 'km/s');
+                                    console.log('⚠️ WARNING: Using simplified calculation. Enter barycorrpy value in "Bary (km/s)" field for precision.');
+                                }
+                            }
+                        }
                     }
                 }
                 
@@ -2530,6 +2622,9 @@
             showTemplate = false;
             document.getElementById('template-overlay-btn').classList.remove('active');
             document.getElementById('template-overlay-btn').style.opacity = '0.6';
+            
+            // Reset manual barycentric input
+            document.getElementById('manual-bary').value = '';
             
             try {
                 const { wavelength, flux, header } = await loadFITSSpectrum(filename);
@@ -3293,6 +3388,9 @@
             showTemplate = false;
             document.getElementById('template-overlay-btn').classList.remove('active');
             document.getElementById('template-overlay-btn').style.opacity = '0.6';
+            
+            // Reset manual barycentric input
+            document.getElementById('manual-bary').value = '';
             
             try {
                 // Load both spectra in parallel
