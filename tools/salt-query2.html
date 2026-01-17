@@ -672,6 +672,23 @@
         let currentSpectrum = null;
         let isFlattened = false;
         
+        // Helper functions for large arrays (avoid spread operator stack overflow)
+        function arrayMin(arr) {
+            let min = Infinity;
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] < min && !isNaN(arr[i])) min = arr[i];
+            }
+            return min;
+        }
+        
+        function arrayMax(arr) {
+            let max = -Infinity;
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] > max && !isNaN(arr[i])) max = arr[i];
+            }
+            return max;
+        }
+        
         // Spectral line markers
         const SPECTRAL_LINES = {
             halpha: { wavelength: 6562.8, label: 'Hα', color: '#ec4899' },
@@ -1146,17 +1163,43 @@
                 console.log('Table columns found:', Object.keys(tableData));
                 
                 // Get wavelength and flux
-                const wavelength = tableData.wavelength || tableData.wave || tableData.wl || [];
-                const flux = tableData.flux || tableData.spec || tableData.intensity || [];
+                let wavelength = tableData.wavelength || tableData.wave || tableData.wl || [];
+                let flux = tableData.flux || tableData.spec || tableData.intensity || [];
                 
                 if (wavelength.length === 0 || flux.length === 0) {
                     throw new Error(`Could not find wavelength/flux columns. Available: ${Object.keys(tableData).join(', ')}`);
                 }
                 
-                console.log('Template wavelength range:', Math.min(...wavelength).toFixed(1), '-', Math.max(...wavelength).toFixed(1), 'Å');
-                console.log('Template n points:', wavelength.length);
+                console.log('Template raw n points:', wavelength.length);
                 
-                const data = { wavelength, flux, header: extHeader };
+                // Filter out invalid values
+                const validIndices = [];
+                for (let i = 0; i < wavelength.length; i++) {
+                    if (!isNaN(wavelength[i]) && isFinite(wavelength[i]) && wavelength[i] > 0 &&
+                        !isNaN(flux[i]) && isFinite(flux[i])) {
+                        validIndices.push(i);
+                    }
+                }
+                
+                // Downsample if template is very large (>50k points)
+                const maxPoints = 20000;
+                let step = 1;
+                if (validIndices.length > maxPoints) {
+                    step = Math.ceil(validIndices.length / maxPoints);
+                    console.log(`Downsampling template by factor of ${step}`);
+                }
+                
+                const finalWl = [];
+                const finalFlux = [];
+                for (let i = 0; i < validIndices.length; i += step) {
+                    finalWl.push(wavelength[validIndices[i]]);
+                    finalFlux.push(flux[validIndices[i]]);
+                }
+                
+                console.log('Template wavelength range:', arrayMin(finalWl).toFixed(1), '-', arrayMax(finalWl).toFixed(1), 'Å');
+                console.log('Template final n points:', finalWl.length);
+                
+                const data = { wavelength: finalWl, flux: finalFlux, header: extHeader };
                 templateCache[templateFile] = data;
                 return data;
                 
@@ -1348,8 +1391,8 @@
             const yData = indices.map(i => ccf[i]);
             
             // Normalize CCF for fitting
-            const maxCCF = Math.max(...yData);
-            const minCCF = Math.min(...yData);
+            const maxCCF = arrayMax(yData);
+            const minCCF = arrayMin(yData);
             const yNorm = yData.map(y => (y - minCCF) / (maxCCF - minCCF));
             
             // Initial guess
@@ -1417,10 +1460,10 @@
                 }
                 
                 // Find overlapping wavelength range
-                const obsMin = Math.min(...validObsWl);
-                const obsMax = Math.max(...validObsWl);
-                const tmpMin = Math.min(...validTmpWl);
-                const tmpMax = Math.max(...validTmpWl);
+                const obsMin = arrayMin(validObsWl);
+                const obsMax = arrayMax(validObsWl);
+                const tmpMin = arrayMin(validTmpWl);
+                const tmpMax = arrayMax(validTmpWl);
                 
                 console.log('Observed wavelength range:', obsMin.toFixed(1), '-', obsMax.toFixed(1), 'Å');
                 console.log('Template wavelength range:', tmpMin.toFixed(1), '-', tmpMax.toFixed(1), 'Å');
@@ -1573,7 +1616,7 @@
             // Add vertical line at peak
             const peakLine = {
                 x: [ccfData.peakVel, ccfData.peakVel],
-                y: [Math.min(...ccfData.ccf), ccfData.peakCCF],
+                y: [arrayMin(ccfData.ccf), ccfData.peakCCF],
                 type: 'scatter',
                 mode: 'lines',
                 line: { color: '#f87171', width: 1.5, dash: 'dash' },
@@ -1877,8 +1920,8 @@
             if (n < 4) return y.slice();
             
             // Create knot positions
-            const xMin = Math.min(...x);
-            const xMax = Math.max(...x);
+            const xMin = arrayMin(x);
+            const xMax = arrayMax(x);
             const knotSpacing = (xMax - xMin) / (nKnots - 1);
             const knots = [];
             for (let i = 0; i < nKnots; i++) {
@@ -1950,7 +1993,7 @@
             if (n < 10) return flux.slice();
             
             // Calculate number of knots based on bkspace (in Angstroms)
-            const wlRange = Math.max(...wavelength) - Math.min(...wavelength);
+            const wlRange = arrayMax(wavelength) - arrayMin(wavelength);
             const nKnots = Math.max(4, Math.floor(wlRange / bkspace) + 1);
             
             console.log(`Fitting spline with bkspace=${bkspace}Å, nKnots=${nKnots}`);
@@ -2232,8 +2275,8 @@
                 let blueWl = getCorrectedWavelength(currentSpectrum.blue.wavelength, currentSpectrum.blue.header, currentSpectrum.gaiaId);
                 let redWl = getCorrectedWavelength(currentSpectrum.red.wavelength, currentSpectrum.red.header, currentSpectrum.gaiaId);
                 const allWavelengths = [...blueWl, ...redWl];
-                document.getElementById('min-wl').value = Math.floor(Math.min(...allWavelengths));
-                document.getElementById('max-wl').value = Math.ceil(Math.max(...allWavelengths));
+                document.getElementById('min-wl').value = Math.floor(arrayMin(allWavelengths));
+                document.getElementById('max-wl').value = Math.ceil(arrayMax(allWavelengths));
                 plotBothArms(currentSpectrum.blue, currentSpectrum.red);
                 return;
             }
@@ -2857,8 +2900,8 @@
                 
                 // Calculate combined wavelength range
                 const allWavelengths = [...blueData.wavelength, ...redData.wavelength];
-                const minWl = Math.floor(Math.min(...allWavelengths));
-                const maxWl = Math.ceil(Math.max(...allWavelengths));
+                const minWl = Math.floor(arrayMin(allWavelengths));
+                const maxWl = Math.ceil(arrayMax(allWavelengths));
                 
                 document.getElementById('min-wl').value = minWl;
                 document.getElementById('max-wl').value = maxWl;
