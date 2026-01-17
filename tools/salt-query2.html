@@ -720,11 +720,12 @@
                     <p style="margin-top: 0.75rem;"><strong>Understanding the results:</strong></p>
                     <ul style="margin: 0.5rem 0 0.5rem 1.25rem; padding: 0;">
                         <li><strong>RV (bary)</strong> = heliocentric radial velocity (the star's true velocity relative to the Sun)</li>
-                        <li><strong>± error</strong> = estimated 1σ uncertainty, derived from CCF peak strength and width</li>
+                        <li><strong>± error</strong> = estimated 1σ uncertainty from CCF SNR and FWHM</li>
                         <li><strong>observed</strong> = raw measured RV before barycentric correction</li>
                         <li><strong>bary corr</strong> = Earth's motion correction (added to observed RV)</li>
                         <li><strong>CCF</strong> = cross-correlation peak (0-1; higher = better template match)</li>
-                        <li><strong>σ</strong> = CCF Gaussian width (related to stellar rotation and spectral resolution)</li>
+                        <li><strong>FWHM</strong> = CCF peak width in km/s (related to v sin i and resolution)</li>
+                        <li><strong>SNR</strong> = CCF signal-to-noise ratio (peak / noise in wings)</li>
                     </ul>
                     
                     <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
@@ -1691,19 +1692,47 @@
             
             console.log(`  Gaussian fit: ${gaussFit.success ? 'success' : 'failed'}, RV=${rv.toFixed(2)} km/s`);
             
-            // Estimate RV uncertainty using Tonry-Davis style approach
-            // σ_RV ≈ σ_CCF / (1 + r) * sqrt(2) where r is CCF peak, σ_CCF is Gaussian width
-            // Higher CCF peak = better correlation = lower error
+            // Estimate RV uncertainty from CCF properties
+            // Method: σ_RV ≈ FWHM / (2.355 * SNR_CCF) where SNR_CCF = peak / noise_rms
+            // The noise is estimated from the CCF wings (far from the peak)
             const ccfPeak = initialPeak.peak;
             const sigma = gaussFit.sigma || 10;
-            const rvError = gaussFit.success && ccfPeak > 0.1 
-                ? sigma * Math.sqrt(1 - ccfPeak * ccfPeak) / ccfPeak
-                : null;
+            const fwhm = sigma * 2.355; // Convert Gaussian sigma to FWHM
+            
+            // Estimate noise from CCF wings (velocities > 200 km/s from peak)
+            const peakVel = rv;
+            let noiseSum = 0;
+            let noiseCount = 0;
+            for (let i = 0; i < velocities.length; i++) {
+                if (Math.abs(velocities[i] - peakVel) > 200) {
+                    noiseSum += ccf[i] * ccf[i];
+                    noiseCount++;
+                }
+            }
+            const noiseRms = noiseCount > 10 ? Math.sqrt(noiseSum / noiseCount) : 0.05;
+            
+            // CCF signal-to-noise ratio
+            const snrCCF = ccfPeak / noiseRms;
+            
+            // RV error estimate
+            // For well-sampled CCF: σ_RV ≈ FWHM / (2 * SNR_CCF)
+            // Additional factor of sqrt(n_pixels) improvement, but we use conservative estimate
+            let rvError = null;
+            if (gaussFit.success && snrCCF > 3) {
+                rvError = fwhm / (2 * snrCCF);
+                // Floor at 0.1 km/s (instrumental/systematic limit)
+                rvError = Math.max(0.1, rvError);
+            }
+            
+            console.log(`  CCF noise RMS: ${noiseRms.toFixed(4)}, SNR_CCF: ${snrCCF.toFixed(1)}, FWHM: ${fwhm.toFixed(1)} km/s`);
+            console.log(`  Estimated RV error: ${rvError ? rvError.toFixed(2) : 'N/A'} km/s`);
             
             return {
                 rv: rv,
                 rvError: rvError,
                 peakCCF: initialPeak.peak,
+                snrCCF: snrCCF,
+                fwhm: fwhm,
                 velocities: velocities,
                 ccf: ccf,
                 gaussFit: gaussFit,
@@ -1849,6 +1878,8 @@
                     rvError: bestResult.rvError,
                     baryCorr: baryCorr,
                     peakCCF: bestResult.peakCCF,
+                    fwhm: bestResult.fwhm,
+                    snrCCF: bestResult.snrCCF,
                     template: templateFile,
                     bkspace: bkspaceValue,
                     // Store template for overplot
@@ -1870,8 +1901,9 @@
                 
                 // Display result
                 const rvError = bestResult.rvError;
-                const errorStr = rvError ? ` ± ${rvError.toFixed(1)}` : '';
-                const sigmaStr = gaussFit.success ? `, σ=${gaussFit.sigma.toFixed(1)}` : '';
+                const errorStr = rvError ? ` ± ${rvError.toFixed(2)}` : '';
+                const fwhmStr = bestResult.fwhm ? `FWHM=${bestResult.fwhm.toFixed(1)}` : '';
+                const snrStr = bestResult.snrCCF ? `SNR=${bestResult.snrCCF.toFixed(0)}` : '';
                 const chunkNote = `${bestResult.chunkMin}-${bestResult.chunkMax}Å`;
                 
                 let rvDisplay;
@@ -1893,8 +1925,8 @@
                 rvResult.innerHTML = `
                     ${rvDisplay}
                     <span class="rv-label">CCF:</span>
-                    <span class="rv-value">${bestResult.peakCCF.toFixed(3)}${sigmaStr}</span>
-                    <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">${chunkNote}</span>
+                    <span class="rv-value">${bestResult.peakCCF.toFixed(3)}</span>
+                    <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">${fwhmStr}, ${snrStr}, ${chunkNote}</span>
                     <button class="show-ccf-btn" onclick="showCCFPlot()">Show CCF</button>
                 `;
                 
@@ -1933,8 +1965,9 @@
                 document.body.appendChild(modal);
             }
             
-            const errorStr = ccfData.rvError ? ` ± ${ccfData.rvError.toFixed(1)}` : '';
-            const sigmaStr = ccfData.gaussFit && ccfData.gaussFit.success ? `, σ=${ccfData.gaussFit.sigma.toFixed(1)} km/s` : '';
+            const errorStr = ccfData.rvError ? ` ± ${ccfData.rvError.toFixed(2)}` : '';
+            const fwhmStr = ccfData.fwhm ? `FWHM=${ccfData.fwhm.toFixed(1)} km/s` : '';
+            const snrStr = ccfData.snrCCF ? `SNR=${ccfData.snrCCF.toFixed(0)}` : '';
             
             modal.innerHTML = `
                 <div style="background: #1e293b; border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 800px;">
@@ -1949,7 +1982,7 @@
                     </div>
                     <div id="ccf-plot" style="width: 100%; height: 350px;"></div>
                     <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.5rem; font-family: 'DM Sans', sans-serif;">
-                        Template: ${ccfData.template} | CCF peak: ${ccfData.peakCCF.toFixed(3)}${sigmaStr}<br>
+                        Template: ${ccfData.template} | CCF peak: ${ccfData.peakCCF.toFixed(3)}, ${fwhmStr}, ${snrStr}<br>
                         ${ccfData.baryCorr ? `RV (bary): ${ccfData.peakVelBary.toFixed(2)}${errorStr} km/s (observed: ${ccfData.peakVel.toFixed(2)} km/s, bary corr: ${ccfData.baryCorr >= 0 ? '+' : ''}${ccfData.baryCorr.toFixed(2)} km/s)` : `RV: ${ccfData.peakVel.toFixed(2)}${errorStr} km/s`}
                     </div>
                 </div>
