@@ -282,6 +282,27 @@
                 border-color: #3b82f6;
             }
             
+            .control-divider {
+                width: 1px;
+                height: 24px;
+                background: #475569;
+                margin: 0 0.5rem;
+            }
+            
+            .line-btn {
+                font-weight: 500;
+            }
+            
+            #halpha-btn.active {
+                background: #ec4899;
+                border-color: #ec4899;
+            }
+            
+            #lithium-btn.active {
+                background: #f59e0b;
+                border-color: #f59e0b;
+            }
+            
             #spectrum-plot {
                 width: 100%;
                 height: 400px;
@@ -413,6 +434,9 @@
                 <button class="spectrum-btn" onclick="applyWavelengthRange()">Apply</button>
                 <button class="spectrum-btn" onclick="resetWavelengthRange()">Reset</button>
                 <button class="spectrum-btn" id="flatten-btn" onclick="toggleFlatten()">Flatten</button>
+                <span class="control-divider"></span>
+                <button class="spectrum-btn line-btn" id="halpha-btn" onclick="toggleLine('halpha')">Hα</button>
+                <button class="spectrum-btn line-btn" id="lithium-btn" onclick="toggleLine('lithium')">Li I</button>
             </div>
             <div id="spectrum-plot"></div>
         </section>
@@ -494,6 +518,90 @@
         // ============================================
         let currentSpectrum = null;
         let isFlattened = false;
+        
+        // Spectral line markers
+        const SPECTRAL_LINES = {
+            halpha: { wavelength: 6562.8, label: 'Hα', color: '#ec4899' },
+            lithium: { wavelength: 6707.8, label: 'Li I 6708', color: '#f59e0b' }
+        };
+        let showLines = { halpha: false, lithium: false };
+        
+        function toggleLine(lineId) {
+            showLines[lineId] = !showLines[lineId];
+            document.getElementById(`${lineId}-btn`).classList.toggle('active', showLines[lineId]);
+            updateSpectralLines();
+        }
+        
+        function updateSpectralLines() {
+            const plotDiv = document.getElementById('spectrum-plot');
+            if (!plotDiv || !plotDiv.data) return;
+            
+            const shapes = [];
+            const annotations = [];
+            
+            const minWl = parseFloat(document.getElementById('min-wl').value);
+            const maxWl = parseFloat(document.getElementById('max-wl').value);
+            
+            for (const [lineId, line] of Object.entries(SPECTRAL_LINES)) {
+                if (showLines[lineId] && line.wavelength >= minWl && line.wavelength <= maxWl) {
+                    shapes.push({
+                        type: 'line',
+                        x0: line.wavelength,
+                        x1: line.wavelength,
+                        y0: 0,
+                        y1: 1,
+                        yref: 'paper',
+                        line: { color: line.color, width: 1.5, dash: 'dash' }
+                    });
+                    annotations.push({
+                        x: line.wavelength,
+                        y: 1,
+                        yref: 'paper',
+                        text: line.label,
+                        showarrow: false,
+                        font: { color: line.color, size: 11 },
+                        yanchor: 'bottom',
+                        yshift: 5
+                    });
+                }
+            }
+            
+            Plotly.relayout(plotDiv, { shapes: shapes, annotations: annotations });
+        }
+        
+        function getSpectralLineShapes() {
+            const shapes = [];
+            const annotations = [];
+            
+            const minWl = parseFloat(document.getElementById('min-wl').value);
+            const maxWl = parseFloat(document.getElementById('max-wl').value);
+            
+            for (const [lineId, line] of Object.entries(SPECTRAL_LINES)) {
+                if (showLines[lineId] && line.wavelength >= minWl && line.wavelength <= maxWl) {
+                    shapes.push({
+                        type: 'line',
+                        x0: line.wavelength,
+                        x1: line.wavelength,
+                        y0: 0,
+                        y1: 1,
+                        yref: 'paper',
+                        line: { color: line.color, width: 1.5, dash: 'dash' }
+                    });
+                    annotations.push({
+                        x: line.wavelength,
+                        y: 1,
+                        yref: 'paper',
+                        text: line.label,
+                        showarrow: false,
+                        font: { color: line.color, size: 11 },
+                        yanchor: 'bottom',
+                        yshift: 5
+                    });
+                }
+            }
+            
+            return { shapes, annotations };
+        }
 
         // ============================================
         // FITS Parsing Functions
@@ -636,6 +744,8 @@
                 hovertemplate: 'λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
             };
             
+            const { shapes, annotations } = getSpectralLineShapes();
+            
             const layout = {
                 title: null,
                 xaxis: { 
@@ -656,7 +766,9 @@
                 plot_bgcolor: '#0f172a',
                 font: { color: '#e2e8f0', family: 'DM Sans, sans-serif' },
                 hovermode: 'closest',
-                margin: { t: 20, r: 30, b: 50, l: 60 }
+                margin: { t: 20, r: 30, b: 50, l: 60 },
+                shapes: shapes,
+                annotations: annotations
             };
             
             const config = {
@@ -692,6 +804,11 @@
             
             isFlattened = false;
             document.getElementById('flatten-btn').classList.remove('active');
+            
+            // Reset line toggles
+            showLines = { halpha: false, lithium: false };
+            document.getElementById('halpha-btn').classList.remove('active');
+            document.getElementById('lithium-btn').classList.remove('active');
             
             try {
                 const { wavelength, flux, header } = await loadFITSSpectrum(filename);
@@ -745,6 +862,10 @@
         function closeSpectrumViewer() {
             document.getElementById('spectrum-viewer').classList.remove('visible');
             currentSpectrum = null;
+            // Reset line toggles
+            showLines = { halpha: false, lithium: false };
+            document.getElementById('halpha-btn').classList.remove('active');
+            document.getElementById('lithium-btn').classList.remove('active');
         }
         
         function applyWavelengthRange() {
@@ -1370,6 +1491,11 @@
             isFlattened = false;
             document.getElementById('flatten-btn').classList.remove('active');
             
+            // Reset line toggles
+            showLines = { halpha: false, lithium: false };
+            document.getElementById('halpha-btn').classList.remove('active');
+            document.getElementById('lithium-btn').classList.remove('active');
+            
             try {
                 // Load both spectra in parallel
                 const [blueData, redData] = await Promise.all([
@@ -1471,6 +1597,8 @@
                 }
             ];
             
+            const { shapes, annotations } = getSpectralLineShapes();
+            
             const layout = {
                 title: null,
                 xaxis: { 
@@ -1501,7 +1629,9 @@
                     borderwidth: 1,
                     font: { color: '#e2e8f0' }
                 },
-                showlegend: true
+                showlegend: true,
+                shapes: shapes,
+                annotations: annotations
             };
             
             const config = {
