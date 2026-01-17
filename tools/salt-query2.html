@@ -303,6 +303,17 @@
                 border-color: #f59e0b;
             }
             
+            #bary-btn.active {
+                background: #10b981;
+                border-color: #10b981;
+            }
+            
+            .line-btn-group {
+                display: inline-flex;
+                gap: 0.5rem;
+                flex-shrink: 0;
+            }
+            
             #spectrum-plot {
                 width: 100%;
                 height: 400px;
@@ -435,9 +446,12 @@
                 <button class="spectrum-btn" onclick="resetWavelengthRange()">Reset</button>
                 <button class="spectrum-btn" id="flatten-btn" onclick="toggleFlatten()">Flatten</button>
                 <button class="spectrum-btn" onclick="recalcSNR()" title="Recalculate SNR for current wavelength range">Calc SNR</button>
+                <button class="spectrum-btn" id="bary-btn" onclick="toggleBarycentric()" title="Apply barycentric correction">Bary Corr</button>
                 <span class="control-divider"></span>
-                <button class="spectrum-btn line-btn" id="halpha-btn" onclick="toggleLine('halpha')">Hα</button>
-                <button class="spectrum-btn line-btn" id="lithium-btn" onclick="toggleLine('lithium')">Li I</button>
+                <span class="line-btn-group">
+                    <button class="spectrum-btn line-btn" id="halpha-btn" onclick="toggleLine('halpha')">Hα</button>
+                    <button class="spectrum-btn line-btn" id="lithium-btn" onclick="toggleLine('lithium')">Li I</button>
+                </span>
             </div>
             <div id="spectrum-plot"></div>
         </section>
@@ -526,6 +540,213 @@
             lithium: { wavelength: 6707.8, label: 'Li I 6708', color: '#f59e0b' }
         };
         let showLines = { halpha: false, lithium: false };
+        
+        // Barycentric correction state
+        let applyBaryCorr = false;
+        
+        // SALT Observatory coordinates
+        const SALT_LAT = 32.37582222;   // degrees
+        const SALT_LONG = 20.81080833;  // degrees East
+        const SALT_ALT = 1798;          // meters
+        const C_KMS = 299792.458;       // speed of light in km/s
+        
+        // ============================================
+        // Barycentric Correction Calculator
+        // Simplified implementation based on Earth's orbital motion
+        // ============================================
+        
+        function degToRad(deg) {
+            return deg * Math.PI / 180;
+        }
+        
+        function radToDeg(rad) {
+            return rad * 180 / Math.PI;
+        }
+        
+        // Calculate Julian Date from Date object
+        function dateToJD(date) {
+            const year = date.getUTCFullYear();
+            const month = date.getUTCMonth() + 1;
+            const day = date.getUTCDate();
+            const hour = date.getUTCHours();
+            const minute = date.getUTCMinutes();
+            const second = date.getUTCSeconds();
+            
+            let y = year;
+            let m = month;
+            if (m <= 2) {
+                y -= 1;
+                m += 12;
+            }
+            
+            const A = Math.floor(y / 100);
+            const B = 2 - A + Math.floor(A / 4);
+            
+            const jd = Math.floor(365.25 * (y + 4716)) + 
+                       Math.floor(30.6001 * (m + 1)) + 
+                       day + B - 1524.5 +
+                       (hour + minute / 60 + second / 3600) / 24;
+            
+            return jd;
+        }
+        
+        // Parse DATE-OBS string to JD
+        function parseDateObsToJD(dateObs, jdHeader = null) {
+            // If JD is directly in header, use it
+            if (jdHeader && !isNaN(jdHeader)) {
+                return jdHeader;
+            }
+            
+            // Try to parse DATE-OBS (format: YYYY-MM-DDTHH:MM:SS)
+            if (dateObs) {
+                const date = new Date(dateObs);
+                if (!isNaN(date.getTime())) {
+                    return dateToJD(date);
+                }
+            }
+            
+            return null;
+        }
+        
+        // Calculate barycentric velocity correction
+        // This is a simplified calculation accounting for Earth's orbital motion
+        function calculateBarycentricVelocity(jd, raDeg, decDeg) {
+            if (!jd || raDeg === null || decDeg === null) {
+                return 0;
+            }
+            
+            // Convert to radians
+            const ra = degToRad(raDeg);
+            const dec = degToRad(decDeg);
+            
+            // Calculate mean longitude of the Sun
+            // Days since J2000.0
+            const d = jd - 2451545.0;
+            
+            // Mean anomaly of the Sun (degrees)
+            const g = 357.529 + 0.98560028 * d;
+            const gRad = degToRad(g % 360);
+            
+            // Mean longitude of the Sun (degrees)
+            const L = 280.459 + 0.98564736 * d;
+            const LRad = degToRad(L % 360);
+            
+            // Ecliptic longitude of the Sun
+            const lambdaSun = L + 1.915 * Math.sin(gRad) + 0.020 * Math.sin(2 * gRad);
+            const lambdaSunRad = degToRad(lambdaSun % 360);
+            
+            // Obliquity of the ecliptic
+            const epsilon = degToRad(23.439 - 0.0000004 * d);
+            
+            // Sun's position in equatorial coordinates
+            const raSun = Math.atan2(Math.cos(epsilon) * Math.sin(lambdaSunRad), Math.cos(lambdaSunRad));
+            const decSun = Math.asin(Math.sin(epsilon) * Math.sin(lambdaSunRad));
+            
+            // Earth's orbital velocity (approximately 29.78 km/s)
+            const vOrb = 29.78;
+            
+            // Earth's orbital velocity is perpendicular to the Sun direction
+            // We need the component along the line of sight to the target
+            
+            // Direction to the Sun (from Earth)
+            const sunX = Math.cos(decSun) * Math.cos(raSun);
+            const sunY = Math.cos(decSun) * Math.sin(raSun);
+            const sunZ = Math.sin(decSun);
+            
+            // Direction to the target
+            const targetX = Math.cos(dec) * Math.cos(ra);
+            const targetY = Math.cos(dec) * Math.sin(ra);
+            const targetZ = Math.sin(dec);
+            
+            // Earth's velocity direction is perpendicular to Sun direction, in the ecliptic plane
+            // Velocity is roughly 90 degrees ahead of Earth's position (behind the Sun)
+            const vDirRA = raSun + Math.PI / 2;
+            const vDirX = Math.cos(vDirRA);
+            const vDirY = Math.sin(vDirRA);
+            const vDirZ = 0; // Simplified: assume motion in ecliptic plane
+            
+            // Project Earth's velocity onto the line of sight to the target
+            const vBary = vOrb * (vDirX * targetX + vDirY * targetY + vDirZ * targetZ);
+            
+            // Add approximate correction for Earth's rotation (smaller effect)
+            const lst = (L / 15 + SALT_LONG / 15) % 24; // Local sidereal time (hours, approximate)
+            const lstRad = degToRad(lst * 15);
+            const latRad = degToRad(SALT_LAT);
+            
+            // Rotational velocity at SALT latitude
+            const vRot = 0.4651 * Math.cos(latRad); // km/s at Earth's surface
+            
+            // Hour angle
+            const ha = lstRad - ra;
+            
+            // Rotational component along line of sight
+            const vRotProj = vRot * Math.cos(dec) * Math.sin(ha);
+            
+            return vBary + vRotProj;
+        }
+        
+        // Apply barycentric correction to wavelength array
+        function applyBarycentricCorrection(wavelength, vBary) {
+            if (!vBary || vBary === 0) return wavelength;
+            
+            // λ_corrected = λ_observed * (1 + v_bary / c)
+            const factor = 1 + (vBary / C_KMS);
+            return wavelength.map(w => w * factor);
+        }
+        
+        // Get target RA/Dec from catalog or header
+        function getTargetCoords(gaiaId, header) {
+            // First try to get from catalog
+            if (catalogData && gaiaId) {
+                const target = catalogData.targets.find(t => t.gaia_dr3_id === gaiaId);
+                if (target && target.ra_deg !== undefined && target.dec_deg !== undefined) {
+                    return { ra: target.ra_deg, dec: target.dec_deg };
+                }
+            }
+            
+            // Try header
+            if (header) {
+                const ra = header.RA || header.OBJRA;
+                const dec = header.DEC || header.OBJDEC;
+                if (ra !== undefined && dec !== undefined) {
+                    return { ra: ra, dec: dec };
+                }
+            }
+            
+            return null;
+        }
+        
+        function toggleBarycentric() {
+            applyBaryCorr = !applyBaryCorr;
+            document.getElementById('bary-btn').classList.toggle('active', applyBaryCorr);
+            
+            // Re-render the current spectrum
+            if (currentSpectrum) {
+                if (currentSpectrum.isMultiArm) {
+                    plotBothArms(currentSpectrum.blue, currentSpectrum.red);
+                } else {
+                    applyWavelengthRange();
+                }
+            }
+        }
+        
+        // Get barycentric-corrected wavelength
+        function getCorrectedWavelength(wavelength, header, gaiaId) {
+            if (!applyBaryCorr) return wavelength;
+            
+            const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
+            const coords = getTargetCoords(gaiaId, header);
+            
+            if (!jd || !coords) {
+                console.warn('Cannot apply barycentric correction: missing JD or coordinates');
+                return wavelength;
+            }
+            
+            const vBary = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
+            console.log(`Barycentric velocity: ${vBary.toFixed(3)} km/s`);
+            
+            return applyBarycentricCorrection(wavelength, vBary);
+        }
         
         // ============================================
         // SNR Calculation (DER_SNR method)
@@ -926,6 +1147,10 @@
             document.getElementById('halpha-btn').classList.remove('active');
             document.getElementById('lithium-btn').classList.remove('active');
             
+            // Reset barycentric correction
+            applyBaryCorr = false;
+            document.getElementById('bary-btn').classList.remove('active');
+            
             try {
                 const { wavelength, flux, header } = await loadFITSSpectrum(filename);
                 
@@ -989,6 +1214,9 @@
             showLines = { halpha: false, lithium: false };
             document.getElementById('halpha-btn').classList.remove('active');
             document.getElementById('lithium-btn').classList.remove('active');
+            // Reset barycentric correction
+            applyBaryCorr = false;
+            document.getElementById('bary-btn').classList.remove('active');
         }
         
         function applyWavelengthRange() {
@@ -1003,7 +1231,11 @@
             const minWl = parseFloat(document.getElementById('min-wl').value);
             const maxWl = parseFloat(document.getElementById('max-wl').value);
             
-            let { wavelength, flux } = currentSpectrum;
+            let wavelength = currentSpectrum.wavelength;
+            let flux = currentSpectrum.flux;
+            
+            // Apply barycentric correction if enabled
+            wavelength = getCorrectedWavelength(wavelength, currentSpectrum.header, currentSpectrum.gaiaId);
             
             if (isFlattened) {
                 flux = flattenSpectrum(wavelength, flux);
@@ -1019,14 +1251,20 @@
             
             // Handle multi-arm case
             if (currentSpectrum.isMultiArm) {
-                const allWavelengths = [...currentSpectrum.blue.wavelength, ...currentSpectrum.red.wavelength];
+                let blueWl = getCorrectedWavelength(currentSpectrum.blue.wavelength, currentSpectrum.blue.header, currentSpectrum.gaiaId);
+                let redWl = getCorrectedWavelength(currentSpectrum.red.wavelength, currentSpectrum.red.header, currentSpectrum.gaiaId);
+                const allWavelengths = [...blueWl, ...redWl];
                 document.getElementById('min-wl').value = Math.floor(Math.min(...allWavelengths));
                 document.getElementById('max-wl').value = Math.ceil(Math.max(...allWavelengths));
                 plotBothArms(currentSpectrum.blue, currentSpectrum.red);
                 return;
             }
             
-            let { wavelength, flux } = currentSpectrum;
+            let wavelength = currentSpectrum.wavelength;
+            let flux = currentSpectrum.flux;
+            
+            // Apply barycentric correction if enabled
+            wavelength = getCorrectedWavelength(wavelength, currentSpectrum.header, currentSpectrum.gaiaId);
             
             if (isFlattened) {
                 flux = flattenSpectrum(wavelength, flux);
@@ -1619,6 +1857,10 @@
             document.getElementById('halpha-btn').classList.remove('active');
             document.getElementById('lithium-btn').classList.remove('active');
             
+            // Reset barycentric correction
+            applyBaryCorr = false;
+            document.getElementById('bary-btn').classList.remove('active');
+            
             try {
                 // Load both spectra in parallel
                 const [blueData, redData] = await Promise.all([
@@ -1694,6 +1936,12 @@
             let blueFlux = blueData.flux;
             let redWl = redData.wavelength;
             let redFlux = redData.flux;
+            
+            // Apply barycentric correction if enabled
+            if (currentSpectrum) {
+                blueWl = getCorrectedWavelength(blueWl, blueData.header, currentSpectrum.gaiaId);
+                redWl = getCorrectedWavelength(redWl, redData.header, currentSpectrum.gaiaId);
+            }
             
             if (isFlattened) {
                 blueFlux = flattenSpectrum(blueWl, blueFlux);
