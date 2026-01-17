@@ -390,6 +390,60 @@
                 color: #e2e8f0;
             }
             
+            /* Condensed file list styling */
+            .obs-files {
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .files-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.25rem 0.5rem;
+                font-size: 0.7rem;
+            }
+            
+            .file-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 0.15rem 0.35rem;
+                background: #f1f5f9;
+                border-radius: 3px;
+                font-family: 'DM Mono', monospace;
+                white-space: nowrap;
+            }
+            
+            .file-badge {
+                font-size: 0.6rem;
+                padding: 0.1rem 0.25rem;
+                border-radius: 2px;
+                background: #e2e8f0;
+                color: #475569;
+                text-transform: uppercase;
+                font-weight: 500;
+            }
+            
+            .file-badge.main {
+                background: #3b82f6;
+                color: #fff;
+            }
+            
+            .dropbox-path {
+                margin-bottom: 0.5rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid #e2e8f0;
+                font-size: 0.75rem;
+            }
+            
+            .dropbox-path code {
+                font-size: 0.7rem;
+            }
+            
+            .file-actions {
+                margin-top: 0.5rem;
+                padding-top: 0.5rem;
+            }
+            
             #spectrum-plot {
                 width: 100%;
                 height: 400px;
