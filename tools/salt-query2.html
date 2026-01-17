@@ -1508,7 +1508,81 @@
             }
         }
         
-        // Main CCF computation function
+        // Compute CCF for a single wavelength chunk
+        function computeCCFForChunk(obsWl, obsFlux, templateWl, templateFlux, chunkMin, chunkMax) {
+            // Filter to chunk range
+            const obsIndices = [];
+            for (let i = 0; i < obsWl.length; i++) {
+                if (obsWl[i] >= chunkMin && obsWl[i] <= chunkMax && !isNaN(obsFlux[i]) && isFinite(obsFlux[i])) {
+                    obsIndices.push(i);
+                }
+            }
+            
+            const tmpIndices = [];
+            for (let i = 0; i < templateWl.length; i++) {
+                if (templateWl[i] >= chunkMin && templateWl[i] <= chunkMax && !isNaN(templateFlux[i]) && isFinite(templateFlux[i])) {
+                    tmpIndices.push(i);
+                }
+            }
+            
+            if (obsIndices.length < 50 || tmpIndices.length < 50) {
+                return null; // Not enough points in this chunk
+            }
+            
+            const chunkObsWl = obsIndices.map(i => obsWl[i]);
+            const chunkObsFlux = obsIndices.map(i => obsFlux[i]);
+            const chunkTmpWl = tmpIndices.map(i => templateWl[i]);
+            const chunkTmpFlux = tmpIndices.map(i => templateFlux[i]);
+            
+            // Convert to log wavelength grid
+            const logWlMin = Math.log(chunkMin);
+            const logWlMax = Math.log(chunkMax);
+            const nPoints = 2048;
+            const dLogWl = (logWlMax - logWlMin) / nPoints;
+            const dv = C_KMS * dLogWl;
+            
+            if (!isFinite(dv) || dv <= 0) return null;
+            
+            // Interpolate
+            const obsInterp = interpolateToLogGrid(chunkObsWl, chunkObsFlux, logWlMin, logWlMax, nPoints);
+            const tmpInterp = interpolateToLogGrid(chunkTmpWl, chunkTmpFlux, logWlMin, logWlMax, nPoints);
+            
+            const obsValidCount = obsInterp.fluxGrid.filter(f => !isNaN(f) && isFinite(f)).length;
+            const tmpValidCount = tmpInterp.fluxGrid.filter(f => !isNaN(f) && isFinite(f)).length;
+            
+            if (obsValidCount < 50 || tmpValidCount < 50) return null;
+            
+            // Normalize
+            const obsNorm = normalizeSpectrum(obsInterp.fluxGrid);
+            const tmpNorm = normalizeSpectrum(tmpInterp.fluxGrid);
+            
+            // Compute CCF
+            const maxVel = 500;
+            const maxLag = Math.ceil(maxVel / dv);
+            const { lags, ccf } = computeCrossCorrelationFunction(obsNorm, tmpNorm, maxLag);
+            
+            // Find peak
+            const velocities = lags.map(l => l * dv);
+            const initialPeak = findCCFPeak(lags, ccf);
+            const initialRV = initialPeak.lag * dv;
+            
+            // Gaussian refinement
+            const gaussFit = refineCCFPeakWithGaussian(velocities, ccf, initialRV, 100);
+            const rv = gaussFit.success ? gaussFit.mean : initialRV;
+            
+            return {
+                rv: rv,
+                peakCCF: initialPeak.peak,
+                velocities: velocities,
+                ccf: ccf,
+                gaussFit: gaussFit,
+                chunkMin: chunkMin,
+                chunkMax: chunkMax,
+                dv: dv
+            };
+        }
+        
+        // Main CCF computation function - divides spectrum into chunks
         async function computeCCF() {
             if (!currentSpectrum) {
                 document.getElementById('rv-result').innerHTML = '<span class="error">No spectrum loaded</span>';
@@ -1522,19 +1596,17 @@
             }
             
             const rvResult = document.getElementById('rv-result');
-            rvResult.innerHTML = '<span class="computing">Computing CCF...</span>';
+            rvResult.innerHTML = '<span class="computing">Computing CCF in 5 chunks...</span>';
             
             try {
                 // Load template
                 const template = await loadTemplate(templateFile);
                 
-                // Get observed spectrum (use appropriate arm or single spectrum)
-                // CCF is always computed on OBSERVED wavelengths (no bary correction)
+                // Get observed spectrum
                 let obsWl, obsFlux;
                 const header = currentSpectrum.isMultiArm ? currentSpectrum.blue.header : currentSpectrum.header;
                 
                 if (currentSpectrum.isMultiArm) {
-                    // For multi-arm, use the blue arm (typically has more lines)
                     obsWl = currentSpectrum.blue.wavelength.slice();
                     obsFlux = currentSpectrum.blue.flux.slice();
                 } else {
@@ -1542,8 +1614,7 @@
                     obsFlux = currentSpectrum.flux.slice();
                 }
                 
-                // Calculate barycentric correction (but don't apply to wavelengths)
-                // CCF measures observed RV; bary correction converts to barycentric frame
+                // Calculate barycentric correction
                 let baryCorr = 0;
                 if (applyBaryCorr) {
                     const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
@@ -1551,136 +1622,86 @@
                     
                     if (jd && coords) {
                         baryCorr = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
-                        console.log('Barycentric correction to be applied:', baryCorr.toFixed(3), 'km/s');
-                    } else {
-                        console.warn('Cannot calculate barycentric correction: missing JD or coordinates');
+                        console.log('Barycentric correction:', baryCorr.toFixed(3), 'km/s');
                     }
                 }
                 
-                // Filter out invalid values
-                const validObsWl = obsWl.filter(w => !isNaN(w) && isFinite(w) && w > 0);
-                const validTmpWl = template.wavelength.filter(w => !isNaN(w) && isFinite(w) && w > 0);
+                // Define 5 wavelength chunks within 4000-7000 Å
+                const globalMin = 4000;
+                const globalMax = 7000;
+                const nChunks = 5;
+                const chunkWidth = (globalMax - globalMin) / nChunks;
                 
-                if (validObsWl.length === 0 || validTmpWl.length === 0) {
-                    console.error('Invalid wavelength arrays - obs:', obsWl.slice(0, 10), 'template:', template.wavelength.slice(0, 10));
-                    rvResult.innerHTML = '<span class="error">Invalid wavelength data</span>';
+                const chunks = [];
+                for (let i = 0; i < nChunks; i++) {
+                    chunks.push({
+                        min: globalMin + i * chunkWidth,
+                        max: globalMin + (i + 1) * chunkWidth
+                    });
+                }
+                
+                console.log('Computing CCF for chunks:', chunks.map(c => `${c.min}-${c.max}`).join(', '));
+                
+                // Compute CCF for each chunk
+                const results = [];
+                for (const chunk of chunks) {
+                    const result = computeCCFForChunk(
+                        obsWl, obsFlux, 
+                        template.wavelength, template.flux,
+                        chunk.min, chunk.max
+                    );
+                    
+                    if (result) {
+                        results.push(result);
+                        console.log(`Chunk ${chunk.min}-${chunk.max}Å: RV=${result.rv.toFixed(2)} km/s, CCF peak=${result.peakCCF.toFixed(4)}`);
+                    } else {
+                        console.log(`Chunk ${chunk.min}-${chunk.max}Å: insufficient data`);
+                    }
+                }
+                
+                if (results.length === 0) {
+                    rvResult.innerHTML = '<span class="error">No valid CCF results from any chunk</span>';
                     return;
                 }
                 
-                // Find overlapping wavelength range
-                const obsMin = arrayMin(validObsWl);
-                const obsMax = arrayMax(validObsWl);
-                const tmpMin = arrayMin(validTmpWl);
-                const tmpMax = arrayMax(validTmpWl);
-                
-                console.log('Observed wavelength range:', obsMin.toFixed(1), '-', obsMax.toFixed(1), 'Å');
-                console.log('Template wavelength range:', tmpMin.toFixed(1), '-', tmpMax.toFixed(1), 'Å');
-                
-                const wlMin = Math.max(obsMin, tmpMin);
-                let wlMax = Math.min(obsMax, tmpMax);
-                
-                // Cap at 7000 Å to avoid telluric contamination
-                const telluricCutoff = 7000;
-                if (wlMax > telluricCutoff) {
-                    console.log(`Capping CCF range at ${telluricCutoff}Å to avoid tellurics`);
-                    wlMax = telluricCutoff;
+                // Find the chunk with highest CCF peak (best correlation)
+                let bestResult = results[0];
+                for (const result of results) {
+                    if (result.peakCCF > bestResult.peakCCF) {
+                        bestResult = result;
+                    }
                 }
                 
-                console.log('CCF range:', wlMin.toFixed(1), '-', wlMax.toFixed(1), 'Å');
+                console.log(`Best chunk: ${bestResult.chunkMin}-${bestResult.chunkMax}Å with CCF peak=${bestResult.peakCCF.toFixed(4)}`);
                 
-                if (wlMin >= wlMax) {
-                    rvResult.innerHTML = `<span class="error">No overlap: obs ${obsMin.toFixed(0)}-${obsMax.toFixed(0)}Å, template ${tmpMin.toFixed(0)}-${tmpMax.toFixed(0)}Å</span>`;
-                    return;
-                }
-                
-                // CCF always uses full overlap range (ignore view constraints)
-                // View constraints are for plotting, not for CCF
-                const rangeMin = wlMin;
-                const rangeMax = wlMax;
-                
-                console.log('CCF range:', rangeMin.toFixed(1), '-', rangeMax.toFixed(1), 'Å');
-                
-                // Convert to log wavelength
-                const logWlMin = Math.log(rangeMin);
-                const logWlMax = Math.log(rangeMax);
-                
-                // Number of points and velocity step
-                // Each pixel in log-wavelength corresponds to a fixed velocity
-                const nPoints = 4096;
-                const dLogWl = (logWlMax - logWlMin) / nPoints;
-                const dv = C_KMS * dLogWl; // km/s per pixel
-                
-                console.log('dLogWl:', dLogWl, 'dv:', dv, 'km/s per pixel');
-                
-                if (!isFinite(dv) || dv <= 0) {
-                    rvResult.innerHTML = `<span class="error">Invalid wavelength range for CCF</span>`;
-                    return;
-                }
-                
-                // Interpolate both spectra onto the same log-wavelength grid
-                const obsInterp = interpolateToLogGrid(obsWl, obsFlux, logWlMin, logWlMax, nPoints);
-                const tmpInterp = interpolateToLogGrid(template.wavelength, template.flux, logWlMin, logWlMax, nPoints);
-                
-                // Check for valid interpolation
-                const obsValidCount = obsInterp.fluxGrid.filter(f => !isNaN(f) && isFinite(f)).length;
-                const tmpValidCount = tmpInterp.fluxGrid.filter(f => !isNaN(f) && isFinite(f)).length;
-                console.log('Valid interpolated points - obs:', obsValidCount, 'template:', tmpValidCount);
-                
-                if (obsValidCount < 100 || tmpValidCount < 100) {
-                    rvResult.innerHTML = `<span class="error">Insufficient valid points for CCF (obs: ${obsValidCount}, tmp: ${tmpValidCount})</span>`;
-                    return;
-                }
-                
-                // Normalize
-                const obsNorm = normalizeSpectrum(obsInterp.fluxGrid);
-                const tmpNorm = normalizeSpectrum(tmpInterp.fluxGrid);
-                
-                // Compute CCF with max velocity range of ±500 km/s
-                const maxVel = 500; // km/s
-                const maxLag = Math.ceil(maxVel / dv);
-                
-                const { lags, ccf } = computeCrossCorrelationFunction(obsNorm, tmpNorm, maxLag);
-                
-                // Convert lags to velocities
-                const velocities = lags.map(l => l * dv);
-                
-                // Find initial peak
-                const initialPeak = findCCFPeak(lags, ccf);
-                const initialRV = initialPeak.lag * dv;
-                
-                // Refine with Gaussian fit (like the Python code)
-                const gaussFit = refineCCFPeakWithGaussian(velocities, ccf, initialRV, 100);
-                
-                // Use Gaussian mean as final RV if fit succeeded
-                const rv = gaussFit.success ? gaussFit.mean : initialRV;
-                
-                // Apply barycentric correction to final RV
+                const rv = bestResult.rv;
                 const rvBary = rv + baryCorr;
+                const gaussFit = bestResult.gaussFit;
                 
-                // Store CCF for optional display
+                // Store CCF for display
                 currentSpectrum.lastCCF = {
-                    velocities: velocities,
-                    ccf: ccf,
+                    velocities: bestResult.velocities,
+                    ccf: bestResult.ccf,
                     peakVel: rv,
                     peakVelBary: rvBary,
                     baryCorr: baryCorr,
-                    peakCCF: initialPeak.peak,
+                    peakCCF: bestResult.peakCCF,
                     template: templateFile,
-                    gaussFit: gaussFit
+                    gaussFit: gaussFit,
+                    chunkRange: `${bestResult.chunkMin}-${bestResult.chunkMax}`,
+                    allResults: results
                 };
                 
-                // Store measured RV for RV correction toggle
+                // Store measured RV
                 measuredRV = applyBaryCorr && baryCorr !== 0 ? rvBary : rv;
-                
-                // Enable the RV Corr button visual feedback
                 document.getElementById('rv-corr-btn').style.opacity = '1';
                 
                 // Display result
-                const fitNote = gaussFit.success ? ` (σ=${gaussFit.sigma.toFixed(1)})` : ' (no fit)';
+                const fitNote = gaussFit.success ? ` (σ=${gaussFit.sigma.toFixed(1)})` : '';
+                const chunkNote = `${bestResult.chunkMin}-${bestResult.chunkMax}Å`;
                 
                 let rvDisplay;
                 if (applyBaryCorr && baryCorr !== 0) {
-                    // Show barycentric-corrected RV
                     const signBary = rvBary >= 0 ? '+' : '';
                     rvDisplay = `
                         <span class="rv-label">RV (bary):</span>
@@ -1688,7 +1709,6 @@
                         <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">observed: ${rv >= 0 ? '+' : ''}${rv.toFixed(2)}, corr: ${baryCorr >= 0 ? '+' : ''}${baryCorr.toFixed(2)}</span>
                     `;
                 } else {
-                    // Show observed RV only
                     const sign = rv >= 0 ? '+' : '';
                     rvDisplay = `
                         <span class="rv-label">RV:</span>
@@ -1698,8 +1718,9 @@
                 
                 rvResult.innerHTML = `
                     ${rvDisplay}
-                    <span class="rv-label">CCF peak:</span>
-                    <span class="rv-value">${initialPeak.peak.toFixed(3)}</span>
+                    <span class="rv-label">CCF:</span>
+                    <span class="rv-value">${bestResult.peakCCF.toFixed(3)}</span>
+                    <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">${chunkNote}</span>
                     <button class="show-ccf-btn" onclick="showCCFPlot()">Show CCF</button>
                 `;
                 
