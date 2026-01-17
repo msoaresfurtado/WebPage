@@ -434,6 +434,7 @@
                 <button class="spectrum-btn" onclick="applyWavelengthRange()">Apply</button>
                 <button class="spectrum-btn" onclick="resetWavelengthRange()">Reset</button>
                 <button class="spectrum-btn" id="flatten-btn" onclick="toggleFlatten()">Flatten</button>
+                <button class="spectrum-btn" onclick="recalcSNR()" title="Recalculate SNR for current wavelength range">Calc SNR</button>
                 <span class="control-divider"></span>
                 <button class="spectrum-btn line-btn" id="halpha-btn" onclick="toggleLine('halpha')">Hα</button>
                 <button class="spectrum-btn line-btn" id="lithium-btn" onclick="toggleLine('lithium')">Li I</button>
@@ -525,6 +526,121 @@
             lithium: { wavelength: 6707.8, label: 'Li I 6708', color: '#f59e0b' }
         };
         let showLines = { halpha: false, lithium: false };
+        
+        // ============================================
+        // SNR Calculation (DER_SNR method)
+        // Based on Stoehr et al. 2008
+        // ============================================
+        
+        function calculateSNR(flux, wavelength = null, minWl = null, maxWl = null) {
+            let fluxArray = flux;
+            
+            // If wavelength range specified, filter to that range
+            if (wavelength && minWl !== null && maxWl !== null) {
+                const indices = [];
+                for (let i = 0; i < wavelength.length; i++) {
+                    if (wavelength[i] >= minWl && wavelength[i] <= maxWl) {
+                        indices.push(i);
+                    }
+                }
+                fluxArray = indices.map(i => flux[i]);
+            }
+            
+            // Filter out NaN and Inf values
+            fluxArray = fluxArray.filter(v => !isNaN(v) && isFinite(v) && v > 0);
+            
+            if (fluxArray.length < 5) return null;
+            
+            // DER_SNR method: noise from second derivative
+            // noise = 1.482602 / sqrt(6) * median(|2*f[i] - f[i-2] - f[i+2]|)
+            const derivs = [];
+            for (let i = 2; i < fluxArray.length - 2; i++) {
+                const d = Math.abs(2 * fluxArray[i] - fluxArray[i - 2] - fluxArray[i + 2]);
+                derivs.push(d);
+            }
+            
+            derivs.sort((a, b) => a - b);
+            const medianDeriv = derivs[Math.floor(derivs.length / 2)];
+            const noise = 1.482602 / Math.sqrt(6) * medianDeriv;
+            
+            // Signal: median flux
+            const sortedFlux = [...fluxArray].sort((a, b) => a - b);
+            const signal = sortedFlux[Math.floor(sortedFlux.length / 2)];
+            
+            if (noise <= 0) return null;
+            
+            return {
+                snr: signal / noise,
+                signal: signal,
+                noise: noise,
+                nPixels: fluxArray.length
+            };
+        }
+        
+        function formatSNR(snrResult) {
+            if (!snrResult) return 'N/A';
+            return snrResult.snr.toFixed(0);
+        }
+        
+        function recalcSNR() {
+            if (!currentSpectrum) return;
+            
+            const minWl = parseFloat(document.getElementById('min-wl').value);
+            const maxWl = parseFloat(document.getElementById('max-wl').value);
+            
+            if (currentSpectrum.isMultiArm) {
+                // Recalculate for both arms within the wavelength range
+                const blueSNR = calculateSNR(
+                    currentSpectrum.blue.flux, 
+                    currentSpectrum.blue.wavelength, 
+                    minWl, maxWl
+                );
+                const redSNR = calculateSNR(
+                    currentSpectrum.red.flux, 
+                    currentSpectrum.red.wavelength, 
+                    minWl, maxWl
+                );
+                
+                // Update the info display
+                const infoDiv = document.getElementById('spectrum-info');
+                infoDiv.innerHTML = `
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Date-Obs</div>
+                        <div class="spectrum-info-value">${currentSpectrum.blue.header['DATE-OBS'] || currentSpectrum.obsDate}</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Blue Arm</div>
+                        <div class="spectrum-info-value" style="color: #38bdf8;">${Math.floor(currentSpectrum.blue.wavelength[0])}–${Math.ceil(currentSpectrum.blue.wavelength[currentSpectrum.blue.wavelength.length-1])} Å</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Red Arm</div>
+                        <div class="spectrum-info-value" style="color: #f87171;">${Math.floor(currentSpectrum.red.wavelength[0])}–${Math.ceil(currentSpectrum.red.wavelength[currentSpectrum.red.wavelength.length-1])} Å</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">SNR (Blue)</div>
+                        <div class="spectrum-info-value" style="color: #38bdf8;">${formatSNR(blueSNR)}${blueSNR ? ` @ ${minWl}–${maxWl}` : ''}</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">SNR (Red)</div>
+                        <div class="spectrum-info-value" style="color: #f87171;">${formatSNR(redSNR)}${redSNR ? ` @ ${minWl}–${maxWl}` : ''}</div>
+                    </div>
+                `;
+            } else {
+                // Single spectrum
+                const snrResult = calculateSNR(
+                    currentSpectrum.flux, 
+                    currentSpectrum.wavelength, 
+                    minWl, maxWl
+                );
+                
+                const snrDisplay = document.getElementById('snr-value');
+                if (snrDisplay) {
+                    snrDisplay.textContent = snrResult ? 
+                        `${formatSNR(snrResult)} @ ${minWl}–${maxWl} Å` : 
+                        'N/A (no data in range)';
+                }
+            }
+        }
         
         function toggleLine(lineId) {
             showLines[lineId] = !showLines[lineId];
@@ -820,6 +936,9 @@
                 document.getElementById('min-wl').value = minWl;
                 document.getElementById('max-wl').value = maxWl;
                 
+                // Calculate SNR
+                const snrResult = calculateSNR(flux);
+                
                 infoDiv.innerHTML = `
                     <div class="spectrum-info-item">
                         <div class="spectrum-info-label">Date-Obs</div>
@@ -836,6 +955,10 @@
                     <div class="spectrum-info-item">
                         <div class="spectrum-info-label">Pixels</div>
                         <div class="spectrum-info-value">${wavelength.length}</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">SNR</div>
+                        <div class="spectrum-info-value" id="snr-value">${formatSNR(snrResult)}</div>
                     </div>
                     <div class="spectrum-info-item">
                         <div class="spectrum-info-label">File</div>
@@ -1520,6 +1643,10 @@
                 document.getElementById('min-wl').value = minWl;
                 document.getElementById('max-wl').value = maxWl;
                 
+                // Calculate SNR for both arms
+                const blueSNR = calculateSNR(blueData.flux);
+                const redSNR = calculateSNR(redData.flux);
+                
                 // Display header info for both
                 infoDiv.innerHTML = `
                     <div class="spectrum-info-item">
@@ -1535,8 +1662,12 @@
                         <div class="spectrum-info-value" style="color: #f87171;">${Math.floor(redData.wavelength[0])}–${Math.ceil(redData.wavelength[redData.wavelength.length-1])} Å</div>
                     </div>
                     <div class="spectrum-info-item">
-                        <div class="spectrum-info-label">Total Range</div>
-                        <div class="spectrum-info-value">${minWl}–${maxWl} Å</div>
+                        <div class="spectrum-info-label">SNR (Blue)</div>
+                        <div class="spectrum-info-value" style="color: #38bdf8;">${formatSNR(blueSNR)}</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">SNR (Red)</div>
+                        <div class="spectrum-info-value" style="color: #f87171;">${formatSNR(redSNR)}</div>
                     </div>
                 `;
                 
