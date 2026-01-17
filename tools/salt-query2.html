@@ -587,8 +587,8 @@
                 <div class="control-group">
                     <label>Template:</label>
                     <select id="template-select" class="template-select">
-                        <option value="5750_spec.FITS">5750 K (Solar)</option>
                         <option value="3500_spec.FITS">3500 K (M-type)</option>
+                        <option value="5750_spec.FITS">5750 K (Solar)</option>
                         <option value="7250_spec.FITS">7250 K (F-type)</option>
                     </select>
                 </div>
@@ -954,15 +954,95 @@
         // Cache for loaded templates
         const templateCache = {};
         
-        // Load a template spectrum
+        // Load a template spectrum - handles different FITS structures
         async function loadTemplate(templateFile) {
             if (templateCache[templateFile]) {
                 return templateCache[templateFile];
             }
             
-            const data = await loadFITSSpectrum(templateFile);
-            templateCache[templateFile] = data;
-            return data;
+            try {
+                const url = `${SALTDATA_FOLDER}/${templateFile}`;
+                console.log('Loading template from:', url);
+                
+                const buffer = await fetchFITS(url);
+                const { header, dataOffset } = parseFITSHeader(buffer);
+                
+                console.log('Template header:', header);
+                console.log('Template NAXIS:', header.NAXIS, 'NAXIS1:', header.NAXIS1, 'NAXIS2:', header.NAXIS2);
+                console.log('Template WCS:', 'CRVAL1:', header.CRVAL1, 'CDELT1:', header.CDELT1, 'CRPIX1:', header.CRPIX1);
+                
+                let wavelength, flux;
+                
+                // Check if this is a 2D spectrum (wavelength in one row, flux in another)
+                if (header.NAXIS === 2 && header.NAXIS2 >= 2) {
+                    console.log('Template appears to be 2D (NAXIS2 =', header.NAXIS2, ')');
+                    
+                    const naxis1 = header.NAXIS1;
+                    const naxis2 = header.NAXIS2;
+                    const bitpix = header.BITPIX || -32;
+                    const view = new DataView(buffer);
+                    
+                    // Read all data
+                    const allData = [];
+                    const bytesPerPixel = Math.abs(bitpix) / 8;
+                    
+                    for (let row = 0; row < naxis2; row++) {
+                        const rowData = [];
+                        for (let col = 0; col < naxis1; col++) {
+                            const offset = dataOffset + (row * naxis1 + col) * bytesPerPixel;
+                            if (bitpix === -32) {
+                                rowData.push(view.getFloat32(offset, false));
+                            } else if (bitpix === -64) {
+                                rowData.push(view.getFloat64(offset, false));
+                            }
+                        }
+                        allData.push(rowData);
+                    }
+                    
+                    // Typically: row 0 = wavelength, row 1 = flux (or vice versa)
+                    // Check which row looks like wavelength (monotonically increasing, larger values)
+                    const row0Mean = allData[0].reduce((a, b) => a + b, 0) / allData[0].length;
+                    const row1Mean = allData[1].reduce((a, b) => a + b, 0) / allData[1].length;
+                    
+                    console.log('Row 0 mean:', row0Mean, 'first few:', allData[0].slice(0, 5));
+                    console.log('Row 1 mean:', row1Mean, 'first few:', allData[1].slice(0, 5));
+                    
+                    // Wavelength values are typically thousands (Angstroms), flux is typically < 100
+                    if (row0Mean > 1000) {
+                        wavelength = allData[0];
+                        flux = allData[1];
+                    } else if (row1Mean > 1000) {
+                        wavelength = allData[1];
+                        flux = allData[0];
+                    } else {
+                        // Fall back to checking if values are monotonically increasing
+                        const row0Increasing = allData[0][1] > allData[0][0] && allData[0][100] > allData[0][0];
+                        if (row0Increasing) {
+                            wavelength = allData[0];
+                            flux = allData[1];
+                        } else {
+                            wavelength = allData[1];
+                            flux = allData[0];
+                        }
+                    }
+                } else {
+                    // 1D spectrum - use WCS for wavelength
+                    flux = readFluxData(buffer, dataOffset, header);
+                    wavelength = calculateWavelength(header, flux.length);
+                }
+                
+                console.log('Template wavelength range:', Math.min(...wavelength), '-', Math.max(...wavelength));
+                console.log('Template flux range:', Math.min(...flux), '-', Math.max(...flux));
+                console.log('Template n points:', wavelength.length);
+                
+                const data = { wavelength, flux, header };
+                templateCache[templateFile] = data;
+                return data;
+                
+            } catch (error) {
+                console.error('Error loading template:', error);
+                throw error;
+            }
         }
         
         // Interpolate spectrum onto a regular log-wavelength grid
@@ -1107,17 +1187,32 @@
                     obsWl = getCorrectedWavelength(obsWl, header, currentSpectrum.gaiaId);
                 }
                 
+                // Filter out invalid values
+                const validObsWl = obsWl.filter(w => !isNaN(w) && isFinite(w) && w > 0);
+                const validTmpWl = template.wavelength.filter(w => !isNaN(w) && isFinite(w) && w > 0);
+                
+                if (validObsWl.length === 0 || validTmpWl.length === 0) {
+                    console.error('Invalid wavelength arrays - obs:', obsWl.slice(0, 10), 'template:', template.wavelength.slice(0, 10));
+                    rvResult.innerHTML = '<span class="error">Invalid wavelength data</span>';
+                    return;
+                }
+                
                 // Find overlapping wavelength range
-                const obsMin = Math.min(...obsWl);
-                const obsMax = Math.max(...obsWl);
-                const tmpMin = Math.min(...template.wavelength);
-                const tmpMax = Math.max(...template.wavelength);
+                const obsMin = Math.min(...validObsWl);
+                const obsMax = Math.max(...validObsWl);
+                const tmpMin = Math.min(...validTmpWl);
+                const tmpMax = Math.max(...validTmpWl);
+                
+                console.log('Observed wavelength range:', obsMin.toFixed(1), '-', obsMax.toFixed(1), 'Å');
+                console.log('Template wavelength range:', tmpMin.toFixed(1), '-', tmpMax.toFixed(1), 'Å');
                 
                 const wlMin = Math.max(obsMin, tmpMin);
                 const wlMax = Math.min(obsMax, tmpMax);
                 
+                console.log('Overlap range:', wlMin.toFixed(1), '-', wlMax.toFixed(1), 'Å');
+                
                 if (wlMin >= wlMax) {
-                    rvResult.innerHTML = '<span class="error">No wavelength overlap with template</span>';
+                    rvResult.innerHTML = `<span class="error">No overlap: obs ${obsMin.toFixed(0)}-${obsMax.toFixed(0)}Å, template ${tmpMin.toFixed(0)}-${tmpMax.toFixed(0)}Å</span>`;
                     return;
                 }
                 
