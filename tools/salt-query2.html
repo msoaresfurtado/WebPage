@@ -1032,19 +1032,27 @@
         }
         
         function toggleTemplateOverlay() {
+            console.log('toggleTemplateOverlay called');
+            console.log('  currentSpectrum:', !!currentSpectrum);
+            console.log('  lastCCF:', !!(currentSpectrum && currentSpectrum.lastCCF));
+            console.log('  templateWl:', !!(currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.templateWl));
+            
             if (!currentSpectrum || !currentSpectrum.lastCCF || !currentSpectrum.lastCCF.templateWl) {
                 alert('Please compute RV first using the "Compute RV" button');
                 return;
             }
             
             showTemplate = !showTemplate;
+            console.log('  showTemplate now:', showTemplate);
             document.getElementById('template-overlay-btn').classList.toggle('active', showTemplate);
             
             // Re-render the current spectrum
             if (currentSpectrum) {
                 if (currentSpectrum.isMultiArm) {
+                    console.log('  Calling plotBothArms');
                     plotBothArms(currentSpectrum.blue, currentSpectrum.red);
                 } else {
+                    console.log('  Calling applyWavelengthRange');
                     applyWavelengthRange();
                 }
             }
@@ -1820,6 +1828,12 @@
                 const rvShiftFactor = 1 + (finalRV / C_KMS);
                 const templateShiftedWl = template.wavelength.map(w => w * rvShiftFactor);
                 
+                console.log('Storing template for overlay:');
+                console.log('  Template wavelength range:', template.wavelength[0].toFixed(1), '-', template.wavelength[template.wavelength.length-1].toFixed(1));
+                console.log('  Template shifted range:', templateShiftedWl[0].toFixed(1), '-', templateShiftedWl[templateShiftedWl.length-1].toFixed(1));
+                console.log('  Template flux length:', tmpFluxFlattened.length);
+                console.log('  Observed flattened length:', obsFluxFlattened.length);
+                
                 // Store CCF for display
                 currentSpectrum.lastCCF = {
                     velocities: bestResult.velocities,
@@ -2311,6 +2325,8 @@
         function plotSpectrum(wavelength, flux, title) {
             const traces = [];
             
+            console.log('plotSpectrum called, showTemplate:', showTemplate);
+            
             // When showing template, use the flattened spectrum that was used in CCF
             let displayWl = wavelength;
             let displayFlux = flux;
@@ -2318,8 +2334,10 @@
             if (showTemplate && currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.obsFluxFlattened) {
                 // Use the exact flattened spectrum that was used in CCF
                 const ccfData = currentSpectrum.lastCCF;
-                displayWl = ccfData.obsWl;
-                displayFlux = ccfData.obsFluxFlattened;
+                displayWl = ccfData.obsWl.slice();
+                displayFlux = ccfData.obsFluxFlattened.slice();
+                
+                console.log('Using CCF flattened spectrum, length:', displayWl.length);
                 
                 // Apply wavelength corrections if needed
                 if (applyBaryCorr || applyRVCorr) {
@@ -2334,7 +2352,7 @@
                 y: displayFlux,
                 type: 'scatter',
                 mode: 'lines',
-                name: 'Observed (flattened)',
+                name: showTemplate ? 'Observed (flattened)' : 'Observed',
                 line: { color: '#38bdf8', width: 1.2 },
                 hovertemplate: 'λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
             });
@@ -2343,6 +2361,12 @@
             if (showTemplate && currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.templateWl) {
                 const ccfData = currentSpectrum.lastCCF;
                 
+                console.log('Adding template overlay');
+                console.log('  templateWl length:', ccfData.templateWl.length);
+                console.log('  templateWlShifted length:', ccfData.templateWlShifted.length);
+                console.log('  templateFlux length:', ccfData.templateFlux.length);
+                console.log('  applyRVCorr:', applyRVCorr);
+                
                 // Use shifted wavelengths if RV corr is NOT applied (so template matches observed)
                 // If RV corr IS applied, use original template wavelengths (both at rest frame)
                 const templateWl = applyRVCorr ? ccfData.templateWl : ccfData.templateWlShifted;
@@ -2350,6 +2374,8 @@
                 // Trim template to current view range
                 const minWl = Math.min(...displayWl);
                 const maxWl = Math.max(...displayWl);
+                
+                console.log('  View range:', minWl.toFixed(1), '-', maxWl.toFixed(1));
                 
                 const trimmedWl = [];
                 const trimmedFlux = [];
@@ -2360,6 +2386,8 @@
                     }
                 }
                 
+                console.log('  Trimmed template points:', trimmedWl.length);
+                
                 if (trimmedWl.length > 0) {
                     traces.push({
                         x: trimmedWl,
@@ -2367,9 +2395,11 @@
                         type: 'scatter',
                         mode: 'lines',
                         name: `Template (${ccfData.template})`,
-                        line: { color: '#f472b6', width: 1.0, opacity: 0.7 },
+                        line: { color: '#f472b6', width: 1.0 },
                         hovertemplate: 'Template<br>λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
                     });
+                } else {
+                    console.warn('No template points in view range!');
                 }
             }
             
@@ -3311,6 +3341,18 @@
                 redFlux = getFlattenedFlux(redData.wavelength, redData.flux, 'flattenedRedFlux');
             }
             
+            // When showing template, use the flattened blue spectrum from CCF
+            if (showTemplate && currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.obsFluxFlattened) {
+                const ccfData = currentSpectrum.lastCCF;
+                blueWl = ccfData.obsWl.slice();
+                blueFlux = ccfData.obsFluxFlattened.slice();
+                
+                // Apply wavelength corrections if needed
+                if (applyBaryCorr || applyRVCorr) {
+                    blueWl = getFullyCorrectedWavelength(blueWl, blueData.header, currentSpectrum.gaiaId);
+                }
+            }
+            
             // Apply wavelength range if set
             const minWl = parseFloat(document.getElementById('min-wl').value);
             const maxWl = parseFloat(document.getElementById('max-wl').value);
@@ -3324,7 +3366,7 @@
                     y: blueTrimmed.flux,
                     type: 'scatter',
                     mode: 'lines',
-                    name: 'Blue arm (H)',
+                    name: showTemplate ? 'Blue arm (flattened)' : 'Blue arm (H)',
                     line: { color: '#38bdf8', width: 1.2 },
                     hovertemplate: 'Blue<br>λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
                 },
@@ -3339,6 +3381,36 @@
                 }
             ];
             
+            // Template overlay if enabled
+            if (showTemplate && currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.templateWl) {
+                const ccfData = currentSpectrum.lastCCF;
+                
+                // Use shifted wavelengths if RV corr is NOT applied
+                const templateWl = applyRVCorr ? ccfData.templateWl : ccfData.templateWlShifted;
+                
+                // Trim to current view
+                const trimmedWl = [];
+                const trimmedFlux = [];
+                for (let i = 0; i < templateWl.length; i++) {
+                    if (templateWl[i] >= minWl && templateWl[i] <= maxWl) {
+                        trimmedWl.push(templateWl[i]);
+                        trimmedFlux.push(ccfData.templateFlux[i]);
+                    }
+                }
+                
+                if (trimmedWl.length > 0) {
+                    traces.push({
+                        x: trimmedWl,
+                        y: trimmedFlux,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: `Template (${ccfData.template})`,
+                        line: { color: '#f472b6', width: 1.0 },
+                        hovertemplate: 'Template<br>λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
+                    });
+                }
+            }
+            
             const { shapes, annotations } = getSpectralLineShapes();
             
             const layout = {
@@ -3351,7 +3423,7 @@
                     tickfont: { color: '#94a3b8' }
                 },
                 yaxis: { 
-                    title: { text: isFlattened ? 'Normalized Flux' : 'Flux', font: { color: '#94a3b8', size: 12 } },
+                    title: { text: isFlattened || showTemplate ? 'Normalized Flux' : 'Flux', font: { color: '#94a3b8', size: 12 } },
                     color: '#94a3b8',
                     gridcolor: '#334155',
                     zerolinecolor: '#334155',
