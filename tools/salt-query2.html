@@ -1561,10 +1561,11 @@
             const maxLag = Math.ceil(maxVel / dv);
             const { lags, ccf } = computeCrossCorrelationFunction(obsNorm, tmpNorm, maxLag);
             
-            // Find peak
-            const velocities = lags.map(l => l * dv);
+            // Find peak - note: negative lag means redshift (positive RV)
+            // so we negate to get conventional RV sign
+            const velocities = lags.map(l => -l * dv);
             const initialPeak = findCCFPeak(lags, ccf);
-            const initialRV = initialPeak.lag * dv;
+            const initialRV = -initialPeak.lag * dv;
             
             // Gaussian refinement
             const gaussFit = refineCCFPeakWithGaussian(velocities, ccf, initialRV, 100);
