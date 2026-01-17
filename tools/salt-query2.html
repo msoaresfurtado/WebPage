@@ -2069,7 +2069,7 @@
         // ============================================
         
         function flattenSpectrum(wavelength, flux, bkspace = null) {
-            // Fast running median continuum fitting
+            // Fast continuum fitting using downsampled percentile
             if (!bkspace) {
                 bkspace = parseFloat(document.getElementById('bkspace').value) || 100;
             }
@@ -2077,22 +2077,22 @@
             const n = wavelength.length;
             if (n < 10) return flux.slice();
             
-            // Calculate window size in pixels based on bkspace (in Angstroms)
+            // Calculate step size based on bkspace
             const wlRange = arrayMax(wavelength) - arrayMin(wavelength);
             const pixelsPerAngstrom = n / wlRange;
-            const windowSize = Math.max(10, Math.floor(bkspace * pixelsPerAngstrom));
-            const halfWindow = Math.floor(windowSize / 2);
+            const stepSize = Math.max(5, Math.floor(bkspace * pixelsPerAngstrom / 4));
             
-            console.log(`Flattening with bkspace=${bkspace}Å, window=${windowSize}px`);
+            console.log(`Flattening with bkspace=${bkspace}Å, step=${stepSize}px`);
             
-            // Running median for continuum
-            const continuum = new Array(n);
+            // Sample continuum points at intervals
+            const sampleWl = [];
+            const sampleCont = [];
             
-            for (let i = 0; i < n; i++) {
-                const start = Math.max(0, i - halfWindow);
-                const end = Math.min(n, i + halfWindow + 1);
+            for (let i = 0; i < n; i += stepSize) {
+                const start = Math.max(0, i - stepSize);
+                const end = Math.min(n, i + stepSize);
                 
-                // Get window values, filter invalid
+                // Collect valid flux values in window
                 const windowVals = [];
                 for (let j = start; j < end; j++) {
                     if (!isNaN(flux[j]) && isFinite(flux[j]) && flux[j] > 0) {
@@ -2100,13 +2100,37 @@
                     }
                 }
                 
-                if (windowVals.length > 0) {
-                    // Use upper percentile (75th) to avoid absorption lines
+                if (windowVals.length > 2) {
+                    // Use 75th percentile to avoid absorption lines
                     windowVals.sort((a, b) => a - b);
                     const idx = Math.floor(windowVals.length * 0.75);
-                    continuum[i] = windowVals[idx];
+                    sampleWl.push(wavelength[i]);
+                    sampleCont.push(windowVals[idx]);
+                }
+            }
+            
+            if (sampleWl.length < 2) return flux.slice();
+            
+            // Linear interpolation of continuum to full resolution
+            const continuum = new Array(n);
+            let sampleIdx = 0;
+            
+            for (let i = 0; i < n; i++) {
+                const wl = wavelength[i];
+                
+                // Find bracketing sample points
+                while (sampleIdx < sampleWl.length - 2 && sampleWl[sampleIdx + 1] < wl) {
+                    sampleIdx++;
+                }
+                
+                if (wl <= sampleWl[0]) {
+                    continuum[i] = sampleCont[0];
+                } else if (wl >= sampleWl[sampleWl.length - 1]) {
+                    continuum[i] = sampleCont[sampleCont.length - 1];
                 } else {
-                    continuum[i] = 1;
+                    // Linear interpolation
+                    const t = (wl - sampleWl[sampleIdx]) / (sampleWl[sampleIdx + 1] - sampleWl[sampleIdx]);
+                    continuum[i] = sampleCont[sampleIdx] + t * (sampleCont[sampleIdx + 1] - sampleCont[sampleIdx]);
                 }
             }
             
