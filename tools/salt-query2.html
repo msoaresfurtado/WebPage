@@ -407,36 +407,27 @@
                 align-items: center;
                 gap: 0.25rem;
                 padding: 0.15rem 0.35rem;
-                background: #f1f5f9;
+                background: rgba(0,0,0,0.03);
+                border: 1px solid rgba(0,0,0,0.06);
                 border-radius: 3px;
                 font-family: 'DM Mono', monospace;
                 white-space: nowrap;
+                color: #64748b;
             }
             
             .file-badge {
-                font-size: 0.6rem;
-                padding: 0.1rem 0.25rem;
+                font-size: 0.55rem;
+                padding: 0.1rem 0.2rem;
                 border-radius: 2px;
-                background: #e2e8f0;
-                color: #475569;
+                background: rgba(0,0,0,0.05);
+                color: #94a3b8;
                 text-transform: uppercase;
                 font-weight: 500;
             }
             
             .file-badge.main {
-                background: #3b82f6;
-                color: #fff;
-            }
-            
-            .dropbox-path {
-                margin-bottom: 0.5rem;
-                padding-bottom: 0.5rem;
-                border-bottom: 1px solid #e2e8f0;
-                font-size: 0.75rem;
-            }
-            
-            .dropbox-path code {
-                font-size: 0.7rem;
+                background: #dbeafe;
+                color: #3b82f6;
             }
             
             .file-actions {
@@ -574,6 +565,10 @@
                 </div>
                 <button class="spectrum-btn" onclick="applyWavelengthRange()">Apply</button>
                 <button class="spectrum-btn" onclick="resetWavelengthRange()">Reset</button>
+                <div class="control-group">
+                    <label>bkspace:</label>
+                    <input type="number" id="bkspace" value="100" step="10" min="10" max="500" style="width: 60px;">
+                </div>
                 <button class="spectrum-btn" id="flatten-btn" onclick="toggleFlatten()">Flatten</button>
                 <button class="spectrum-btn" onclick="recalcSNR()" title="Recalculate SNR for current wavelength range">Calc SNR</button>
                 <button class="spectrum-btn" id="bary-btn" onclick="toggleBarycentric()" title="Apply barycentric correction">Bary Corr</button>
@@ -603,8 +598,7 @@
         <div class="info-box">
             <strong>Data Access:</strong> Files are stored in the shared Dropbox folder and the shared Google Drive folder
             <code>SALT_data/2023-2-SCI-018/</code>. 
-            Click "Copy Path" to get the file location, then navigate there in Finder.
-            For web plotting, FITS files should also be in the <code>saltdata/</code> folder.
+            For web plotting, FITS files should be in the <code>saltdata/</code> folder.
             
             <div class="help-toggle" onclick="toggleHelp()">
                 ⓘ Need help finding the files? Click here
@@ -1850,19 +1844,194 @@
         // Spectrum Processing
         // ============================================
         
-        function flattenSpectrum(wavelength, flux, windowSize = 50) {
-            const continuum = [];
-            const halfWindow = Math.floor(windowSize / 2);
+        // ============================================
+        // Spline-Based Continuum Normalization
+        // Based on the Kepler spline approach with iterative outlier rejection
+        // ============================================
+        
+        function robustMean(y, cut = 3) {
+            // Robust mean estimate with outlier rejection
+            const validY = y.filter(v => !isNaN(v) && isFinite(v));
+            if (validY.length === 0) return { mean: 0, mask: y.map(() => false) };
             
-            for (let i = 0; i < flux.length; i++) {
-                const start = Math.max(0, i - halfWindow);
-                const end = Math.min(flux.length, i + halfWindow);
-                const window = flux.slice(start, end).filter(v => !isNaN(v) && isFinite(v));
-                window.sort((a, b) => a - b);
-                continuum.push(window[Math.floor(window.length / 2)] || 1);
+            const median = validY.slice().sort((a, b) => a - b)[Math.floor(validY.length / 2)];
+            const absdev = validY.map(v => Math.abs(v - median));
+            let sigma = 1.4826 * absdev.slice().sort((a, b) => a - b)[Math.floor(absdev.length / 2)];
+            
+            if (sigma < 1e-24) {
+                sigma = 1.253 * absdev.reduce((a, b) => a + b, 0) / absdev.length;
             }
             
-            return flux.map((f, i) => f / (continuum[i] || 1));
+            const mask = y.map(v => !isNaN(v) && isFinite(v) && Math.abs(v - median) <= cut * sigma);
+            const maskedY = y.filter((v, i) => mask[i]);
+            const mean = maskedY.length > 0 ? maskedY.reduce((a, b) => a + b, 0) / maskedY.length : median;
+            
+            return { mean, mask };
+        }
+        
+        function fitCubicSpline(x, y, nKnots) {
+            // Simple cubic spline fitting using natural cubic splines
+            // Returns spline values at each x point
+            
+            const n = x.length;
+            if (n < 4) return y.slice();
+            
+            // Create knot positions
+            const xMin = Math.min(...x);
+            const xMax = Math.max(...x);
+            const knotSpacing = (xMax - xMin) / (nKnots - 1);
+            const knots = [];
+            for (let i = 0; i < nKnots; i++) {
+                knots.push(xMin + i * knotSpacing);
+            }
+            
+            // For each knot interval, fit a local polynomial and blend
+            // This is a simplified approach using local regression
+            const result = new Array(n);
+            const halfWidth = knotSpacing * 1.5;
+            
+            for (let i = 0; i < n; i++) {
+                const xi = x[i];
+                
+                // Find points within the smoothing window
+                const localX = [];
+                const localY = [];
+                const localW = [];
+                
+                for (let j = 0; j < n; j++) {
+                    const dist = Math.abs(x[j] - xi);
+                    if (dist <= halfWidth && !isNaN(y[j]) && isFinite(y[j])) {
+                        localX.push(x[j]);
+                        localY.push(y[j]);
+                        // Tricube weight
+                        const u = dist / halfWidth;
+                        localW.push(Math.pow(1 - Math.pow(u, 3), 3));
+                    }
+                }
+                
+                if (localX.length < 3) {
+                    result[i] = y[i];
+                    continue;
+                }
+                
+                // Weighted linear regression (LOESS-style)
+                let sumW = 0, sumWX = 0, sumWY = 0, sumWXX = 0, sumWXY = 0;
+                for (let j = 0; j < localX.length; j++) {
+                    const w = localW[j];
+                    const lx = localX[j] - xi;
+                    sumW += w;
+                    sumWX += w * lx;
+                    sumWY += w * localY[j];
+                    sumWXX += w * lx * lx;
+                    sumWXY += w * lx * localY[j];
+                }
+                
+                const denom = sumW * sumWXX - sumWX * sumWX;
+                if (Math.abs(denom) < 1e-10) {
+                    result[i] = sumWY / sumW;
+                } else {
+                    const a = (sumWXX * sumWY - sumWX * sumWXY) / denom;
+                    result[i] = a;
+                }
+            }
+            
+            return result;
+        }
+        
+        function flattenSpectrum(wavelength, flux, bkspace = null) {
+            // Fit continuum using iterative spline fitting with outlier rejection
+            // Similar to keplersplinev2 approach
+            
+            if (!bkspace) {
+                bkspace = parseFloat(document.getElementById('bkspace').value) || 100;
+            }
+            
+            const n = wavelength.length;
+            if (n < 10) return flux.slice();
+            
+            // Calculate number of knots based on bkspace (in Angstroms)
+            const wlRange = Math.max(...wavelength) - Math.min(...wavelength);
+            const nKnots = Math.max(4, Math.floor(wlRange / bkspace) + 1);
+            
+            console.log(`Fitting spline with bkspace=${bkspace}Å, nKnots=${nKnots}`);
+            
+            // Iterative fitting with outlier rejection
+            let mask = flux.map(f => !isNaN(f) && isFinite(f) && f > 0);
+            let spline = null;
+            const maxIter = 5;
+            const outlierCut = 2.5; // More aggressive for absorption lines
+            
+            for (let iter = 0; iter < maxIter; iter++) {
+                // Get masked data
+                const maskedWl = wavelength.filter((w, i) => mask[i]);
+                const maskedFlux = flux.filter((f, i) => mask[i]);
+                
+                if (maskedWl.length < nKnots + 3) break;
+                
+                // Fit spline to masked data
+                const maskedSpline = fitCubicSpline(maskedWl, maskedFlux, nKnots);
+                
+                // Interpolate spline back to full wavelength grid
+                spline = new Array(n);
+                let lastIdx = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    const wl = wavelength[i];
+                    
+                    // Find bracketing points in masked arrays
+                    while (lastIdx < maskedWl.length - 1 && maskedWl[lastIdx + 1] < wl) {
+                        lastIdx++;
+                    }
+                    
+                    if (lastIdx >= maskedWl.length - 1) {
+                        spline[i] = maskedSpline[maskedSpline.length - 1];
+                    } else if (maskedWl[lastIdx] > wl) {
+                        spline[i] = maskedSpline[0];
+                    } else {
+                        // Linear interpolation
+                        const t = (wl - maskedWl[lastIdx]) / (maskedWl[lastIdx + 1] - maskedWl[lastIdx]);
+                        spline[i] = maskedSpline[lastIdx] + t * (maskedSpline[lastIdx + 1] - maskedSpline[lastIdx]);
+                    }
+                }
+                
+                // Calculate residuals and identify outliers
+                // For spectra, we want to reject points BELOW the continuum (absorption lines)
+                const residuals = flux.map((f, i) => f - spline[i]);
+                
+                // Robust sigma estimate
+                const validResid = residuals.filter((r, i) => mask[i]);
+                validResid.sort((a, b) => a - b);
+                const medianResid = validResid[Math.floor(validResid.length / 2)];
+                const absResid = validResid.map(r => Math.abs(r - medianResid));
+                absResid.sort((a, b) => a - b);
+                const sigma = 1.4826 * absResid[Math.floor(absResid.length / 2)];
+                
+                // New mask: reject points more than outlierCut*sigma BELOW the continuum
+                // (absorption lines) but keep points above (emission or noise)
+                const newMask = flux.map((f, i) => {
+                    if (!mask[i]) return false;
+                    const resid = f - spline[i];
+                    // Reject strong absorption (negative residuals)
+                    return resid > -outlierCut * sigma;
+                });
+                
+                // Check convergence
+                const changed = newMask.some((m, i) => m !== mask[i]);
+                mask = newMask;
+                
+                if (!changed) break;
+            }
+            
+            if (!spline) {
+                // Fallback to simple median filter
+                return flux.map(f => f / (flux.reduce((a, b) => a + b, 0) / flux.length));
+            }
+            
+            // Normalize by dividing by spline
+            return flux.map((f, i) => {
+                const s = spline[i];
+                return (s > 0) ? f / s : f;
+            });
         }
         
         function trimSpectrum(wavelength, flux, minWl, maxWl) {
@@ -2891,10 +3060,6 @@
                             <span class="expand-icon">▼</span>
                         </div>
                         <div class="obs-files" id="files-${idx}">
-                            <div class="dropbox-path">
-                                <code>${fullPath}/</code>
-                                <button class="copy-btn" onclick="copyPath('${fullPath}/', this); event.stopPropagation();">Copy Path</button>
-                            </div>
                             <div class="files-grid">
                                 ${allFiles.map(f => {
                                     const isMain = f === mainFile;
@@ -3006,17 +3171,6 @@
             const header = filesDiv.previousElementSibling;
             filesDiv.classList.toggle('expanded');
             header.classList.toggle('expanded');
-        }
-
-        function copyPath(path, btn) {
-            navigator.clipboard.writeText(path).then(() => {
-                btn.textContent = 'Copied!';
-                btn.classList.add('copied');
-                setTimeout(() => { 
-                    btn.textContent = 'Copy Path'; 
-                    btn.classList.remove('copied'); 
-                }, 2000);
-            });
         }
 
         function getFileBadge(filename) {
