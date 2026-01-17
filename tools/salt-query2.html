@@ -350,6 +350,16 @@
                 border-color: #10b981;
             }
             
+            #rv-corr-btn {
+                opacity: 0.6;
+            }
+            
+            #rv-corr-btn.active {
+                background: #8b5cf6;
+                border-color: #8b5cf6;
+                opacity: 1;
+            }
+            
             .line-btn-group {
                 display: inline-flex;
                 gap: 0.5rem;
@@ -614,6 +624,7 @@
                 <button class="spectrum-btn" id="flatten-btn" onclick="toggleFlatten()">Flatten</button>
                 <button class="spectrum-btn" onclick="recalcSNR()" title="Recalculate SNR for current wavelength range">Calc SNR</button>
                 <button class="spectrum-btn" id="bary-btn" onclick="toggleBarycentric()" title="Apply barycentric correction">Bary Corr</button>
+                <button class="spectrum-btn" id="rv-corr-btn" onclick="toggleRVCorr()" title="Shift spectrum to rest frame using measured RV">RV Corr</button>
                 <span class="control-divider"></span>
                 <span class="line-btn-group">
                     <button class="spectrum-btn line-btn" id="halpha-btn" onclick="toggleLine('halpha')">Hα</button>
@@ -721,6 +732,8 @@
         
         // Barycentric correction state
         let applyBaryCorr = false;
+        let applyRVCorr = false;
+        let measuredRV = null;  // Store the last measured RV from CCF
         
         // SALT Observatory coordinates
         const SALT_LAT = 32.37582222;   // degrees
@@ -908,22 +921,70 @@
             }
         }
         
-        // Get barycentric-corrected wavelength
-        function getCorrectedWavelength(wavelength, header, gaiaId) {
-            if (!applyBaryCorr) return wavelength;
-            
-            const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
-            const coords = getTargetCoords(gaiaId, header);
-            
-            if (!jd || !coords) {
-                console.warn('Cannot apply barycentric correction: missing JD or coordinates');
-                return wavelength;
+        function toggleRVCorr() {
+            if (!measuredRV && (!currentSpectrum || !currentSpectrum.lastCCF)) {
+                alert('Please compute RV first using the "Compute RV" button');
+                return;
             }
             
-            const vBary = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
-            console.log(`Barycentric velocity: ${vBary.toFixed(3)} km/s`);
+            applyRVCorr = !applyRVCorr;
+            document.getElementById('rv-corr-btn').classList.toggle('active', applyRVCorr);
             
-            return applyBarycentricCorrection(wavelength, vBary);
+            // Re-render the current spectrum
+            if (currentSpectrum) {
+                if (currentSpectrum.isMultiArm) {
+                    plotBothArms(currentSpectrum.blue, currentSpectrum.red);
+                } else {
+                    applyWavelengthRange();
+                }
+            }
+        }
+        
+        // Apply RV correction to shift spectrum to rest frame
+        // λ_rest = λ_observed / (1 + v/c)
+        function applyRVCorrection(wavelength, rv) {
+            const factor = 1 + (rv / C_KMS);
+            return wavelength.map(w => w / factor);
+        }
+        
+        // Get fully corrected wavelength (bary + RV if enabled)
+        function getFullyCorrectedWavelength(wavelength, header, gaiaId) {
+            let correctedWl = wavelength.slice();
+            
+            // Apply barycentric correction first (to observed wavelengths)
+            if (applyBaryCorr) {
+                const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
+                const coords = getTargetCoords(gaiaId, header);
+                
+                if (jd && coords) {
+                    const vBary = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
+                    console.log(`Applying barycentric correction: ${vBary.toFixed(3)} km/s`);
+                    correctedWl = applyBarycentricCorrection(correctedWl, vBary);
+                }
+            }
+            
+            // Apply RV correction to shift to rest frame
+            if (applyRVCorr) {
+                // Use measured RV (with bary correction if enabled)
+                let rv = measuredRV;
+                if (!rv && currentSpectrum && currentSpectrum.lastCCF) {
+                    rv = applyBaryCorr && currentSpectrum.lastCCF.baryCorr 
+                        ? currentSpectrum.lastCCF.peakVelBary 
+                        : currentSpectrum.lastCCF.peakVel;
+                }
+                
+                if (rv) {
+                    console.log(`Applying RV correction: ${rv.toFixed(3)} km/s`);
+                    correctedWl = applyRVCorrection(correctedWl, rv);
+                }
+            }
+            
+            return correctedWl;
+        }
+        
+        // Get barycentric-corrected wavelength (legacy function for compatibility)
+        function getCorrectedWavelength(wavelength, header, gaiaId) {
+            return getFullyCorrectedWavelength(wavelength, header, gaiaId);
         }
         
         // ============================================
@@ -1603,6 +1664,12 @@
                     gaussFit: gaussFit
                 };
                 
+                // Store measured RV for RV correction toggle
+                measuredRV = applyBaryCorr && baryCorr !== 0 ? rvBary : rv;
+                
+                // Enable the RV Corr button visual feedback
+                document.getElementById('rv-corr-btn').style.opacity = '1';
+                
                 // Display result
                 const fitNote = gaussFit.success ? ` (σ=${gaussFit.sigma.toFixed(1)})` : ' (no fit)';
                 
@@ -2115,6 +2182,12 @@
             applyBaryCorr = false;
             document.getElementById('bary-btn').classList.remove('active');
             
+            // Reset RV correction
+            applyRVCorr = false;
+            measuredRV = null;
+            document.getElementById('rv-corr-btn').classList.remove('active');
+            document.getElementById('rv-corr-btn').style.opacity = '0.6';
+            
             try {
                 const { wavelength, flux, header } = await loadFITSSpectrum(filename);
                 
@@ -2181,6 +2254,11 @@
             // Reset barycentric correction
             applyBaryCorr = false;
             document.getElementById('bary-btn').classList.remove('active');
+            // Reset RV correction
+            applyRVCorr = false;
+            measuredRV = null;
+            document.getElementById('rv-corr-btn').classList.remove('active');
+            document.getElementById('rv-corr-btn').style.opacity = '0.6';
         }
         
         function applyWavelengthRange() {
@@ -2824,6 +2902,12 @@
             // Reset barycentric correction
             applyBaryCorr = false;
             document.getElementById('bary-btn').classList.remove('active');
+            
+            // Reset RV correction
+            applyRVCorr = false;
+            measuredRV = null;
+            document.getElementById('rv-corr-btn').classList.remove('active');
+            document.getElementById('rv-corr-btn').style.opacity = '0.6';
             
             try {
                 // Load both spectra in parallel
