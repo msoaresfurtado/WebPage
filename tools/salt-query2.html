@@ -1172,32 +1172,23 @@
                 
                 console.log('Template raw n points:', wavelength.length);
                 
-                // Filter out invalid values
-                const validIndices = [];
-                for (let i = 0; i < wavelength.length; i++) {
-                    if (!isNaN(wavelength[i]) && isFinite(wavelength[i]) && wavelength[i] > 0 &&
-                        !isNaN(flux[i]) && isFinite(flux[i])) {
-                        validIndices.push(i);
-                    }
-                }
-                
-                // Downsample if template is very large (>50k points)
-                const maxPoints = 20000;
-                let step = 1;
-                if (validIndices.length > maxPoints) {
-                    step = Math.ceil(validIndices.length / maxPoints);
-                    console.log(`Downsampling template by factor of ${step}`);
-                }
+                // Trim to SALT wavelength range (blue+red arms: ~3500-9000 Å with some margin)
+                const minWl = 3500;
+                const maxWl = 9200;
                 
                 const finalWl = [];
                 const finalFlux = [];
-                for (let i = 0; i < validIndices.length; i += step) {
-                    finalWl.push(wavelength[validIndices[i]]);
-                    finalFlux.push(flux[validIndices[i]]);
+                for (let i = 0; i < wavelength.length; i++) {
+                    const wl = wavelength[i];
+                    const fl = flux[i];
+                    if (wl >= minWl && wl <= maxWl && !isNaN(wl) && isFinite(wl) && !isNaN(fl) && isFinite(fl)) {
+                        finalWl.push(wl);
+                        finalFlux.push(fl);
+                    }
                 }
                 
                 console.log('Template wavelength range:', arrayMin(finalWl).toFixed(1), '-', arrayMax(finalWl).toFixed(1), 'Å');
-                console.log('Template final n points:', finalWl.length);
+                console.log('Template trimmed n points:', finalWl.length);
                 
                 const data = { wavelength: finalWl, flux: finalFlux, header: extHeader };
                 templateCache[templateFile] = data;
