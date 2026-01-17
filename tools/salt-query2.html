@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soares-Furtado Team Observation Query</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Plotly for spectrum plotting -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="site-badge">
+                <a href="https://www.salt.ac.za/" target="_blank">Southern African Large Telescope (SALT)</a>
+            </div>
+            <h1>Soares-Furtado Team Observation Query</h1>
+            <p class="subtitle">Search for SALT observations from the Ursa Major Spectral Survey</p>
+        </header>
+
+        <section class="search-section">
+            <label class="search-label" for="gaia-id">Gaia DR3 Source ID</label>
+            <div class="search-wrapper">
+                <div class="input-container">
+                    <input type="text" id="gaia-id" class="search-input" placeholder="e.g., 4654969496256092032" autocomplete="off">
+                    <div class="search-dropdown" id="search-dropdown"></div>
+                </div>
+                <button class="search-btn" onclick="searchTarget()">Search</button>
+            </div>
+            <div class="search-links">
+                <a href="#" onclick="showAllTargets(); return false;">Browse all targets</a>
+                <span class="simbad-link" id="simbad-link">
+                    · <a href="#" id="simbad-url" target="_blank">SIMBAD ↗</a>
+                </span>
+                <span class="vizier-link" id="vizier-link">
+                    · <a href="#" id="vizier-url" target="_blank">VizieR ↗</a>
+                </span>
+            </div>
+        </section>
+        
+        <style>
+            .search-section {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            .search-wrapper {
+                display: flex;
+                gap: 0;
+                align-items: stretch;
+            }
+            .input-container {
+                position: relative;
+                flex: 1;
+            }
+            .search-input {
+                width: 100%;
+                box-sizing: border-box;
+                border-radius: 8px 0 0 8px;
+                border-right: none;
+            }
+            .search-btn {
+                border-radius: 0 8px 8px 0;
+                padding: 0 24px;
+                white-space: nowrap;
+            }
+            .search-dropdown {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-top: none;
+                border-radius: 0 0 6px 6px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                z-index: 100;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            .search-dropdown.visible {
+                display: block;
+            }
+            .dropdown-label {
+                padding: 8px 12px;
+                font-size: 11px;
+                color: #555;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border-bottom: 1px solid #ddd;
+                background: #f8f8f8;
+            }
+            .dropdown-item {
+                padding: 10px 12px;
+                cursor: pointer;
+                font-family: 'DM Mono', monospace;
+                font-size: 13px;
+                color: #1a1a2e;
+                transition: background 0.15s;
+            }
+            .dropdown-item:hover {
+                background: #e8f0fe;
+                color: #1a56db;
+            }
+            .dropdown-item:last-child {
+                border-radius: 0 0 6px 6px;
+            }
+            .search-links {
+                margin-top: 10px;
+                text-align: center;
+            }
+            
+            /* Team Rejected badge styling */
+            .quality-badge.team-rejected {
+                background: #fef2f2;
+                color: #b91c1c;
+                border: 1px solid #fecaca;
+                font-weight: 500;
+            }
+            
+            /* Load CMD button */
+            .load-cmd-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                color: #64748b;
+                padding: 0.75rem 1.25rem;
+                border-radius: 8px;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.875rem;
+                cursor: pointer;
+                transition: all 0.15s;
+                margin: 1rem 0;
+            }
+            .load-cmd-btn:hover {
+                background: #f1f5f9;
+                border-color: #cbd5e1;
+                color: #475569;
+            }
+            .load-cmd-btn:disabled {
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+            .stellar-section-placeholder {
+                text-align: center;
+                padding: 1rem;
+            }
+            
+            /* Collapse CMD button */
+            .stellar-header {
+                display: flex;
+                justify-content: flex-end;
+                margin-bottom: 0.5rem;
+            }
+            .collapse-cmd-btn {
+                background: transparent;
+                border: 1px solid #cbd5e1;
+                color: #64748b;
+                padding: 0.25rem 0.75rem;
+                border-radius: 4px;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            .collapse-cmd-btn:hover {
+                background: #f1f5f9;
+                color: #475569;
+            }
+            
+            /* ============================================
+               Spectrum Viewer Styles
+               ============================================ */
+            
+            .spectrum-viewer {
+                background: #1e293b;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-top: 1.5rem;
+                display: none;
+            }
+            
+            .spectrum-viewer.visible {
+                display: block;
+            }
+            
+            .spectrum-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+            
+            .spectrum-title {
+                color: #e2e8f0;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 1rem;
+                font-weight: 500;
+            }
+            
+            .spectrum-close-btn {
+                background: transparent;
+                border: 1px solid #475569;
+                color: #94a3b8;
+                padding: 0.25rem 0.75rem;
+                border-radius: 4px;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            
+            .spectrum-close-btn:hover {
+                background: #334155;
+                color: #e2e8f0;
+            }
+            
+            .spectrum-controls {
+                display: flex;
+                gap: 1rem;
+                margin-bottom: 1rem;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            
+            .control-group {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .control-group label {
+                color: #94a3b8;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.8rem;
+            }
+            
+            .control-group input {
+                width: 80px;
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+                border: 1px solid #475569;
+                border-radius: 4px;
+                background: #0f172a;
+                color: #e2e8f0;
+                font-family: 'DM Mono', monospace;
+            }
+            
+            .control-group input:focus {
+                outline: none;
+                border-color: #3b82f6;
+            }
+            
+            .spectrum-btn {
+                background: #334155;
+                border: 1px solid #475569;
+                color: #e2e8f0;
+                padding: 0.4rem 0.75rem;
+                border-radius: 4px;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.8rem;
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            
+            .spectrum-btn:hover {
+                background: #475569;
+                border-color: #64748b;
+            }
+            
+            .spectrum-btn.active {
+                background: #3b82f6;
+                border-color: #3b82f6;
+            }
+            
+            #spectrum-plot {
+                width: 100%;
+                height: 400px;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            
+            .spectrum-loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 300px;
+                color: #94a3b8;
+                font-family: 'DM Sans', sans-serif;
+            }
+            
+            .spectrum-loading::after {
+                content: '';
+                animation: dots 1.5s infinite;
+            }
+            
+            @keyframes dots {
+                0%, 20% { content: '.'; }
+                40% { content: '..'; }
+                60%, 100% { content: '...'; }
+            }
+            
+            .spectrum-error {
+                background: rgba(239, 68, 68, 0.1);
+                border: 1px solid #ef4444;
+                color: #fca5a5;
+                padding: 1rem;
+                border-radius: 8px;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.875rem;
+            }
+            
+            /* Plot button in observation items */
+            .plot-spectrum-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                background: #3b82f6;
+                border: none;
+                color: #fff;
+                padding: 0.4rem 0.75rem;
+                border-radius: 4px;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: all 0.15s;
+                margin-right: 0.5rem;
+            }
+            
+            .plot-spectrum-btn:hover {
+                background: #2563eb;
+            }
+            
+            .plot-spectrum-btn:disabled {
+                background: #64748b;
+                cursor: not-allowed;
+            }
+            
+            .file-actions {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
+                border-top: 1px solid #e2e8f0;
+            }
+            
+            /* Header info in spectrum viewer */
+            .spectrum-info {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+                padding: 0.75rem;
+                background: #0f172a;
+                border-radius: 6px;
+            }
+            
+            .spectrum-info-item {
+                text-align: center;
+            }
+            
+            .spectrum-info-label {
+                color: #64748b;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 0.25rem;
+            }
+            
+            .spectrum-info-value {
+                color: #e2e8f0;
+                font-family: 'DM Mono', monospace;
+                font-size: 0.85rem;
+            }
+        </style>
+
+        <section id="results" class="results-section"></section>
+        
+        <!-- Spectrum Viewer Section -->
+        <section id="spectrum-viewer" class="spectrum-viewer">
+            <div class="spectrum-header">
+                <div class="spectrum-title" id="spectrum-title">Spectrum</div>
+                <button class="spectrum-close-btn" onclick="closeSpectrumViewer()">Close</button>
+            </div>
+            <div class="spectrum-info" id="spectrum-info"></div>
+            <div class="spectrum-controls">
+                <div class="control-group">
+                    <label>Min λ (Å):</label>
+                    <input type="number" id="min-wl" value="4000" step="100">
+                </div>
+                <div class="control-group">
+                    <label>Max λ (Å):</label>
+                    <input type="number" id="max-wl" value="5500" step="100">
+                </div>
+                <button class="spectrum-btn" onclick="applyWavelengthRange()">Apply</button>
+                <button class="spectrum-btn" onclick="resetWavelengthRange()">Reset</button>
+                <button class="spectrum-btn" id="flatten-btn" onclick="toggleFlatten()">Flatten</button>
+            </div>
+            <div id="spectrum-plot"></div>
+        </section>
+
+        <div class="info-box">
+            <strong>Data Access:</strong> Files are stored in the shared Dropbox folder and the shared Google Drive folder
+            <code>SALT_data/2023-2-SCI-018/</code>. 
+            Click "Copy Path" to get the file location, then navigate there in Finder.
+            For web plotting, FITS files should also be in the <code>saltdata/</code> folder.
+            
+            <div class="help-toggle" onclick="toggleHelp()">
+                ⓘ Need help finding the files? Click here
+            </div>
+            
+            <div class="help-content" id="help-content">
+                <p><strong>Option 1: Shared Dropbox folder (similar instructions for the shared Google Drive folder)</strong></p>
+                <p>If you have access to the shared Dropbox, make sure it's synced locally:</p>
+                <ol>
+                    <li>Open the <strong>Dropbox app</strong> on your Mac (not just the website)</li>
+                    <li>In the Dropbox menu bar icon, click <strong>Preferences</strong> (gear icon)</li>
+                    <li>Go to the <strong>Sync</strong> tab</li>
+                    <li>Click <strong>Select folders to sync</strong></li>
+                    <li>Make sure <code>Data/SALT_data/2023-2-SCI-018</code> is checked</li>
+                    <li>Click <strong>Update</strong> and wait for sync to complete</li>
+                </ol>
+                <p style="margin-top: 0.75rem;">
+                    Once synced, files will appear in <code>~/Dropbox/Data/SALT_data/2023-2-SCI-018/</code> on your Mac.
+                </p>
+                
+                <p style="margin-top: 1rem;"><strong>Option 2: Local copies</strong></p>
+                <p>If you downloaded the data to your own folder, the paths shown here are relative. 
+                   Just use the appropriate folder and product path (e.g., <code>231205/product/</code>) 
+                   and navigate to that location within your local data directory.
+                </p>
+                <p style="margin-top: 0.5rem;">
+                    For example, if your data lives in <code>/Users/jsheffler/Desktop/Salt_analysis/</code>, 
+                    then <code>231205/product/</code> means <code>/Users/jsheffler/Desktop/Salt_analysis/231205/product/</code>.
+                </p>
+                
+                <p style="margin-top: 1rem;">
+                    Questions? Contact <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="total-nights">0</div>
+                <div class="stat-label">Nights</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="total-targets">0</div>
+                <div class="stat-label">Targets</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="total-obs">0</div>
+                <div class="stat-label">Observations</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="total-hq">0</div>
+                <div class="stat-label">High Quality</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DROPBOX_FOLDER = '2023-2-SCI-018';
+        const SALTDATA_FOLDER = 'saltdata';  // Folder containing FITS files for web viewing
+        const MAX_RECENT_SEARCHES = 4;
+        const TEAM_INSPECTION_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTbg5XWBsfv8V74hLfu7e2cllY_FESOslL67pBSTQv51ZHL2ypGZC1iQyvi7QBCB_c-NWJ4HSrJRXja/pub?gid=1011669788&single=true&output=csv';
+        
+        let catalogData = null;
+        let currentGaiaId = null;
+        let teamInspectionData = {};
+        const stellarDataCache = {};
+        
+        // ============================================
+        // Spectrum Viewer State
+        // ============================================
+        let currentSpectrum = null;
+        let isFlattened = false;
+
+        // ============================================
+        // FITS Parsing Functions
+        // ============================================
+        
+        async function fetchFITS(url) {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch FITS file: ${response.status} ${response.statusText}`);
+            }
+            return await response.arrayBuffer();
+        }
+        
+        function parseFITSHeader(buffer) {
+            const header = {};
+            let offset = 0;
+            let foundEnd = false;
+            
+            while (!foundEnd && offset < buffer.byteLength) {
+                const blockBytes = new Uint8Array(buffer, offset, Math.min(2880, buffer.byteLength - offset));
+                const blockText = new TextDecoder('ascii').decode(blockBytes);
+                
+                for (let i = 0; i < 36; i++) {
+                    const card = blockText.substring(i * 80, (i + 1) * 80);
+                    const keyword = card.substring(0, 8).trim();
+                    
+                    if (keyword === 'END') {
+                        foundEnd = true;
+                        break;
+                    }
+                    
+                    if (keyword && card.charAt(8) === '=') {
+                        let valueStr = card.substring(10, 80).split('/')[0].trim();
+                        
+                        if (valueStr.startsWith("'")) {
+                            header[keyword] = valueStr.replace(/^'|'$/g, '').trim();
+                        } else if (valueStr === 'T') {
+                            header[keyword] = true;
+                        } else if (valueStr === 'F') {
+                            header[keyword] = false;
+                        } else if (valueStr !== '') {
+                            header[keyword] = parseFloat(valueStr.replace('D', 'E'));
+                        }
+                    }
+                }
+                offset += 2880;
+            }
+            
+            return { header, dataOffset: offset };
+        }
+        
+        function readFluxData(buffer, dataOffset, header) {
+            const naxis1 = header.NAXIS1 || 0;
+            const bitpix = header.BITPIX || -32;
+            const view = new DataView(buffer);
+            const flux = [];
+            
+            if (bitpix === -32) {
+                for (let i = 0; i < naxis1; i++) {
+                    flux.push(view.getFloat32(dataOffset + i * 4, false));
+                }
+            } else if (bitpix === -64) {
+                for (let i = 0; i < naxis1; i++) {
+                    flux.push(view.getFloat64(dataOffset + i * 8, false));
+                }
+            } else if (bitpix === 16) {
+                const bzero = header.BZERO || 0;
+                const bscale = header.BSCALE || 1;
+                for (let i = 0; i < naxis1; i++) {
+                    flux.push(bzero + bscale * view.getInt16(dataOffset + i * 2, false));
+                }
+            }
+            
+            return flux;
+        }
+        
+        function calculateWavelength(header, nPixels) {
+            const crval1 = header.CRVAL1 || 0;
+            const cdelt1 = header.CDELT1 || header.CD1_1 || 1;
+            const crpix1 = header.CRPIX1 || 1;
+            
+            return Array.from({ length: nPixels }, (_, i) => 
+                crval1 + cdelt1 * ((i + 1) - crpix1)
+            );
+        }
+        
+        async function loadFITSSpectrum(filename) {
+            const url = `${SALTDATA_FOLDER}/${filename}`;
+            console.log('Loading FITS from:', url);
+            
+            const buffer = await fetchFITS(url);
+            const { header, dataOffset } = parseFITSHeader(buffer);
+            const flux = readFluxData(buffer, dataOffset, header);
+            const wavelength = calculateWavelength(header, flux.length);
+            
+            return { wavelength, flux, header };
+        }
+        
+        // ============================================
+        // Spectrum Processing
+        // ============================================
+        
+        function flattenSpectrum(wavelength, flux, windowSize = 50) {
+            const continuum = [];
+            const halfWindow = Math.floor(windowSize / 2);
+            
+            for (let i = 0; i < flux.length; i++) {
+                const start = Math.max(0, i - halfWindow);
+                const end = Math.min(flux.length, i + halfWindow);
+                const window = flux.slice(start, end).filter(v => !isNaN(v) && isFinite(v));
+                window.sort((a, b) => a - b);
+                continuum.push(window[Math.floor(window.length / 2)] || 1);
+            }
+            
+            return flux.map((f, i) => f / (continuum[i] || 1));
+        }
+        
+        function trimSpectrum(wavelength, flux, minWl, maxWl) {
+            const indices = wavelength.map((w, i) => ({ w, i }))
+                .filter(({ w }) => w >= minWl && w <= maxWl)
+                .map(({ i }) => i);
+            
+            return {
+                wavelength: indices.map(i => wavelength[i]),
+                flux: indices.map(i => flux[i])
+            };
+        }
+        
+        // ============================================
+        // Spectrum Plotting
+        // ============================================
+        
+        function plotSpectrum(wavelength, flux, title) {
+            const trace = {
+                x: wavelength,
+                y: flux,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#38bdf8', width: 1.2 },
+                hovertemplate: 'λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
+            };
+            
+            const layout = {
+                title: null,
+                xaxis: { 
+                    title: { text: 'Wavelength (Å)', font: { color: '#94a3b8', size: 12 } },
+                    color: '#94a3b8',
+                    gridcolor: '#334155',
+                    zerolinecolor: '#334155',
+                    tickfont: { color: '#94a3b8' }
+                },
+                yaxis: { 
+                    title: { text: isFlattened ? 'Normalized Flux' : 'Flux', font: { color: '#94a3b8', size: 12 } },
+                    color: '#94a3b8',
+                    gridcolor: '#334155',
+                    zerolinecolor: '#334155',
+                    tickfont: { color: '#94a3b8' }
+                },
+                paper_bgcolor: '#0f172a',
+                plot_bgcolor: '#0f172a',
+                font: { color: '#e2e8f0', family: 'DM Sans, sans-serif' },
+                hovermode: 'closest',
+                margin: { t: 20, r: 30, b: 50, l: 60 }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['select2d', 'lasso2d'],
+                toImageButtonOptions: {
+                    format: 'png',
+                    filename: title.replace(/\s+/g, '_'),
+                    height: 600,
+                    width: 1200,
+                    scale: 2
+                }
+            };
+            
+            Plotly.newPlot('spectrum-plot', [trace], layout, config);
+        }
+        
+        // ============================================
+        // Spectrum Viewer UI
+        // ============================================
+        
+        async function viewSpectrum(filename, gaiaId, obsDate) {
+            const viewer = document.getElementById('spectrum-viewer');
+            const plotDiv = document.getElementById('spectrum-plot');
+            const titleDiv = document.getElementById('spectrum-title');
+            const infoDiv = document.getElementById('spectrum-info');
+            
+            viewer.classList.add('visible');
+            plotDiv.innerHTML = '<div class="spectrum-loading">Loading spectrum</div>';
+            titleDiv.textContent = `Gaia DR3 ${gaiaId} — ${obsDate}`;
+            infoDiv.innerHTML = '';
+            
+            isFlattened = false;
+            document.getElementById('flatten-btn').classList.remove('active');
+            
+            try {
+                const { wavelength, flux, header } = await loadFITSSpectrum(filename);
+                
+                currentSpectrum = { wavelength, flux, header, filename, gaiaId, obsDate };
+                
+                const minWl = Math.floor(wavelength[0]);
+                const maxWl = Math.ceil(wavelength[wavelength.length - 1]);
+                document.getElementById('min-wl').value = minWl;
+                document.getElementById('max-wl').value = maxWl;
+                
+                infoDiv.innerHTML = `
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Date-Obs</div>
+                        <div class="spectrum-info-value">${header['DATE-OBS'] || obsDate}</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Exp Time</div>
+                        <div class="spectrum-info-value">${header.EXPTIME ? header.EXPTIME.toFixed(1) + 's' : 'N/A'}</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">λ Range</div>
+                        <div class="spectrum-info-value">${minWl}–${maxWl} Å</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Pixels</div>
+                        <div class="spectrum-info-value">${wavelength.length}</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">File</div>
+                        <div class="spectrum-info-value" style="font-size: 0.7rem;">${filename}</div>
+                    </div>
+                `;
+                
+                const title = `Gaia DR3 ${gaiaId} — ${obsDate}`;
+                plotSpectrum(wavelength, flux, title);
+                
+                viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+            } catch (error) {
+                console.error('Error loading spectrum:', error);
+                plotDiv.innerHTML = `
+                    <div class="spectrum-error">
+                        <strong>Error loading spectrum:</strong> ${error.message}<br><br>
+                        Make sure the FITS file <code>${filename}</code> exists in the <code>${SALTDATA_FOLDER}/</code> folder.
+                    </div>
+                `;
+            }
+        }
+        
+        function closeSpectrumViewer() {
+            document.getElementById('spectrum-viewer').classList.remove('visible');
+            currentSpectrum = null;
+        }
+        
+        function applyWavelengthRange() {
+            if (!currentSpectrum) return;
+            
+            const minWl = parseFloat(document.getElementById('min-wl').value);
+            const maxWl = parseFloat(document.getElementById('max-wl').value);
+            
+            let { wavelength, flux } = currentSpectrum;
+            
+            if (isFlattened) {
+                flux = flattenSpectrum(wavelength, flux);
+            }
+            
+            const trimmed = trimSpectrum(wavelength, flux, minWl, maxWl);
+            const title = `Gaia DR3 ${currentSpectrum.gaiaId} — ${currentSpectrum.obsDate}`;
+            plotSpectrum(trimmed.wavelength, trimmed.flux, title);
+        }
+        
+        function resetWavelengthRange() {
+            if (!currentSpectrum) return;
+            
+            let { wavelength, flux } = currentSpectrum;
+            
+            if (isFlattened) {
+                flux = flattenSpectrum(wavelength, flux);
+            }
+            
+            document.getElementById('min-wl').value = Math.floor(wavelength[0]);
+            document.getElementById('max-wl').value = Math.ceil(wavelength[wavelength.length - 1]);
+            
+            const title = `Gaia DR3 ${currentSpectrum.gaiaId} — ${currentSpectrum.obsDate}`;
+            plotSpectrum(wavelength, flux, title);
+        }
+        
+        function toggleFlatten() {
+            if (!currentSpectrum) return;
+            
+            isFlattened = !isFlattened;
+            document.getElementById('flatten-btn').classList.toggle('active', isFlattened);
+            
+            applyWavelengthRange();
+        }
+
+        // ============================================
+        // Team Inspection Data
+        // ============================================
+        
+        async function loadTeamInspection() {
+            try {
+                const response = await fetch(TEAM_INSPECTION_CSV_URL);
+                if (!response.ok) {
+                    console.warn('Could not load team inspection data');
+                    return;
+                }
+                
+                const csvText = await response.text();
+                const lines = csvText.split('\n');
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const cols = parseCSVLine(line);
+                    if (cols.length < 3) continue;
+                    
+                    let gaiaId = cols[0].trim();
+                    if (gaiaId.startsWith('Gaia DR3 ')) {
+                        gaiaId = gaiaId.substring(9);
+                    }
+                    
+                    const dateObserved = cols[1].trim();
+                    const usableValue = cols[2].trim().toLowerCase();
+                    const repeatInFall = cols.length > 3 ? cols[3].trim().toLowerCase() === 'yes' : false;
+                    
+                    if (usableValue === '') continue;
+                    
+                    const usable = usableValue === 'yes';
+                    const key = `${gaiaId}_${dateObserved}`;
+                    teamInspectionData[key] = { usable, repeatInFall };
+                }
+                
+                console.log(`Loaded team inspection data for ${Object.keys(teamInspectionData).length} observations`);
+            } catch (error) {
+                console.warn('Error loading team inspection data:', error);
+            }
+        }
+        
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            
+            return result;
+        }
+        
+        function getTeamInspectionStatus(gaiaId, obsDate) {
+            let dateKey = obsDate;
+            if (obsDate.includes('-')) {
+                const parts = obsDate.split('-');
+                dateKey = parts[0].slice(2) + parts[1] + parts[2];
+            }
+            const key = `${gaiaId}_${dateKey}`;
+            return teamInspectionData[key] || null;
+        }
+
+        function getSpectralType(teff) {
+            if (!teff) return null;
+            if (teff >= 30000) return 'O';
+            if (teff >= 10000) return 'B';
+            if (teff >= 7500) return 'A';
+            if (teff >= 6000) return 'F';
+            if (teff >= 5200) return 'G';
+            if (teff >= 3700) return 'K';
+            if (teff >= 2400) return 'M';
+            return 'L';
+        }
+
+        function drawCMD(canvas, data) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, w, h);
+            
+            const xMin = -0.5, xMax = 3.5;
+            const yMin = -2, yMax = 14;
+            const margin = { top: 15, right: 15, bottom: 35, left: 45 };
+            const plotW = w - margin.left - margin.right;
+            const plotH = h - margin.top - margin.bottom;
+            
+            function toX(bprp) { return margin.left + (bprp - xMin) / (xMax - xMin) * plotW; }
+            function toY(mg) { return margin.top + (mg - yMin) / (yMax - yMin) * plotH; }
+            
+            const bands = [
+                { range: [-0.3, 0.33], color: 'rgba(147, 170, 255, 0.15)' },
+                { range: [0.33, 0.98], color: 'rgba(255, 235, 200, 0.25)' },
+                { range: [0.98, 1.85], color: 'rgba(255, 200, 124, 0.2)' },
+                { range: [1.85, 3.5], color: 'rgba(255, 150, 80, 0.15)' }
+            ];
+            
+            for (const band of bands) {
+                ctx.fillStyle = band.color;
+                const x1 = toX(Math.max(band.range[0], xMin));
+                const x2 = toX(Math.min(band.range[1], xMax));
+                ctx.fillRect(x1, margin.top, x2 - x1, plotH);
+            }
+            
+            const msPoints = [
+                [-0.3, -1], [0.0, 1], [0.3, 2.5], [0.6, 3.5], [0.8, 4.5],
+                [1.0, 5.5], [1.3, 6.5], [1.6, 8], [2.0, 9.5], [2.5, 11], [3.2, 13]
+            ];
+            
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            for (let i = 0; i < msPoints.length; i++) {
+                const x = toX(msPoints[i][0]);
+                const y = toY(msPoints[i][1]);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(margin.left, margin.top);
+            ctx.lineTo(margin.left, h - margin.bottom);
+            ctx.lineTo(w - margin.right, h - margin.bottom);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '11px "DM Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('BP − RP', w / 2, h - 8);
+            
+            ctx.save();
+            ctx.translate(12, h / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('M_G (mag)', 0, 0);
+            ctx.restore();
+            
+            ctx.font = '9px "DM Sans", sans-serif';
+            ctx.textAlign = 'center';
+            for (let bp = 0; bp <= 3; bp++) {
+                const x = toX(bp);
+                ctx.beginPath();
+                ctx.moveTo(x, h - margin.bottom);
+                ctx.lineTo(x, h - margin.bottom + 4);
+                ctx.stroke();
+                ctx.fillText(bp.toString(), x, h - margin.bottom + 14);
+            }
+            
+            ctx.textAlign = 'right';
+            for (let mg = 0; mg <= 12; mg += 4) {
+                const y = toY(mg);
+                ctx.beginPath();
+                ctx.moveTo(margin.left - 4, y);
+                ctx.lineTo(margin.left, y);
+                ctx.stroke();
+                ctx.fillText(mg.toString(), margin.left - 8, y + 3);
+            }
+            
+            const sunX = toX(0.82);
+            const sunY = toY(4.83);
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 5, 0, Math.PI * 2);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fill();
+            
+            if (data && data.bp_rp != null && data.abs_g != null) {
+                const starX = toX(data.bp_rp);
+                const starY = toY(data.abs_g);
+                
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                const r = 7;
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * 4 * Math.PI / 5) - Math.PI / 2;
+                    const x = starX + r * Math.cos(angle);
+                    const y = starY + r * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#1e40af';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = '#888';
+                ctx.font = '11px "DM Sans", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No Gaia data', w / 2, h / 2);
+            }
+        }
+
+        // ============================================
+        // Recent searches
+        // ============================================
+        
+        function getRecentSearches() {
+            try {
+                const stored = localStorage.getItem('saltRecentSearches');
+                return stored ? JSON.parse(stored) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveRecentSearch(gaiaId) {
+            try {
+                let recent = getRecentSearches();
+                recent = recent.filter(id => id !== gaiaId);
+                recent.unshift(gaiaId);
+                recent = recent.slice(0, MAX_RECENT_SEARCHES);
+                localStorage.setItem('saltRecentSearches', JSON.stringify(recent));
+                renderRecentSearches();
+            } catch {}
+        }
+
+        function renderRecentSearches() {
+            const recent = getRecentSearches();
+            const dropdown = document.getElementById('search-dropdown');
+            
+            if (recent.length === 0) {
+                dropdown.innerHTML = '';
+                return;
+            }
+            
+            dropdown.innerHTML = `
+                <div class="dropdown-label">Recent searches</div>
+                ${recent.map(id => 
+                    `<div class="dropdown-item" onmousedown="selectTarget('${id}')">${id}</div>`
+                ).join('')}
+            `;
+        }
+        
+        function showDropdown() {
+            const dropdown = document.getElementById('search-dropdown');
+            const recent = getRecentSearches();
+            if (recent.length > 0) {
+                dropdown.classList.add('visible');
+            }
+        }
+        
+        function hideDropdown() {
+            const dropdown = document.getElementById('search-dropdown');
+            dropdown.classList.remove('visible');
+        }
+
+        // ============================================
+        // External links
+        // ============================================
+        
+        function showExternalLinks(gaiaId) {
+            const simbadContainer = document.getElementById('simbad-link');
+            const simbadUrl = document.getElementById('simbad-url');
+            simbadUrl.href = `https://simbad.u-strasbg.fr/simbad/sim-id?Ident=Gaia+DR3+${gaiaId}`;
+            simbadContainer.classList.add('visible');
+            
+            const vizierContainer = document.getElementById('vizier-link');
+            const vizierUrl = document.getElementById('vizier-url');
+            vizierUrl.href = `https://vizier.cds.unistra.fr/viz-bin/VizieR-4?-source=&-out.all&-c=Gaia+DR3+${gaiaId}&-c.rs=2`;
+            vizierContainer.classList.add('visible');
+        }
+
+        function hideExternalLinks() {
+            document.getElementById('simbad-link').classList.remove('visible');
+            document.getElementById('vizier-link').classList.remove('visible');
+        }
+    
+        // ============================================
+        // Stellar data fetching
+        // ============================================
+        async function fetchStellarData(gaiaId) {
+          if (stellarDataCache[gaiaId] !== undefined) {
+            return stellarDataCache[gaiaId];
+          }
+          
+          try {
+            const url = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
+            
+            const query = `
+              SELECT "Source", "Gmag", "BPmag", "RPmag", "Plx", "e_Plx", "Teff", "RV", "e_RV", "RUWE"
+              FROM "I/355/gaiadr3"
+              WHERE "Source" = '${gaiaId}'
+            `;
+            
+            const params = new URLSearchParams({
+              REQUEST: 'doQuery',
+              LANG: 'ADQL',
+              FORMAT: 'json',
+              QUERY: query.replace(/\s+/g, ' ').trim()
+            });
+            
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: params
+            });
+            
+            if (!response.ok) throw new Error('VizieR query failed');
+            
+            const data = await response.json();
+            
+            if (data.data && data.data.length > 0) {
+              const row = data.data[0];
+              const result = {
+                source_id: String(row[0]),
+                g_mag: row[1],
+                bp_mag: row[2],
+                rp_mag: row[3],
+                parallax: row[4],
+                parallax_error: row[5],
+                teff: row[6],
+                rv: row[7],
+                rv_error: row[8],
+                ruwe: row[9],
+                bp_rp: (row[2] && row[3]) ? row[2] - row[3] : null,
+                distance: row[4] > 0 ? 1000 / row[4] : null,
+                abs_g: (row[1] && row[4] > 0) ? row[1] - 5 * Math.log10(1000 / row[4]) + 5 : null
+              };
+              stellarDataCache[gaiaId] = result;
+              return result;
+            }
+          } catch (error) {
+            console.warn('Could not fetch stellar data from VizieR:', error);
+          }
+          
+          stellarDataCache[gaiaId] = null;
+          return null;
+        }
+
+        function toggleHelp() {
+            document.getElementById('help-content').classList.toggle('visible');
+        }
+
+        // ============================================
+        // Catalog loading
+        // ============================================
+        
+        async function loadCatalog() {
+            try {
+                const [catalogResponse] = await Promise.all([
+                    fetch('./index.json'),
+                    loadTeamInspection()
+                ]);
+                
+                if (!catalogResponse.ok) throw new Error('Catalog not found');
+                catalogData = await catalogResponse.json();
+                
+                document.getElementById('total-targets').textContent = catalogData.targets.length;
+                const totalObs = catalogData.targets.reduce((sum, t) => sum + t.observations.length, 0);
+                document.getElementById('total-obs').textContent = totalObs;
+                
+                let hqCount = 0;
+                catalogData.targets.forEach(t => {
+                    t.observations.forEach(obs => {
+                        const catalogStatus = obs.quality_status || 'Accepted';
+                        const teamStatus = getTeamInspectionStatus(t.gaia_dr3_id, obs.date);
+                        const passesTeamInspection = !teamStatus || teamStatus.usable;
+                        
+                        if (catalogStatus === 'Accepted' && passesTeamInspection) {
+                            hqCount++;
+                        }
+                    });
+                });
+                document.getElementById('total-hq').textContent = hqCount;
+                
+                const nights = new Set();
+                catalogData.targets.forEach(t => t.observations.forEach(o => nights.add(o.date)));
+                document.getElementById('total-nights').textContent = nights.size;
+            } catch (error) {
+                console.error('Error loading catalog:', error);
+                showStatus('Unable to load observation catalog.', true);
+            }
+        }
+
+        // ============================================
+        // Search
+        // ============================================
+        
+        function searchTarget() {
+            const gaiaId = document.getElementById('gaia-id').value.trim();
+            if (!gaiaId) { 
+                showStatus('Please enter a Gaia DR3 source ID.', true); 
+                hideExternalLinks();
+                return; 
+            }
+            if (!catalogData) { 
+                showStatus('Catalog not loaded. Please refresh.', true); 
+                return; 
+            }
+
+            const target = catalogData.targets.find(t => t.gaia_dr3_id === gaiaId);
+            if (!target) { 
+                showStatus(`No observations found for Gaia DR3 ${gaiaId}`, true); 
+                hideExternalLinks();
+                return; 
+            }
+
+            currentGaiaId = gaiaId;
+            saveRecentSearch(gaiaId);
+            showExternalLinks(gaiaId);
+            closeSpectrumViewer();
+            displayResults(target);
+        }
+
+        function getDQMPassCount(target) {
+            let passCount = 0;
+            
+            for (const obs of target.observations) {
+                const catalogStatus = obs.quality_status || 'Accepted';
+                const teamStatus = getTeamInspectionStatus(target.gaia_dr3_id, obs.date);
+                const passesTeamInspection = !teamStatus || teamStatus.usable;
+                
+                if (catalogStatus === 'Accepted' && passesTeamInspection) {
+                    passCount++;
+                }
+            }
+            
+            return passCount;
+        }
+
+        async function loadStellarData(gaiaId) {
+            const btn = document.getElementById('load-cmd-btn');
+            const container = document.getElementById('stellar-section-container');
+            
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Loading...';
+            }
+            
+            const stellarData = await fetchStellarData(gaiaId);
+            
+            container.innerHTML = `
+                <div class="stellar-section">
+                    <div class="stellar-header">
+                        <button class="collapse-cmd-btn" onclick="collapseStellarSection('${gaiaId}')">Hide</button>
+                    </div>
+                    <div class="cmd-container">
+                        <canvas id="cmd-canvas" width="280" height="260"></canvas>
+                    </div>
+                    <div class="stellar-params" id="stellar-params">
+                        <div class="param-row">
+                            <span class="param-label">G mag</span>
+                            <span class="param-value">${stellarData?.g_mag?.toFixed(2) || 'N/A'}</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-label">BP − RP</span>
+                            <span class="param-value">${stellarData?.bp_rp?.toFixed(2) || 'N/A'}</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-label">Distance</span>
+                            <span class="param-value">${stellarData?.distance ? stellarData.distance.toFixed(1) + ' pc' : 'N/A'}</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-label">Spectral Type</span>
+                            <span class="param-value">${getSpectralType(stellarData?.teff) || 'N/A'}</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-label">Teff</span>
+                            <span class="param-value">${stellarData?.teff ? Math.round(stellarData.teff) + ' K' : 'N/A'}</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-label">Radial Velocity</span>
+                            <span class="param-value">${stellarData?.rv ? stellarData.rv.toFixed(1) + ' ± ' + (stellarData.rv_error?.toFixed(1) || '?') + ' km/s' : 'N/A'}</span>
+                        </div>
+                        <div class="param-row">
+                            <span class="param-label">RUWE</span>
+                            <span class="param-value">${stellarData?.ruwe?.toFixed(2) || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const canvas = document.getElementById('cmd-canvas');
+            if (canvas) {
+                drawCMD(canvas, stellarData);
+            }
+        }
+        
+        function collapseStellarSection(gaiaId) {
+            const container = document.getElementById('stellar-section-container');
+            container.innerHTML = `
+                <div class="stellar-section-placeholder">
+                    <button id="load-cmd-btn" class="load-cmd-btn" onclick="loadStellarData('${gaiaId}')">
+                        Load CMD &amp; Stellar Parameters
+                    </button>
+                </div>
+            `;
+        }
+
+        function findPlottableFile(allFiles) {
+            const uwmFile = allFiles.find(f => f.includes('_uwm'));
+            if (uwmFile) return uwmFile;
+            
+            const mergedFile = allFiles.find(f => f.includes('_1wm') || f.includes('_2wm'));
+            if (mergedFile) return mergedFile;
+            
+            const fitsFile = allFiles.find(f => f.endsWith('.fits'));
+            return fitsFile || null;
+        }
+
+        // ============================================
+        // Display results
+        // ============================================
+        
+        async function displayResults(target) {
+            const resultsSection = document.getElementById('results');
+            const dqmPassCount = getDQMPassCount(target);
+            
+            const sortedObs = [...target.observations].sort((a, b) => {
+                const dateA = a.date.includes('-') ? a.date : `20${a.date.slice(0,2)}-${a.date.slice(2,4)}-${a.date.slice(4,6)}`;
+                const dateB = b.date.includes('-') ? b.date : `20${b.date.slice(0,2)}-${b.date.slice(2,4)}-${b.date.slice(4,6)}`;
+                return dateA.localeCompare(dateB);
+            });
+            
+            const obsHtml = sortedObs.map((obs, idx) => {
+                const allFiles = obs.all_files || [obs.filename];
+                const mainFile = obs.filename;
+                const dropboxPath = obs.dropbox_path || '';
+                const fullPath = `${DROPBOX_FOLDER}/${dropboxPath}`;
+                
+                const plottableFile = findPlottableFile(allFiles);
+                
+                const catalogStatus = obs.quality_status || 'Accepted';
+                const catalogReason = obs.quality_reason;
+                const teamStatus = getTeamInspectionStatus(target.gaia_dr3_id, obs.date);
+                
+                let qualityHtml = '';
+                
+                if (catalogStatus === 'Rejected') {
+                    qualityHtml = `<span class="quality-badge rejected">Rejected${catalogReason ? `: ${catalogReason}` : ''}</span>`;
+                } else if (teamStatus && !teamStatus.usable) {
+                    qualityHtml = `<span class="quality-badge team-rejected">Team Rejected</span>`;
+                } else {
+                    qualityHtml = `<span class="quality-badge accepted">Accepted</span>`;
+                }
+                
+                const conditionsHtml = obs.conditions ? 
+                    `<div class="obs-conditions">☁ ${obs.conditions}${obs.seeing ? ` · Seeing: ${obs.seeing}"` : ''}</div>` : 
+                    (obs.seeing ? `<div class="obs-conditions">Seeing: ${obs.seeing}"</div>` : '');
+                
+                return `
+                    <div class="obs-item">
+                        <div class="obs-header" onclick="toggleFiles(${idx})">
+                            <div class="obs-info">
+                                <div class="obs-date">${obs.date} ${qualityHtml}</div>
+                                <div class="obs-details">
+                                    ${obs.instrument} · ${obs.mode || 'Standard'} · ${obs.exposure_time}s · ${allFiles.length} files
+                                </div>
+                                ${conditionsHtml}
+                            </div>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                        <div class="obs-files" id="files-${idx}">
+                            <div class="dropbox-path">
+                                <code>${fullPath}/</code>
+                                <button class="copy-btn" onclick="copyPath('${fullPath}/', this); event.stopPropagation();">Copy Path</button>
+                            </div>
+                            <div class="files-grid">
+                                ${allFiles.map(f => {
+                                    const isMain = f === mainFile;
+                                    const badge = getFileBadge(f);
+                                    return `<div class="file-item">${badge ? `<span class="file-badge ${isMain ? 'main' : ''}">${badge}</span>` : ''}<span>${f}</span></div>`;
+                                }).join('')}
+                            </div>
+                            ${plottableFile ? `
+                            <div class="file-actions">
+                                <button class="plot-spectrum-btn" onclick="viewSpectrum('${plottableFile}', '${target.gaia_dr3_id}', '${obs.date}'); event.stopPropagation();">
+                                    📈 Plot Spectrum
+                                </button>
+                                <span style="color: #64748b; font-size: 0.75rem;">Using: ${plottableFile}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            resultsSection.innerHTML = `
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="target-name">Gaia DR3 ${target.gaia_dr3_id}</div>
+                        <div class="coords">
+                            RA: ${target.ra_deg?.toFixed(6) || 'N/A'}° · Dec: ${target.dec_deg?.toFixed(6) || 'N/A'}°
+                            ${target.common_name ? ` · ${target.common_name}` : ''}
+                        </div>
+                    </div>
+                    <div class="result-body">
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <div class="meta-label">Observations</div>
+                                <div class="meta-value">${target.observations.length}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">DQM Pass</div>
+                                <div class="meta-value">${dqmPassCount} / ${target.observations.length}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Program</div>
+                                <div class="meta-value">${target.program || 'General'}</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">Notes</div>
+                                <div class="meta-value">${target.notes || 'None'}</div>
+                            </div>
+                        </div>
+                        <div class="observations-header">Observations</div>
+                        ${obsHtml}
+                        
+                        <div id="stellar-section-container">
+                            <div class="stellar-section-placeholder">
+                                <button id="load-cmd-btn" class="load-cmd-btn" onclick="loadStellarData('${target.gaia_dr3_id}')">
+                                    Load CMD &amp; Stellar Parameters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            resultsSection.classList.add('visible');
+        }
+
+        function showAllTargets() {
+            if (!catalogData) return;
+            hideExternalLinks();
+            closeSpectrumViewer();
+            currentGaiaId = null;
+            
+            const resultsSection = document.getElementById('results');
+            const sortedTargets = [...catalogData.targets].sort((a, b) => 
+                b.observations.length - a.observations.length
+            );
+            
+            resultsSection.innerHTML = `
+                <div class="all-targets">
+                    <h2>All Targets (${catalogData.targets.length})</h2>
+                    <div class="target-list">
+                        ${sortedTargets.map(t => `
+                            <div class="target-item" onclick="selectTarget('${t.gaia_dr3_id}')">
+                                <div class="gaia-id">${t.gaia_dr3_id}</div>
+                                <div class="obs-count">${t.observations.length} obs</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            resultsSection.classList.add('visible');
+        }
+
+        function selectTarget(gaiaId) {
+            document.getElementById('gaia-id').value = gaiaId;
+            searchTarget();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleFiles(idx) {
+            const filesDiv = document.getElementById(`files-${idx}`);
+            const header = filesDiv.previousElementSibling;
+            filesDiv.classList.toggle('expanded');
+            header.classList.toggle('expanded');
+        }
+
+        function copyPath(path, btn) {
+            navigator.clipboard.writeText(path).then(() => {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => { 
+                    btn.textContent = 'Copy Path'; 
+                    btn.classList.remove('copied'); 
+                }, 2000);
+            });
+        }
+
+        function getFileBadge(filename) {
+            if (filename.includes('_uwm')) return 'merged';
+            if (filename.includes('_1wm') || filename.includes('_2wm')) return 'merged';
+            if (filename.includes('_1we') || filename.includes('_2we')) return 'extracted';
+            if (filename.includes('_1w.') || filename.includes('_2w.')) return 'wavelength';
+            if (filename.includes('SNR')) return 'SNR';
+            return null;
+        }
+
+        function showStatus(message, isError = false) {
+            const resultsSection = document.getElementById('results');
+            resultsSection.innerHTML = `<div class="status ${isError ? 'error' : ''}"><p>${message}</p></div>`;
+            resultsSection.classList.add('visible');
+        }
+
+        // ============================================
+        // Init
+        // ============================================
+        
+        const gaiaInput = document.getElementById('gaia-id');
+        
+        gaiaInput.addEventListener('keypress', e => { 
+            if (e.key === 'Enter') searchTarget(); 
+        });
+        
+        gaiaInput.addEventListener('focus', () => {
+            renderRecentSearches();
+            showDropdown();
+        });
+        
+        gaiaInput.addEventListener('blur', () => {
+            setTimeout(hideDropdown, 150);
+        });
+        
+        loadCatalog();
+    </script>
+</body>
+</html>
