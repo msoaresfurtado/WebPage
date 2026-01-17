@@ -447,6 +447,46 @@
                 color: #e2e8f0;
             }
             
+            .rv-help-toggle {
+                color: #64748b;
+                font-size: 0.75rem;
+                cursor: pointer;
+                margin-left: 1rem;
+                transition: color 0.15s;
+            }
+            
+            .rv-help-toggle:hover {
+                color: #a78bfa;
+            }
+            
+            .rv-help-content {
+                display: none;
+                margin-top: 0.75rem;
+                padding: 0.75rem 1rem;
+                background: rgba(124, 58, 237, 0.1);
+                border: 1px solid rgba(124, 58, 237, 0.3);
+                border-radius: 6px;
+                font-size: 0.8rem;
+                color: #cbd5e1;
+            }
+            
+            .rv-help-content.show {
+                display: block;
+            }
+            
+            .rv-help-content ol {
+                margin: 0.5rem 0 0.5rem 1.25rem;
+                padding: 0;
+            }
+            
+            .rv-help-content li {
+                margin-bottom: 0.35rem;
+            }
+            
+            .rv-help-content p {
+                margin: 0.5rem 0 0 0;
+            }
+            
             /* Condensed file list styling */
             .obs-files {
                 padding: 0.5rem 0.75rem;
@@ -649,6 +689,22 @@
                     Compute RV
                 </button>
                 <div class="rv-result" id="rv-result"></div>
+                <span class="rv-help-toggle" onclick="toggleRVHelp()">ⓘ How to measure RV</span>
+            </div>
+            <div class="rv-help-content" id="rv-help-content">
+                <div class="rv-help-steps">
+                    <strong>To measure the true stellar radial velocity:</strong>
+                    <ol>
+                        <li><strong>Select a template</strong> matching your star's temperature (use BP-RP color as guide)</li>
+                        <li><strong>Enable "Bary Corr"</strong> (turns green) to correct for Earth's motion</li>
+                        <li><strong>Click "Compute RV"</strong> to run cross-correlation</li>
+                    </ol>
+                    <p>The result shows <strong>RV (bary)</strong> = the star's true heliocentric radial velocity.</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
+                        <strong>RV Corr</strong> shifts the spectrum to rest frame (useful to check if lines align with markers).<br>
+                        <strong>Flatten</strong> removes the continuum shape for easier line comparison.
+                    </p>
+                </div>
             </div>
             <div id="spectrum-plot"></div>
         </section>
@@ -2740,6 +2796,10 @@
 
         function toggleHelp() {
             document.getElementById('help-content').classList.toggle('visible');
+        }
+        
+        function toggleRVHelp() {
+            document.getElementById('rv-help-content').classList.toggle('show');
         }
 
         // ============================================
