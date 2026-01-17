@@ -365,6 +365,16 @@
                 opacity: 1;
             }
             
+            #template-overlay-btn {
+                opacity: 0.6;
+            }
+            
+            #template-overlay-btn.active {
+                background: #ec4899;
+                border-color: #ec4899;
+                opacity: 1;
+            }
+            
             .line-btn-group {
                 display: inline-flex;
                 gap: 0.5rem;
@@ -477,6 +487,12 @@
             .rv-help-content ol {
                 margin: 0.5rem 0 0.5rem 1.25rem;
                 padding: 0;
+            }
+            
+            .rv-help-content ul {
+                margin: 0.5rem 0 0.5rem 1.25rem;
+                padding: 0;
+                list-style-type: disc;
             }
             
             .rv-help-content li {
@@ -688,6 +704,7 @@
                 <button class="spectrum-btn rv-btn" onclick="computeCCF()" title="Compute cross-correlation and radial velocity">
                     Compute RV
                 </button>
+                <button class="spectrum-btn" id="template-overlay-btn" onclick="toggleTemplateOverlay()" title="Show/hide RV-shifted template spectrum">Show Template</button>
                 <div class="rv-result" id="rv-result"></div>
                 <span class="rv-help-toggle" onclick="toggleRVHelp()">ⓘ How to measure RV</span>
             </div>
@@ -699,10 +716,22 @@
                         <li><strong>Enable "Bary Corr"</strong> (turns green) to correct for Earth's motion</li>
                         <li><strong>Click "Compute RV"</strong> to run cross-correlation</li>
                     </ol>
-                    <p>The result shows <strong>RV (bary)</strong> = the star's true heliocentric radial velocity.</p>
+                    
+                    <p style="margin-top: 0.75rem;"><strong>Understanding the results:</strong></p>
+                    <ul style="margin: 0.5rem 0 0.5rem 1.25rem; padding: 0;">
+                        <li><strong>RV (bary)</strong> = heliocentric radial velocity (the star's true velocity relative to the Sun)</li>
+                        <li><strong>± error</strong> = estimated 1σ uncertainty, derived from CCF peak strength and width</li>
+                        <li><strong>observed</strong> = raw measured RV before barycentric correction</li>
+                        <li><strong>bary corr</strong> = Earth's motion correction (added to observed RV)</li>
+                        <li><strong>CCF</strong> = cross-correlation peak (0-1; higher = better template match)</li>
+                        <li><strong>σ</strong> = CCF Gaussian width (related to stellar rotation and spectral resolution)</li>
+                    </ul>
+                    
                     <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
+                        <strong>Show Template</strong> overlays the RV-shifted template on the flattened spectrum (use to verify the fit).<br>
                         <strong>RV Corr</strong> shifts the spectrum to rest frame (useful to check if lines align with markers).<br>
-                        <strong>Flatten</strong> removes the continuum shape for easier line comparison.
+                        <strong>Flatten</strong> removes the continuum shape for easier line comparison.<br>
+                        <em>Note: CCF is always computed using flattened (continuum-normalized) spectra.</em>
                     </p>
                 </div>
             </div>
@@ -795,6 +824,7 @@
         let applyBaryCorr = false;
         let applyRVCorr = false;
         let measuredRV = null;  // Store the last measured RV from CCF
+        let showTemplate = false;  // Toggle for template overlay
         
         // SALT Observatory coordinates
         const SALT_LAT = 32.37582222;   // degrees
@@ -990,6 +1020,25 @@
             
             applyRVCorr = !applyRVCorr;
             document.getElementById('rv-corr-btn').classList.toggle('active', applyRVCorr);
+            
+            // Re-render the current spectrum
+            if (currentSpectrum) {
+                if (currentSpectrum.isMultiArm) {
+                    plotBothArms(currentSpectrum.blue, currentSpectrum.red);
+                } else {
+                    applyWavelengthRange();
+                }
+            }
+        }
+        
+        function toggleTemplateOverlay() {
+            if (!currentSpectrum || !currentSpectrum.lastCCF || !currentSpectrum.lastCCF.templateWl) {
+                alert('Please compute RV first using the "Compute RV" button');
+                return;
+            }
+            
+            showTemplate = !showTemplate;
+            document.getElementById('template-overlay-btn').classList.toggle('active', showTemplate);
             
             // Re-render the current spectrum
             if (currentSpectrum) {
@@ -1627,8 +1676,18 @@
             const gaussFit = refineCCFPeakWithGaussian(velocities, ccf, initialRV, 100);
             const rv = gaussFit.success ? gaussFit.mean : initialRV;
             
+            // Estimate RV uncertainty using Tonry-Davis style approach
+            // σ_RV ≈ σ_CCF / (1 + r) * sqrt(2) where r is CCF peak, σ_CCF is Gaussian width
+            // Higher CCF peak = better correlation = lower error
+            const ccfPeak = initialPeak.peak;
+            const sigma = gaussFit.sigma || 10;
+            const rvError = gaussFit.success && ccfPeak > 0.1 
+                ? sigma * Math.sqrt(1 - ccfPeak * ccfPeak) / ccfPeak
+                : null;
+            
             return {
                 rv: rv,
+                rvError: rvError,
                 peakCCF: initialPeak.peak,
                 velocities: velocities,
                 ccf: ccf,
@@ -1671,6 +1730,13 @@
                     obsFlux = currentSpectrum.flux.slice();
                 }
                 
+                // Always flatten spectra for CCF (continuum normalization improves cross-correlation)
+                console.log('Flattening observed spectrum for CCF...');
+                const obsFluxFlattened = flattenSpectrum(obsWl, obsFlux, 100);
+                
+                console.log('Flattening template spectrum for CCF...');
+                const tmpFluxFlattened = flattenSpectrum(template.wavelength, template.flux, 100);
+                
                 // Calculate barycentric correction
                 let baryCorr = 0;
                 if (applyBaryCorr) {
@@ -1699,12 +1765,12 @@
                 
                 console.log('Computing CCF for chunks:', chunks.map(c => `${c.min}-${c.max}`).join(', '));
                 
-                // Compute CCF for each chunk
+                // Compute CCF for each chunk using flattened spectra
                 const results = [];
                 for (const chunk of chunks) {
                     const result = computeCCFForChunk(
-                        obsWl, obsFlux, 
-                        template.wavelength, template.flux,
+                        obsWl, obsFluxFlattened, 
+                        template.wavelength, tmpFluxFlattened,
                         chunk.min, chunk.max
                     );
                     
@@ -1735,15 +1801,28 @@
                 const rvBary = rv + baryCorr;
                 const gaussFit = bestResult.gaussFit;
                 
+                // Store template data for overplotting (RV-shifted)
+                const finalRV = applyBaryCorr && baryCorr !== 0 ? rvBary : rv;
+                const rvShiftFactor = 1 + (finalRV / C_KMS);
+                const templateShiftedWl = template.wavelength.map(w => w * rvShiftFactor);
+                
                 // Store CCF for display
                 currentSpectrum.lastCCF = {
                     velocities: bestResult.velocities,
                     ccf: bestResult.ccf,
                     peakVel: rv,
                     peakVelBary: rvBary,
+                    rvError: bestResult.rvError,
                     baryCorr: baryCorr,
                     peakCCF: bestResult.peakCCF,
                     template: templateFile,
+                    // Store template for overplot
+                    templateWl: template.wavelength,
+                    templateWlShifted: templateShiftedWl,
+                    templateFlux: tmpFluxFlattened,
+                    // Store observed flattened spectrum used in CCF
+                    obsWl: obsWl,
+                    obsFluxFlattened: obsFluxFlattened,
                     gaussFit: gaussFit,
                     chunkRange: `${bestResult.chunkMin}-${bestResult.chunkMax}`,
                     allResults: results
@@ -1752,9 +1831,12 @@
                 // Store measured RV
                 measuredRV = applyBaryCorr && baryCorr !== 0 ? rvBary : rv;
                 document.getElementById('rv-corr-btn').style.opacity = '1';
+                document.getElementById('template-overlay-btn').style.opacity = '1';
                 
                 // Display result
-                const fitNote = gaussFit.success ? ` (σ=${gaussFit.sigma.toFixed(1)})` : '';
+                const rvError = bestResult.rvError;
+                const errorStr = rvError ? ` ± ${rvError.toFixed(1)}` : '';
+                const sigmaStr = gaussFit.success ? `, σ=${gaussFit.sigma.toFixed(1)}` : '';
                 const chunkNote = `${bestResult.chunkMin}-${bestResult.chunkMax}Å`;
                 
                 let rvDisplay;
@@ -1762,21 +1844,21 @@
                     const signBary = rvBary >= 0 ? '+' : '';
                     rvDisplay = `
                         <span class="rv-label">RV (bary):</span>
-                        <span class="rv-value">${signBary}${rvBary.toFixed(2)} km/s${fitNote}</span>
-                        <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">observed: ${rv >= 0 ? '+' : ''}${rv.toFixed(2)}, corr: ${baryCorr >= 0 ? '+' : ''}${baryCorr.toFixed(2)}</span>
+                        <span class="rv-value">${signBary}${rvBary.toFixed(2)}${errorStr} km/s</span>
+                        <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">observed: ${rv >= 0 ? '+' : ''}${rv.toFixed(2)} km/s, bary corr: ${baryCorr >= 0 ? '+' : ''}${baryCorr.toFixed(2)} km/s</span>
                     `;
                 } else {
                     const sign = rv >= 0 ? '+' : '';
                     rvDisplay = `
                         <span class="rv-label">RV:</span>
-                        <span class="rv-value">${sign}${rv.toFixed(2)} km/s${fitNote}</span>
+                        <span class="rv-value">${sign}${rv.toFixed(2)}${errorStr} km/s</span>
                     `;
                 }
                 
                 rvResult.innerHTML = `
                     ${rvDisplay}
                     <span class="rv-label">CCF:</span>
-                    <span class="rv-value">${bestResult.peakCCF.toFixed(3)}</span>
+                    <span class="rv-value">${bestResult.peakCCF.toFixed(3)}${sigmaStr}</span>
                     <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">${chunkNote}</span>
                     <button class="show-ccf-btn" onclick="showCCFPlot()">Show CCF</button>
                 `;
@@ -1816,6 +1898,9 @@
                 document.body.appendChild(modal);
             }
             
+            const errorStr = ccfData.rvError ? ` ± ${ccfData.rvError.toFixed(1)}` : '';
+            const sigmaStr = ccfData.gaussFit && ccfData.gaussFit.success ? `, σ=${ccfData.gaussFit.sigma.toFixed(1)} km/s` : '';
+            
             modal.innerHTML = `
                 <div style="background: #1e293b; border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 800px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -1829,8 +1914,8 @@
                     </div>
                     <div id="ccf-plot" style="width: 100%; height: 350px;"></div>
                     <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.5rem; font-family: 'DM Sans', sans-serif;">
-                        Template: ${ccfData.template} | 
-                        ${ccfData.baryCorr ? `RV (bary): ${ccfData.peakVelBary.toFixed(2)} km/s (observed: ${ccfData.peakVel.toFixed(2)}, corr: ${ccfData.baryCorr >= 0 ? '+' : ''}${ccfData.baryCorr.toFixed(2)})` : `RV: ${ccfData.peakVel.toFixed(2)} km/s`}
+                        Template: ${ccfData.template} | CCF peak: ${ccfData.peakCCF.toFixed(3)}${sigmaStr}<br>
+                        ${ccfData.baryCorr ? `RV (bary): ${ccfData.peakVelBary.toFixed(2)}${errorStr} km/s (observed: ${ccfData.peakVel.toFixed(2)} km/s, bary corr: ${ccfData.baryCorr >= 0 ? '+' : ''}${ccfData.baryCorr.toFixed(2)} km/s)` : `RV: ${ccfData.peakVel.toFixed(2)}${errorStr} km/s`}
                     </div>
                 </div>
             `;
@@ -2210,14 +2295,69 @@
         // ============================================
         
         function plotSpectrum(wavelength, flux, title) {
-            const trace = {
-                x: wavelength,
-                y: flux,
+            const traces = [];
+            
+            // When showing template, use the flattened spectrum that was used in CCF
+            let displayWl = wavelength;
+            let displayFlux = flux;
+            
+            if (showTemplate && currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.obsFluxFlattened) {
+                // Use the exact flattened spectrum that was used in CCF
+                const ccfData = currentSpectrum.lastCCF;
+                displayWl = ccfData.obsWl;
+                displayFlux = ccfData.obsFluxFlattened;
+                
+                // Apply wavelength corrections if needed
+                if (applyBaryCorr || applyRVCorr) {
+                    const header = currentSpectrum.isMultiArm ? currentSpectrum.blue.header : currentSpectrum.header;
+                    displayWl = getFullyCorrectedWavelength(displayWl, header, currentSpectrum.gaiaId);
+                }
+            }
+            
+            // Main spectrum trace
+            traces.push({
+                x: displayWl,
+                y: displayFlux,
                 type: 'scatter',
                 mode: 'lines',
+                name: 'Observed (flattened)',
                 line: { color: '#38bdf8', width: 1.2 },
                 hovertemplate: 'λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
-            };
+            });
+            
+            // Template overlay if enabled
+            if (showTemplate && currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.templateWl) {
+                const ccfData = currentSpectrum.lastCCF;
+                
+                // Use shifted wavelengths if RV corr is NOT applied (so template matches observed)
+                // If RV corr IS applied, use original template wavelengths (both at rest frame)
+                const templateWl = applyRVCorr ? ccfData.templateWl : ccfData.templateWlShifted;
+                
+                // Trim template to current view range
+                const minWl = Math.min(...displayWl);
+                const maxWl = Math.max(...displayWl);
+                
+                const trimmedWl = [];
+                const trimmedFlux = [];
+                for (let i = 0; i < templateWl.length; i++) {
+                    if (templateWl[i] >= minWl && templateWl[i] <= maxWl) {
+                        trimmedWl.push(templateWl[i]);
+                        trimmedFlux.push(ccfData.templateFlux[i]);
+                    }
+                }
+                
+                if (trimmedWl.length > 0) {
+                    traces.push({
+                        x: trimmedWl,
+                        y: trimmedFlux,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: `Template (${ccfData.template})`,
+                        line: { color: '#f472b6', width: 1.0, opacity: 0.7 },
+                        hovertemplate: 'Template<br>λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
+                    });
+                }
+            }
             
             const { shapes, annotations } = getSpectralLineShapes();
             
@@ -2231,7 +2371,7 @@
                     tickfont: { color: '#94a3b8' }
                 },
                 yaxis: { 
-                    title: { text: isFlattened ? 'Normalized Flux' : 'Flux', font: { color: '#94a3b8', size: 12 } },
+                    title: { text: isFlattened || showTemplate ? 'Normalized Flux' : 'Flux', font: { color: '#94a3b8', size: 12 } },
                     color: '#94a3b8',
                     gridcolor: '#334155',
                     zerolinecolor: '#334155',
@@ -2243,7 +2383,14 @@
                 hovermode: 'closest',
                 margin: { t: 20, r: 30, b: 50, l: 60 },
                 shapes: shapes,
-                annotations: annotations
+                annotations: annotations,
+                showlegend: showTemplate,
+                legend: { 
+                    x: 0.02, 
+                    y: 0.98, 
+                    bgcolor: 'rgba(15, 23, 42, 0.8)',
+                    font: { color: '#94a3b8', size: 11 }
+                }
             };
             
             const config = {
@@ -2259,7 +2406,7 @@
                 }
             };
             
-            Plotly.newPlot('spectrum-plot', [trace], layout, config);
+            Plotly.newPlot('spectrum-plot', traces, layout, config);
         }
         
         // ============================================
@@ -2294,6 +2441,11 @@
             measuredRV = null;
             document.getElementById('rv-corr-btn').classList.remove('active');
             document.getElementById('rv-corr-btn').style.opacity = '0.6';
+            
+            // Reset template overlay
+            showTemplate = false;
+            document.getElementById('template-overlay-btn').classList.remove('active');
+            document.getElementById('template-overlay-btn').style.opacity = '0.6';
             
             try {
                 const { wavelength, flux, header } = await loadFITSSpectrum(filename);
@@ -2366,6 +2518,10 @@
             measuredRV = null;
             document.getElementById('rv-corr-btn').classList.remove('active');
             document.getElementById('rv-corr-btn').style.opacity = '0.6';
+            // Reset template overlay
+            showTemplate = false;
+            document.getElementById('template-overlay-btn').classList.remove('active');
+            document.getElementById('template-overlay-btn').style.opacity = '0.6';
         }
         
         function applyWavelengthRange() {
@@ -3048,6 +3204,11 @@
             measuredRV = null;
             document.getElementById('rv-corr-btn').classList.remove('active');
             document.getElementById('rv-corr-btn').style.opacity = '0.6';
+            
+            // Reset template overlay
+            showTemplate = false;
+            document.getElementById('template-overlay-btn').classList.remove('active');
+            document.getElementById('template-overlay-btn').style.opacity = '0.6';
             
             try {
                 // Load both spectra in parallel
