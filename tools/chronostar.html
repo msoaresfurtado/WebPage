@@ -1984,6 +1984,18 @@ DATA SOURCES:
     const k2Match = cleaned.match(/^K2[-\s]*(\d+[A-Za-z]?)$/i);
     if (k2Match) variants.push(`K2-${k2Match[1]}`, `K2 ${k2Match[1]}`, `K2${k2Match[1]}`);
 
+   // K2 targets (e.g., K2-33, K2 33, K233, K2-288B, K2-288 B)
+    const k2Match = cleaned.match(/^K2[-\s]*(\d+)\s*([A-Za-z]?)$/i);
+    if (k2Match) {
+      const num = k2Match[1];
+      const letter = k2Match[2] || '';
+      variants.push(`K2-${num}${letter}`, `K2 ${num}${letter}`, `K2${num}${letter}`);
+      if (letter) {
+        // Also try with space before letter for SIMBAD compatibility
+        variants.push(`K2-${num} ${letter}`, `K2 ${num} ${letter}`);
+      }
+    }
+     
     // WASP targets (e.g., WASP-12, WASP 12)
     const waspMatch = cleaned.match(/^WASP[-\s]*(\d+[A-Za-z]?)$/i);
     if (waspMatch) variants.push(`WASP-${waspMatch[1]}`, `WASP ${waspMatch[1]}`, `WASP${waspMatch[1]}`);
@@ -2548,16 +2560,19 @@ DATA SOURCES:
   const stripX = [...instabilityStrip.blueX, ...instabilityStrip.redX.slice().reverse()];
   const stripY = [...instabilityStrip.blueY, ...instabilityStrip.redY.slice().reverse()];
 
-  function displayCMD(candidates, target) {
+   // High RUWE threshold
+  const HIGH_RUWE_THRESHOLD = 1.4;
+     
+function displayCMD(candidates, target) {
     const container = document.getElementById('cmd-plot');
 
-    const bprp = candidates.map(c => c.bp_rp);
-    const absG = candidates.map(c => calculateAbsMag(c.phot_g_mean_mag, c.parallax));
-    const voff = candidates.map(c => c.voff);
+    // Separate candidates into normal and high RUWE
+    const normalCandidates = candidates.filter(c => c.ruwe == null || c.ruwe <= HIGH_RUWE_THRESHOLD);
+    const highRuweCandidates = candidates.filter(c => c.ruwe != null && c.ruwe > HIGH_RUWE_THRESHOLD);
 
     const targetBpRp = target.bp_rp;
     const targetAbsMag = calculateAbsMag(target.phot_g_mean_mag, target.parallax);
-
+   
     const shapes = spectralTypeColors.map(band => ({
       type: 'rect', xref: 'x', yref: 'paper',
       x0: band.range[0], x1: band.range[1], y0: 0, y1: 1,
@@ -2585,19 +2600,43 @@ DATA SOURCES:
       { x: [0.874], y: [4.902], mode: 'markers', name: 'Sun', marker: { size: 12, color: '#000000', symbol: 'circle-open-dot', line: { color: '#000000', width: 2 } }, hovertemplate: '<b>Sun</b><br>BP-RP: 0.874<br>M_G: 4.902<extra></extra>' }
     ];
 
-    if (bprp.length > 0) {
+// Normal RUWE candidates (circles)
+    if (normalCandidates.length > 0) {
+      const bprp = normalCandidates.map(c => c.bp_rp);
+      const absG = normalCandidates.map(c => calculateAbsMag(c.phot_g_mean_mag, c.parallax));
+      const voff = normalCandidates.map(c => c.voff);
+
       traces.push({
         x: bprp, y: absG, mode: 'markers', name: 'Comoving',
         marker: {
           size: 10, color: voff, colorscale: 'Viridis', showscale: true,
           colorbar: { title: 'V<sub>off</sub>', len: 0.5, y: 0.75 },
-          line: { color: '#333', width: 0.5 }
+          line: { color: '#333', width: 0.5 },
+          symbol: 'circle'
         },
-        text: candidates.map(c => `Gaia DR3 ${c.source_id}`),
+        text: normalCandidates.map(c => `Gaia DR3 ${c.source_id}`),
         hovertemplate: '<b>%{text}</b><br>BP-RP: %{x:.3f}<br>M_G: %{y:.2f}<extra></extra>'
       });
     }
 
+    // High RUWE candidates (squares)
+    if (highRuweCandidates.length > 0) {
+      const bprpHigh = highRuweCandidates.map(c => c.bp_rp);
+      const absGHigh = highRuweCandidates.map(c => calculateAbsMag(c.phot_g_mean_mag, c.parallax));
+      const voffHigh = highRuweCandidates.map(c => c.voff);
+
+      traces.push({
+        x: bprpHigh, y: absGHigh, mode: 'markers', name: `High RUWE (>${HIGH_RUWE_THRESHOLD})`,
+        marker: {
+          size: 10, color: voffHigh, colorscale: 'Viridis', showscale: false,
+          line: { color: '#333', width: 0.5 },
+          symbol: 'square'
+        },
+        text: highRuweCandidates.map(c => `Gaia DR3 ${c.source_id}<br>RUWE: ${c.ruwe?.toFixed(2)}`),
+        hovertemplate: '<b>%{text}</b><br>BP-RP: %{x:.3f}<br>M_G: %{y:.2f}<extra></extra>'
+      });
+    }
+   
     if (targetBpRp != null && targetAbsMag != null) {
       traces.push({
         x: [targetBpRp], y: [targetAbsMag],
