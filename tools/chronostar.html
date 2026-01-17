@@ -1980,11 +1980,7 @@ DATA SOURCES:
     const keltMatch = cleaned.match(/^KELT[-\s]*(\d+[A-Za-z]?)$/i);
     if (keltMatch) variants.push(`KELT-${keltMatch[1]}`, `KELT ${keltMatch[1]}`, `KELT${keltMatch[1]}`);
 
-    // K2 targets (e.g., K2-33, K2 33, K233)
-    const k2Match = cleaned.match(/^K2[-\s]*(\d+[A-Za-z]?)$/i);
-    if (k2Match) variants.push(`K2-${k2Match[1]}`, `K2 ${k2Match[1]}`, `K2${k2Match[1]}`);
-
-   // K2 targets (e.g., K2-33, K2 33, K233, K2-288B, K2-288 B)
+    // K2 targets (e.g., K2-33, K2 33, K233, K2-288B, K2-288 B)
     const k2Match = cleaned.match(/^K2[-\s]*(\d+)\s*([A-Za-z]?)$/i);
     if (k2Match) {
       const num = k2Match[1];
