@@ -345,6 +345,14 @@
                 cursor: not-allowed;
             }
             
+            .plot-both-btn {
+                background: linear-gradient(90deg, #38bdf8 0%, #f87171 100%);
+            }
+            
+            .plot-both-btn:hover {
+                background: linear-gradient(90deg, #0ea5e9 0%, #ef4444 100%);
+            }
+            
             .file-actions {
                 display: flex;
                 align-items: center;
@@ -742,6 +750,12 @@
         function applyWavelengthRange() {
             if (!currentSpectrum) return;
             
+            // Handle multi-arm case
+            if (currentSpectrum.isMultiArm) {
+                plotBothArms(currentSpectrum.blue, currentSpectrum.red);
+                return;
+            }
+            
             const minWl = parseFloat(document.getElementById('min-wl').value);
             const maxWl = parseFloat(document.getElementById('max-wl').value);
             
@@ -758,6 +772,15 @@
         
         function resetWavelengthRange() {
             if (!currentSpectrum) return;
+            
+            // Handle multi-arm case
+            if (currentSpectrum.isMultiArm) {
+                const allWavelengths = [...currentSpectrum.blue.wavelength, ...currentSpectrum.red.wavelength];
+                document.getElementById('min-wl').value = Math.floor(Math.min(...allWavelengths));
+                document.getElementById('max-wl').value = Math.ceil(Math.max(...allWavelengths));
+                plotBothArms(currentSpectrum.blue, currentSpectrum.red);
+                return;
+            }
             
             let { wavelength, flux } = currentSpectrum;
             
@@ -777,6 +800,12 @@
             
             isFlattened = !isFlattened;
             document.getElementById('flatten-btn').classList.toggle('active', isFlattened);
+            
+            // Handle multi-arm case
+            if (currentSpectrum.isMultiArm) {
+                plotBothArms(currentSpectrum.blue, currentSpectrum.red);
+                return;
+            }
             
             applyWavelengthRange();
         }
@@ -1304,6 +1333,192 @@
             const fitsFile = allFiles.find(f => f.endsWith('.fits'));
             return fitsFile || null;
         }
+        
+        // Find matching blue (H) and red (R) arm files
+        function findBothArmFiles(allFiles) {
+            // Look for _uwm files first (merged, wavelength-calibrated)
+            const blueUwm = allFiles.find(f => f.includes('H') && f.includes('_uwm'));
+            const redUwm = allFiles.find(f => f.includes('R') && f.includes('_uwm'));
+            
+            if (blueUwm && redUwm) {
+                return { blue: blueUwm, red: redUwm };
+            }
+            
+            // Fall back to _1wm/_2wm merged files
+            const blue1wm = allFiles.find(f => f.includes('H') && (f.includes('_1wm') || f.includes('_2wm')));
+            const red1wm = allFiles.find(f => f.includes('R') && (f.includes('_1wm') || f.includes('_2wm')));
+            
+            if (blue1wm && red1wm) {
+                return { blue: blue1wm, red: red1wm };
+            }
+            
+            return null;
+        }
+        
+        // Plot both arms together
+        async function viewBothArms(blueFile, redFile, gaiaId, obsDate) {
+            const viewer = document.getElementById('spectrum-viewer');
+            const plotDiv = document.getElementById('spectrum-plot');
+            const titleDiv = document.getElementById('spectrum-title');
+            const infoDiv = document.getElementById('spectrum-info');
+            
+            viewer.classList.add('visible');
+            plotDiv.innerHTML = '<div class="spectrum-loading">Loading both spectra</div>';
+            titleDiv.textContent = `Gaia DR3 ${gaiaId} — ${obsDate} (Blue + Red)`;
+            infoDiv.innerHTML = '';
+            
+            isFlattened = false;
+            document.getElementById('flatten-btn').classList.remove('active');
+            
+            try {
+                // Load both spectra in parallel
+                const [blueData, redData] = await Promise.all([
+                    loadFITSSpectrum(blueFile),
+                    loadFITSSpectrum(redFile)
+                ]);
+                
+                // Store both for later use
+                currentSpectrum = { 
+                    blue: blueData,
+                    red: redData,
+                    gaiaId, 
+                    obsDate,
+                    isMultiArm: true
+                };
+                
+                // Calculate combined wavelength range
+                const allWavelengths = [...blueData.wavelength, ...redData.wavelength];
+                const minWl = Math.floor(Math.min(...allWavelengths));
+                const maxWl = Math.ceil(Math.max(...allWavelengths));
+                
+                document.getElementById('min-wl').value = minWl;
+                document.getElementById('max-wl').value = maxWl;
+                
+                // Display header info for both
+                infoDiv.innerHTML = `
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Date-Obs</div>
+                        <div class="spectrum-info-value">${blueData.header['DATE-OBS'] || obsDate}</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Blue Arm</div>
+                        <div class="spectrum-info-value" style="color: #38bdf8;">${Math.floor(blueData.wavelength[0])}–${Math.ceil(blueData.wavelength[blueData.wavelength.length-1])} Å</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Red Arm</div>
+                        <div class="spectrum-info-value" style="color: #f87171;">${Math.floor(redData.wavelength[0])}–${Math.ceil(redData.wavelength[redData.wavelength.length-1])} Å</div>
+                    </div>
+                    <div class="spectrum-info-item">
+                        <div class="spectrum-info-label">Total Range</div>
+                        <div class="spectrum-info-value">${minWl}–${maxWl} Å</div>
+                    </div>
+                `;
+                
+                // Plot both
+                plotBothArms(blueData, redData);
+                
+                viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+            } catch (error) {
+                console.error('Error loading spectra:', error);
+                plotDiv.innerHTML = `
+                    <div class="spectrum-error">
+                        <strong>Error loading spectra:</strong> ${error.message}<br><br>
+                        Make sure both FITS files exist in the <code>${SALTDATA_FOLDER}/</code> folder:<br>
+                        • Blue: <code>${blueFile}</code><br>
+                        • Red: <code>${redFile}</code>
+                    </div>
+                `;
+            }
+        }
+        
+        function plotBothArms(blueData, redData) {
+            let blueWl = blueData.wavelength;
+            let blueFlux = blueData.flux;
+            let redWl = redData.wavelength;
+            let redFlux = redData.flux;
+            
+            if (isFlattened) {
+                blueFlux = flattenSpectrum(blueWl, blueFlux);
+                redFlux = flattenSpectrum(redWl, redFlux);
+            }
+            
+            // Apply wavelength range if set
+            const minWl = parseFloat(document.getElementById('min-wl').value);
+            const maxWl = parseFloat(document.getElementById('max-wl').value);
+            
+            const blueTrimmed = trimSpectrum(blueWl, blueFlux, minWl, maxWl);
+            const redTrimmed = trimSpectrum(redWl, redFlux, minWl, maxWl);
+            
+            const traces = [
+                {
+                    x: blueTrimmed.wavelength,
+                    y: blueTrimmed.flux,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Blue arm (H)',
+                    line: { color: '#38bdf8', width: 1.2 },
+                    hovertemplate: 'Blue<br>λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
+                },
+                {
+                    x: redTrimmed.wavelength,
+                    y: redTrimmed.flux,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Red arm (R)',
+                    line: { color: '#f87171', width: 1.2 },
+                    hovertemplate: 'Red<br>λ = %{x:.2f} Å<br>Flux = %{y:.4f}<extra></extra>'
+                }
+            ];
+            
+            const layout = {
+                title: null,
+                xaxis: { 
+                    title: { text: 'Wavelength (Å)', font: { color: '#94a3b8', size: 12 } },
+                    color: '#94a3b8',
+                    gridcolor: '#334155',
+                    zerolinecolor: '#334155',
+                    tickfont: { color: '#94a3b8' }
+                },
+                yaxis: { 
+                    title: { text: isFlattened ? 'Normalized Flux' : 'Flux', font: { color: '#94a3b8', size: 12 } },
+                    color: '#94a3b8',
+                    gridcolor: '#334155',
+                    zerolinecolor: '#334155',
+                    tickfont: { color: '#94a3b8' }
+                },
+                paper_bgcolor: '#0f172a',
+                plot_bgcolor: '#0f172a',
+                font: { color: '#e2e8f0', family: 'DM Sans, sans-serif' },
+                hovermode: 'closest',
+                margin: { t: 20, r: 30, b: 50, l: 60 },
+                legend: {
+                    x: 1,
+                    y: 1,
+                    xanchor: 'right',
+                    bgcolor: 'rgba(15, 23, 42, 0.8)',
+                    bordercolor: '#334155',
+                    borderwidth: 1,
+                    font: { color: '#e2e8f0' }
+                },
+                showlegend: true
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['select2d', 'lasso2d'],
+                toImageButtonOptions: {
+                    format: 'png',
+                    filename: `spectrum_${currentSpectrum.gaiaId}_${currentSpectrum.obsDate}`,
+                    height: 600,
+                    width: 1200,
+                    scale: 2
+                }
+            };
+            
+            Plotly.newPlot('spectrum-plot', traces, layout, config);
+        }
 
         // ============================================
         // Display results
@@ -1374,6 +1589,15 @@
                                 <button class="plot-spectrum-btn" onclick="viewSpectrum('${plottableFile}', '${target.gaia_dr3_id}', '${obs.date}'); event.stopPropagation();">
                                     📈 Plot Spectrum
                                 </button>
+                                ${(() => {
+                                    const bothArms = findBothArmFiles(allFiles);
+                                    if (bothArms) {
+                                        return `<button class="plot-spectrum-btn plot-both-btn" onclick="viewBothArms('${bothArms.blue}', '${bothArms.red}', '${target.gaia_dr3_id}', '${obs.date}'); event.stopPropagation();">
+                                            📊 Plot Both Arms
+                                        </button>`;
+                                    }
+                                    return '';
+                                })()}
                                 <span style="color: #64748b; font-size: 0.75rem;">Using: ${plottableFile}</span>
                             </div>
                             ` : ''}
