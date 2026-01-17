@@ -1068,6 +1068,8 @@
             const nFields = extHeader.TFIELDS || 0;
             const view = new DataView(buffer);
             
+            console.log(`Reading ${nRows} rows, ${rowBytes} bytes/row, ${nFields} fields`);
+            
             // Parse column info
             const columns = [];
             let byteOffset = 0;
@@ -1106,15 +1108,41 @@
                 console.log(`Column ${i}: ${ttype}, format=${tform}, dtype=${dtype}, count=${count}, offset=${columns[columns.length-1].offset}`);
             }
             
-            // Read data
+            // Read data - for templates, read directly into trimmed range
+            // SALT wavelength range is ~3500-9000 Å
             const data = {};
             columns.forEach(col => {
                 data[col.name] = [];
             });
             
+            // Find wavelength column index
+            const wlColIdx = columns.findIndex(c => c.name === 'wavelength' || c.name === 'wave' || c.name === 'wl');
+            const wlCol = wlColIdx >= 0 ? columns[wlColIdx] : null;
+            
+            // Trim to useful wavelength range (cap at 7000 Å to avoid tellurics in CCF)
+            const minWl = 3400;
+            const maxWl = 7100;
+            let skippedLow = 0, skippedHigh = 0, kept = 0;
+            
             for (let row = 0; row < nRows; row++) {
                 const rowStart = extDataOffset + row * rowBytes;
                 
+                // First read wavelength to check if in range
+                let wl = null;
+                if (wlCol) {
+                    const wlPos = rowStart + wlCol.offset;
+                    if (wlCol.dtype === 'D') {
+                        wl = view.getFloat64(wlPos, false);
+                    } else if (wlCol.dtype === 'E') {
+                        wl = view.getFloat32(wlPos, false);
+                    }
+                    
+                    // Skip if outside SALT range
+                    if (wl < minWl) { skippedLow++; continue; }
+                    if (wl > maxWl) { skippedHigh++; continue; }
+                }
+                
+                // Read all columns for this row
                 for (const col of columns) {
                     const colStart = rowStart + col.offset;
                     
@@ -1123,7 +1151,7 @@
                         let value;
                         
                         if (col.dtype === 'D') {
-                            value = view.getFloat64(pos, false); // big-endian
+                            value = view.getFloat64(pos, false);
                         } else if (col.dtype === 'E') {
                             value = view.getFloat32(pos, false);
                         } else if (col.dtype === 'J') {
@@ -1137,7 +1165,10 @@
                         data[col.name].push(value);
                     }
                 }
+                kept++;
             }
+            
+            console.log(`Template rows: ${skippedLow} below range, ${skippedHigh} above range, ${kept} kept`);
             
             return data;
         }
@@ -1157,40 +1188,25 @@
                 // Parse binary table extension
                 const { extHeader, extDataOffset } = parseFITSBinaryTable(buffer);
                 
-                // Read columns
+                // Read columns (already trimmed to SALT wavelength range)
                 const tableData = readBinaryTableColumns(buffer, extHeader, extDataOffset);
                 
                 console.log('Table columns found:', Object.keys(tableData));
+                console.log('First 5 wavelength values:', tableData.wavelength?.slice(0, 5) || tableData.wave?.slice(0, 5) || 'N/A');
+                console.log('First 5 flux values:', tableData.flux?.slice(0, 5) || 'N/A');
                 
                 // Get wavelength and flux
-                let wavelength = tableData.wavelength || tableData.wave || tableData.wl || [];
-                let flux = tableData.flux || tableData.spec || tableData.intensity || [];
+                const wavelength = tableData.wavelength || tableData.wave || tableData.wl || [];
+                const flux = tableData.flux || tableData.spec || tableData.intensity || [];
                 
                 if (wavelength.length === 0 || flux.length === 0) {
-                    throw new Error(`Could not find wavelength/flux columns. Available: ${Object.keys(tableData).join(', ')}`);
+                    throw new Error(`Could not find wavelength/flux columns or no data in SALT range. Available: ${Object.keys(tableData).join(', ')}`);
                 }
                 
-                console.log('Template raw n points:', wavelength.length);
+                console.log('Template wavelength range:', arrayMin(wavelength).toFixed(1), '-', arrayMax(wavelength).toFixed(1), 'Å');
+                console.log('Template n points:', wavelength.length);
                 
-                // Trim to SALT wavelength range (blue+red arms: ~3500-9000 Å with some margin)
-                const minWl = 3500;
-                const maxWl = 9200;
-                
-                const finalWl = [];
-                const finalFlux = [];
-                for (let i = 0; i < wavelength.length; i++) {
-                    const wl = wavelength[i];
-                    const fl = flux[i];
-                    if (wl >= minWl && wl <= maxWl && !isNaN(wl) && isFinite(wl) && !isNaN(fl) && isFinite(fl)) {
-                        finalWl.push(wl);
-                        finalFlux.push(fl);
-                    }
-                }
-                
-                console.log('Template wavelength range:', arrayMin(finalWl).toFixed(1), '-', arrayMax(finalWl).toFixed(1), 'Å');
-                console.log('Template trimmed n points:', finalWl.length);
-                
-                const data = { wavelength: finalWl, flux: finalFlux, header: extHeader };
+                const data = { wavelength, flux, header: extHeader };
                 templateCache[templateFile] = data;
                 return data;
                 
@@ -1460,18 +1476,25 @@
                 console.log('Template wavelength range:', tmpMin.toFixed(1), '-', tmpMax.toFixed(1), 'Å');
                 
                 const wlMin = Math.max(obsMin, tmpMin);
-                const wlMax = Math.min(obsMax, tmpMax);
+                let wlMax = Math.min(obsMax, tmpMax);
                 
-                console.log('Overlap range:', wlMin.toFixed(1), '-', wlMax.toFixed(1), 'Å');
+                // Cap at 7000 Å to avoid telluric contamination
+                const telluricCutoff = 7000;
+                if (wlMax > telluricCutoff) {
+                    console.log(`Capping CCF range at ${telluricCutoff}Å to avoid tellurics`);
+                    wlMax = telluricCutoff;
+                }
+                
+                console.log('CCF range:', wlMin.toFixed(1), '-', wlMax.toFixed(1), 'Å');
                 
                 if (wlMin >= wlMax) {
                     rvResult.innerHTML = `<span class="error">No overlap: obs ${obsMin.toFixed(0)}-${obsMax.toFixed(0)}Å, template ${tmpMin.toFixed(0)}-${tmpMax.toFixed(0)}Å</span>`;
                     return;
                 }
                 
-                // Use current view range if smaller
+                // Use current view range if smaller (but still cap at telluric cutoff)
                 const viewMin = parseFloat(document.getElementById('min-wl').value);
-                const viewMax = parseFloat(document.getElementById('max-wl').value);
+                const viewMax = Math.min(parseFloat(document.getElementById('max-wl').value), telluricCutoff);
                 const rangeMin = Math.max(wlMin, viewMin);
                 const rangeMax = Math.min(wlMax, viewMax);
                 
@@ -1879,103 +1902,11 @@
         // ============================================
         
         // ============================================
-        // Spline-Based Continuum Normalization
-        // Based on the Kepler spline approach with iterative outlier rejection
+        // Continuum Normalization (Running Median)
         // ============================================
         
-        function robustMean(y, cut = 3) {
-            // Robust mean estimate with outlier rejection
-            const validY = y.filter(v => !isNaN(v) && isFinite(v));
-            if (validY.length === 0) return { mean: 0, mask: y.map(() => false) };
-            
-            const median = validY.slice().sort((a, b) => a - b)[Math.floor(validY.length / 2)];
-            const absdev = validY.map(v => Math.abs(v - median));
-            let sigma = 1.4826 * absdev.slice().sort((a, b) => a - b)[Math.floor(absdev.length / 2)];
-            
-            if (sigma < 1e-24) {
-                sigma = 1.253 * absdev.reduce((a, b) => a + b, 0) / absdev.length;
-            }
-            
-            const mask = y.map(v => !isNaN(v) && isFinite(v) && Math.abs(v - median) <= cut * sigma);
-            const maskedY = y.filter((v, i) => mask[i]);
-            const mean = maskedY.length > 0 ? maskedY.reduce((a, b) => a + b, 0) / maskedY.length : median;
-            
-            return { mean, mask };
-        }
-        
-        function fitCubicSpline(x, y, nKnots) {
-            // Simple cubic spline fitting using natural cubic splines
-            // Returns spline values at each x point
-            
-            const n = x.length;
-            if (n < 4) return y.slice();
-            
-            // Create knot positions
-            const xMin = arrayMin(x);
-            const xMax = arrayMax(x);
-            const knotSpacing = (xMax - xMin) / (nKnots - 1);
-            const knots = [];
-            for (let i = 0; i < nKnots; i++) {
-                knots.push(xMin + i * knotSpacing);
-            }
-            
-            // For each knot interval, fit a local polynomial and blend
-            // This is a simplified approach using local regression
-            const result = new Array(n);
-            const halfWidth = knotSpacing * 1.5;
-            
-            for (let i = 0; i < n; i++) {
-                const xi = x[i];
-                
-                // Find points within the smoothing window
-                const localX = [];
-                const localY = [];
-                const localW = [];
-                
-                for (let j = 0; j < n; j++) {
-                    const dist = Math.abs(x[j] - xi);
-                    if (dist <= halfWidth && !isNaN(y[j]) && isFinite(y[j])) {
-                        localX.push(x[j]);
-                        localY.push(y[j]);
-                        // Tricube weight
-                        const u = dist / halfWidth;
-                        localW.push(Math.pow(1 - Math.pow(u, 3), 3));
-                    }
-                }
-                
-                if (localX.length < 3) {
-                    result[i] = y[i];
-                    continue;
-                }
-                
-                // Weighted linear regression (LOESS-style)
-                let sumW = 0, sumWX = 0, sumWY = 0, sumWXX = 0, sumWXY = 0;
-                for (let j = 0; j < localX.length; j++) {
-                    const w = localW[j];
-                    const lx = localX[j] - xi;
-                    sumW += w;
-                    sumWX += w * lx;
-                    sumWY += w * localY[j];
-                    sumWXX += w * lx * lx;
-                    sumWXY += w * lx * localY[j];
-                }
-                
-                const denom = sumW * sumWXX - sumWX * sumWX;
-                if (Math.abs(denom) < 1e-10) {
-                    result[i] = sumWY / sumW;
-                } else {
-                    const a = (sumWXX * sumWY - sumWX * sumWXY) / denom;
-                    result[i] = a;
-                }
-            }
-            
-            return result;
-        }
-        
         function flattenSpectrum(wavelength, flux, bkspace = null) {
-            // Fit continuum using iterative spline fitting with outlier rejection
-            // Similar to keplersplinev2 approach
-            
+            // Fast running median continuum fitting
             if (!bkspace) {
                 bkspace = parseFloat(document.getElementById('bkspace').value) || 100;
             }
@@ -1983,89 +1914,41 @@
             const n = wavelength.length;
             if (n < 10) return flux.slice();
             
-            // Calculate number of knots based on bkspace (in Angstroms)
+            // Calculate window size in pixels based on bkspace (in Angstroms)
             const wlRange = arrayMax(wavelength) - arrayMin(wavelength);
-            const nKnots = Math.max(4, Math.floor(wlRange / bkspace) + 1);
+            const pixelsPerAngstrom = n / wlRange;
+            const windowSize = Math.max(10, Math.floor(bkspace * pixelsPerAngstrom));
+            const halfWindow = Math.floor(windowSize / 2);
             
-            console.log(`Fitting spline with bkspace=${bkspace}Å, nKnots=${nKnots}`);
+            console.log(`Flattening with bkspace=${bkspace}Å, window=${windowSize}px`);
             
-            // Iterative fitting with outlier rejection
-            let mask = flux.map(f => !isNaN(f) && isFinite(f) && f > 0);
-            let spline = null;
-            const maxIter = 5;
-            const outlierCut = 2.5; // More aggressive for absorption lines
+            // Running median for continuum
+            const continuum = new Array(n);
             
-            for (let iter = 0; iter < maxIter; iter++) {
-                // Get masked data
-                const maskedWl = wavelength.filter((w, i) => mask[i]);
-                const maskedFlux = flux.filter((f, i) => mask[i]);
+            for (let i = 0; i < n; i++) {
+                const start = Math.max(0, i - halfWindow);
+                const end = Math.min(n, i + halfWindow + 1);
                 
-                if (maskedWl.length < nKnots + 3) break;
-                
-                // Fit spline to masked data
-                const maskedSpline = fitCubicSpline(maskedWl, maskedFlux, nKnots);
-                
-                // Interpolate spline back to full wavelength grid
-                spline = new Array(n);
-                let lastIdx = 0;
-                
-                for (let i = 0; i < n; i++) {
-                    const wl = wavelength[i];
-                    
-                    // Find bracketing points in masked arrays
-                    while (lastIdx < maskedWl.length - 1 && maskedWl[lastIdx + 1] < wl) {
-                        lastIdx++;
-                    }
-                    
-                    if (lastIdx >= maskedWl.length - 1) {
-                        spline[i] = maskedSpline[maskedSpline.length - 1];
-                    } else if (maskedWl[lastIdx] > wl) {
-                        spline[i] = maskedSpline[0];
-                    } else {
-                        // Linear interpolation
-                        const t = (wl - maskedWl[lastIdx]) / (maskedWl[lastIdx + 1] - maskedWl[lastIdx]);
-                        spline[i] = maskedSpline[lastIdx] + t * (maskedSpline[lastIdx + 1] - maskedSpline[lastIdx]);
+                // Get window values, filter invalid
+                const windowVals = [];
+                for (let j = start; j < end; j++) {
+                    if (!isNaN(flux[j]) && isFinite(flux[j]) && flux[j] > 0) {
+                        windowVals.push(flux[j]);
                     }
                 }
                 
-                // Calculate residuals and identify outliers
-                // For spectra, we want to reject points BELOW the continuum (absorption lines)
-                const residuals = flux.map((f, i) => f - spline[i]);
-                
-                // Robust sigma estimate
-                const validResid = residuals.filter((r, i) => mask[i]);
-                validResid.sort((a, b) => a - b);
-                const medianResid = validResid[Math.floor(validResid.length / 2)];
-                const absResid = validResid.map(r => Math.abs(r - medianResid));
-                absResid.sort((a, b) => a - b);
-                const sigma = 1.4826 * absResid[Math.floor(absResid.length / 2)];
-                
-                // New mask: reject points more than outlierCut*sigma BELOW the continuum
-                // (absorption lines) but keep points above (emission or noise)
-                const newMask = flux.map((f, i) => {
-                    if (!mask[i]) return false;
-                    const resid = f - spline[i];
-                    // Reject strong absorption (negative residuals)
-                    return resid > -outlierCut * sigma;
-                });
-                
-                // Check convergence
-                const changed = newMask.some((m, i) => m !== mask[i]);
-                mask = newMask;
-                
-                if (!changed) break;
+                if (windowVals.length > 0) {
+                    // Use upper percentile (75th) to avoid absorption lines
+                    windowVals.sort((a, b) => a - b);
+                    const idx = Math.floor(windowVals.length * 0.75);
+                    continuum[i] = windowVals[idx];
+                } else {
+                    continuum[i] = 1;
+                }
             }
             
-            if (!spline) {
-                // Fallback to simple median filter
-                return flux.map(f => f / (flux.reduce((a, b) => a + b, 0) / flux.length));
-            }
-            
-            // Normalize by dividing by spline
-            return flux.map((f, i) => {
-                const s = spline[i];
-                return (s > 0) ? f / s : f;
-            });
+            // Normalize
+            return flux.map((f, i) => continuum[i] > 0 ? f / continuum[i] : f);
         }
         
         function trimSpectrum(wavelength, flux, minWl, maxWl) {
