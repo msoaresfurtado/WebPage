@@ -1746,11 +1746,12 @@
                 }
                 
                 // Always flatten spectra for CCF (continuum normalization improves cross-correlation)
-                console.log('Flattening observed spectrum for CCF...');
-                const obsFluxFlattened = flattenSpectrum(obsWl, obsFlux, 100);
+                const bkspaceValue = parseFloat(document.getElementById('bkspace').value) || 100;
+                console.log(`Flattening observed spectrum for CCF with bkspace=${bkspaceValue}Å...`);
+                const obsFluxFlattened = flattenSpectrum(obsWl, obsFlux, bkspaceValue);
                 
-                console.log('Flattening template spectrum for CCF...');
-                const tmpFluxFlattened = flattenSpectrum(template.wavelength, template.flux, 100);
+                console.log(`Flattening template spectrum for CCF with bkspace=${bkspaceValue}Å...`);
+                const tmpFluxFlattened = flattenSpectrum(template.wavelength, template.flux, bkspaceValue);
                 
                 // Calculate barycentric correction
                 let baryCorr = 0;
@@ -1819,6 +1820,7 @@
                 const gaussFit = bestResult.gaussFit;
                 
                 console.log(`=== FINAL RV RESULT ===`);
+                console.log(`  Flattening bkspace: ${bkspaceValue}Å`);
                 console.log(`  Observed RV: ${rv.toFixed(2)} km/s`);
                 console.log(`  Barycentric correction: ${baryCorr.toFixed(2)} km/s (${applyBaryCorr ? 'enabled' : 'disabled'})`);
                 console.log(`  RV (bary) = observed + bary = ${rv.toFixed(2)} + ${baryCorr.toFixed(2)} = ${rvBary.toFixed(2)} km/s`);
@@ -1848,6 +1850,7 @@
                     baryCorr: baryCorr,
                     peakCCF: bestResult.peakCCF,
                     template: templateFile,
+                    bkspace: bkspaceValue,
                     // Store template for overplot
                     templateWl: template.wavelength,
                     templateWlShifted: templateShiftedWl,
@@ -3668,12 +3671,65 @@
             setTimeout(hideDropdown, 150);
         });
         
-        // Clear flatten cache when bkspace changes
+        // Debounce timer for bkspace input
+        let bkspaceDebounceTimer = null;
+        
+        // Recompute CCF when bkspace changes (debounced for input, immediate for change)
+        document.getElementById('bkspace').addEventListener('input', () => {
+            // Debounce: wait 500ms after last input before recomputing
+            if (bkspaceDebounceTimer) {
+                clearTimeout(bkspaceDebounceTimer);
+            }
+            
+            bkspaceDebounceTimer = setTimeout(() => {
+                if (currentSpectrum) {
+                    // Clear flatten cache
+                    currentSpectrum.flattenedFlux = null;
+                    currentSpectrum.flattenedBlueFlux = null;
+                    currentSpectrum.flattenedRedFlux = null;
+                    
+                    // Recompute CCF if one was already computed
+                    if (currentSpectrum.lastCCF) {
+                        console.log('Bkspace changed, recomputing CCF...');
+                        computeCCF();
+                    } else if (isFlattened) {
+                        // Just re-render if flattened view is active
+                        if (currentSpectrum.isMultiArm) {
+                            plotBothArms(currentSpectrum.blue, currentSpectrum.red);
+                        } else {
+                            applyWavelengthRange();
+                        }
+                    }
+                }
+            }, 500);
+        });
+        
+        // Also handle change event for immediate response when using arrows or pressing enter
         document.getElementById('bkspace').addEventListener('change', () => {
+            // Clear any pending debounce
+            if (bkspaceDebounceTimer) {
+                clearTimeout(bkspaceDebounceTimer);
+                bkspaceDebounceTimer = null;
+            }
+            
             if (currentSpectrum) {
+                // Clear flatten cache
                 currentSpectrum.flattenedFlux = null;
                 currentSpectrum.flattenedBlueFlux = null;
                 currentSpectrum.flattenedRedFlux = null;
+                
+                // Recompute CCF if one was already computed
+                if (currentSpectrum.lastCCF) {
+                    console.log('Bkspace changed, recomputing CCF...');
+                    computeCCF();
+                } else if (isFlattened) {
+                    // Just re-render if flattened view is active
+                    if (currentSpectrum.isMultiArm) {
+                        plotBothArms(currentSpectrum.blue, currentSpectrum.red);
+                    } else {
+                        applyWavelengthRange();
+                    }
+                }
             }
         });
         
