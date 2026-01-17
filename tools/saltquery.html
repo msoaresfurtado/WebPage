@@ -701,10 +701,6 @@
                         <option value="7250_spec.FITS">7250 K (F-type)</option>
                     </select>
                 </div>
-                <div class="control-group" title="Manual barycentric correction from barycorrpy (leave empty to use catalog value)">
-                    <label>Bary (km/s):</label>
-                    <input type="number" id="manual-bary" step="0.01" style="width: 70px;" placeholder="auto">
-                </div>
                 <span class="control-divider"></span>
                 <div class="control-group" title="Minimum wavelength for CCF analysis">
                     <label>CCF Min:</label>
@@ -715,18 +711,19 @@
                     <input type="number" id="ccf-max-wl" value="7000" step="100" style="width: 65px;">
                 </div>
                 <button class="spectrum-btn" id="select-ccf-range-btn" onclick="startSelectCCFRange()" title="Click and drag on spectrum to select CCF range">Select Range</button>
-                <button class="spectrum-btn" id="add-exclude-btn" onclick="startAddExclude()" title="Click and drag on spectrum to add exclusion region">+ Exclude</button>
-                <div class="control-group" title="Wavelength ranges to exclude (e.g., 5570-5590, 6275-6320)">
-                    <label>Exclude:</label>
-                    <input type="text" id="ccf-exclude" style="width: 140px;" placeholder="e.g. 5570-5590, 6275-6320">
-                </div>
-                <button class="spectrum-btn" onclick="clearExclusions()" title="Clear all exclusion regions">Clear</button>
                 <button class="spectrum-btn rv-btn" onclick="computeCCF()" title="Compute cross-correlation and radial velocity">
                     Compute RV
                 </button>
                 <button class="spectrum-btn" id="template-overlay-btn" onclick="toggleTemplateOverlay()" title="Show template at rest frame (enable RV Corr to align observed spectrum)">Show Template</button>
                 <div class="rv-result" id="rv-result"></div>
+                <span class="rv-help-toggle" onclick="toggleChunkResults()" id="chunk-results-toggle" style="display: none;">📊 Show chunk breakdown</span>
                 <span class="rv-help-toggle" onclick="toggleRVHelp()">ⓘ How to measure RV</span>
+                <!-- Hidden inputs for code compatibility -->
+                <input type="hidden" id="manual-bary" value="">
+                <input type="hidden" id="ccf-exclude" value="">
+            </div>
+            <div class="rv-help-content" id="chunk-results-content" style="display: none;">
+                <div id="chunk-results-table"></div>
             </div>
             <div class="rv-help-content" id="rv-help-content">
                 <div class="rv-help-steps">
@@ -749,13 +746,12 @@
                     </ul>
                     
                     <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
-                        <strong>Bary (km/s)</strong> = Enter barycentric correction from barycorrpy for precision (leave empty to use catalog value).<br>
-                        <strong>CCF Min/Max</strong> = Wavelength range for CCF analysis (default 4000-7000Å). Gray shading shows excluded regions.<br>
+                        <strong>CCF Min/Max</strong> = Wavelength range for CCF analysis (default 4000-7000Å). Gray shading shows regions outside range.<br>
                         <strong>Select Range</strong> = Click and drag on plot to set CCF range interactively.<br>
-                        <strong>+ Exclude</strong> = Click and drag on plot to mark a bad region (shown in red). Common exclusions: tellurics at 5570-5590Å, 6275-6320Å.<br>
                         <strong>Show Template</strong> overlays the rest-frame template on the flattened spectrum.<br>
                         <strong>RV Corr</strong> shifts the observed spectrum to rest frame (template + observed should align when enabled).<br>
-                        <em>Note: CCF is always computed using flattened (continuum-normalized) spectra.</em>
+                        <strong>CCF ≥ 0.7</strong> = Excellent template match (shown as "✓ Good").<br>
+                        <em>Note: CCF is computed in 500Å chunks and combined as a weighted average.</em>
                     </p>
                 </div>
             </div>
@@ -1063,46 +1059,23 @@
         }
         
         // Interactive CCF range selection
-        let ccfSelectionMode = null; // 'range' or 'exclude'
+        let ccfSelectionMode = null; // 'range'
         let ccfSelectionStart = null;
         
         function startSelectCCFRange() {
             ccfSelectionMode = 'range';
             ccfSelectionStart = null;
             document.getElementById('select-ccf-range-btn').classList.add('active');
-            document.getElementById('add-exclude-btn').classList.remove('active');
             document.getElementById('spectrum-plot').style.cursor = 'crosshair';
             showSelectionInstructions('Click and drag on the spectrum to select CCF wavelength range. Press Escape to cancel.');
-        }
-        
-        function startAddExclude() {
-            ccfSelectionMode = 'exclude';
-            ccfSelectionStart = null;
-            document.getElementById('add-exclude-btn').classList.add('active');
-            document.getElementById('select-ccf-range-btn').classList.remove('active');
-            document.getElementById('spectrum-plot').style.cursor = 'crosshair';
-            showSelectionInstructions('Click and drag on the spectrum to mark a region to exclude. Press Escape to cancel.');
         }
         
         function cancelSelection() {
             ccfSelectionMode = null;
             ccfSelectionStart = null;
             document.getElementById('select-ccf-range-btn').classList.remove('active');
-            document.getElementById('add-exclude-btn').classList.remove('active');
             document.getElementById('spectrum-plot').style.cursor = '';
             hideSelectionInstructions();
-        }
-        
-        function clearExclusions() {
-            document.getElementById('ccf-exclude').value = '';
-            // Re-render to remove shading
-            if (currentSpectrum) {
-                if (currentSpectrum.isMultiArm) {
-                    plotBothArms(currentSpectrum.blue, currentSpectrum.red);
-                } else {
-                    applyWavelengthRange();
-                }
-            }
         }
         
         function showSelectionInstructions(text) {
@@ -1143,23 +1116,14 @@
                     const minWl = Math.min(x0, x1);
                     const maxWl = Math.max(x0, x1);
                     
-                    if (ccfSelectionMode === 'range') {
-                        // Set CCF range
-                        document.getElementById('ccf-min-wl').value = Math.round(minWl);
-                        document.getElementById('ccf-max-wl').value = Math.round(maxWl);
-                        console.log(`CCF range set to ${Math.round(minWl)}-${Math.round(maxWl)}Å`);
-                    } else if (ccfSelectionMode === 'exclude') {
-                        // Add to exclusions
-                        const excludeInput = document.getElementById('ccf-exclude');
-                        const currentExclusions = excludeInput.value.trim();
-                        const newExclusion = `${Math.round(minWl)}-${Math.round(maxWl)}`;
-                        excludeInput.value = currentExclusions ? `${currentExclusions}, ${newExclusion}` : newExclusion;
-                        console.log(`Added exclusion: ${newExclusion}`);
-                    }
+                    // Set CCF range
+                    document.getElementById('ccf-min-wl').value = Math.round(minWl);
+                    document.getElementById('ccf-max-wl').value = Math.round(maxWl);
+                    console.log(`CCF range set to ${Math.round(minWl)}-${Math.round(maxWl)}Å`);
                     
                     cancelSelection();
                     
-                    // Re-render to show the range/exclusions
+                    // Re-render to show the range
                     if (currentSpectrum) {
                         // Reset zoom first
                         Plotly.relayout(plotElement, {
@@ -1194,16 +1158,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             const ccfMinInput = document.getElementById('ccf-min-wl');
             const ccfMaxInput = document.getElementById('ccf-max-wl');
-            const ccfExcludeInput = document.getElementById('ccf-exclude');
             
             if (ccfMinInput) {
                 ccfMinInput.addEventListener('change', refreshCCFRangeDisplay);
             }
             if (ccfMaxInput) {
                 ccfMaxInput.addEventListener('change', refreshCCFRangeDisplay);
-            }
-            if (ccfExcludeInput) {
-                ccfExcludeInput.addEventListener('change', refreshCCFRangeDisplay);
             }
         });
         
@@ -2077,61 +2037,22 @@
                 const globalMin = parseFloat(document.getElementById('ccf-min-wl').value) || 4000;
                 const globalMax = parseFloat(document.getElementById('ccf-max-wl').value) || 7000;
                 
-                // Parse exclude regions (format: "5570-5590, 6275-6320")
-                const excludeStr = document.getElementById('ccf-exclude').value.trim();
-                const excludeRegions = [];
-                if (excludeStr) {
-                    const parts = excludeStr.split(',');
-                    for (const part of parts) {
-                        const match = part.trim().match(/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/);
-                        if (match) {
-                            excludeRegions.push({
-                                min: parseFloat(match[1]),
-                                max: parseFloat(match[2])
-                            });
-                        }
-                    }
-                    console.log('Exclude regions:', excludeRegions);
-                }
-                
-                // Create chunks, splitting around excluded regions
-                const nChunks = 5;
-                const chunkWidth = (globalMax - globalMin) / nChunks;
-                
+                // Create 500Å chunks
+                const chunkWidth = 500;
                 const chunks = [];
-                for (let i = 0; i < nChunks; i++) {
-                    let chunkMin = globalMin + i * chunkWidth;
-                    let chunkMax = globalMin + (i + 1) * chunkWidth;
+                
+                for (let chunkMin = globalMin; chunkMin < globalMax; chunkMin += chunkWidth) {
+                    const chunkMax = Math.min(chunkMin + chunkWidth, globalMax);
                     
-                    // Check if this chunk overlaps with any exclude region
-                    let excluded = false;
-                    for (const excl of excludeRegions) {
-                        // If chunk is entirely within exclusion, skip it
-                        if (chunkMin >= excl.min && chunkMax <= excl.max) {
-                            excluded = true;
-                            break;
-                        }
-                        // If exclusion overlaps start of chunk, trim start
-                        if (excl.min <= chunkMin && excl.max > chunkMin && excl.max < chunkMax) {
-                            chunkMin = excl.max;
-                        }
-                        // If exclusion overlaps end of chunk, trim end
-                        if (excl.min > chunkMin && excl.min < chunkMax && excl.max >= chunkMax) {
-                            chunkMax = excl.min;
-                        }
-                        // If exclusion is entirely within chunk, we'll handle in CCF computation
-                    }
-                    
-                    if (!excluded && chunkMax - chunkMin > 50) {  // Require at least 50Å
+                    if (chunkMax - chunkMin >= 100) {  // Require at least 100Å
                         chunks.push({
                             min: chunkMin,
-                            max: chunkMax,
-                            excludeRegions: excludeRegions  // Pass to CCF computation
+                            max: chunkMax
                         });
                     }
                 }
                 
-                console.log(`Computing CCF in range ${globalMin}-${globalMax}Å`);
+                console.log(`Computing CCF in range ${globalMin}-${globalMax}Å using ${chunkWidth}Å chunks`);
                 console.log('CCF chunks:', chunks.map(c => `${c.min.toFixed(0)}-${c.max.toFixed(0)}`).join(', '));
                 
                 // Compute CCF for each chunk using flattened spectra
@@ -2141,10 +2062,11 @@
                         obsWl, obsFluxFlattened, 
                         template.wavelength, tmpFluxFlattened,
                         chunk.min, chunk.max,
-                        chunk.excludeRegions
+                        []
                     );
                     
                     if (result) {
+                        result.included = true;
                         results.push(result);
                         console.log(`Chunk ${chunk.min}-${chunk.max}Å: RV=${result.rv.toFixed(2)} km/s, CCF peak=${result.peakCCF.toFixed(4)}`);
                     } else {
@@ -2152,33 +2074,60 @@
                     }
                 }
                 
-                if (results.length === 0) {
+                // Display chunk results table
+                displayChunkResults(results, baryCorr);
+                
+                // All results are included
+                const includedResults = results;
+                
+                if (includedResults.length === 0) {
                     rvResult.innerHTML = '<span class="error">No valid CCF results from any chunk</span>';
                     return;
                 }
                 
-                // Find the chunk with highest CCF peak (best correlation)
-                let bestResult = results[0];
-                for (const result of results) {
+                // Compute weighted average using CCF peak as weight
+                let weightedRV = 0;
+                let totalWeight = 0;
+                let bestResult = includedResults[0];
+                
+                for (const result of includedResults) {
+                    const weight = result.peakCCF * result.peakCCF; // Weight by CCF^2
+                    weightedRV += result.rv * weight;
+                    totalWeight += weight;
+                    
                     if (result.peakCCF > bestResult.peakCCF) {
                         bestResult = result;
                     }
                 }
                 
+                // Use weighted average RV
+                const rv = weightedRV / totalWeight;
+                console.log(`Weighted average RV: ${rv.toFixed(2)} km/s (from ${includedResults.length} chunks)`);
                 console.log(`Best chunk: ${bestResult.chunkMin}-${bestResult.chunkMax}Å with CCF peak=${bestResult.peakCCF.toFixed(4)}`);
                 
-                const rv = bestResult.rv;
                 // Barycentric correction: RV_helio = RV_observed + v_bary
                 // v_bary is positive when Earth moves toward target (blueshifts observed light)
                 const rvBary = rv + baryCorr;
                 const gaussFit = bestResult.gaussFit;
                 
+                // Compute error from scatter in chunk RVs (if multiple chunks)
+                let rvError = bestResult.rvError;
+                if (includedResults.length > 1) {
+                    const rvValues = includedResults.map(r => r.rv);
+                    const rvMean = rvValues.reduce((a, b) => a + b, 0) / rvValues.length;
+                    const rvVariance = rvValues.reduce((sum, v) => sum + (v - rvMean) ** 2, 0) / (rvValues.length - 1);
+                    const rvScatter = Math.sqrt(rvVariance);
+                    const rvErrorFromScatter = rvScatter / Math.sqrt(rvValues.length);
+                    rvError = Math.max(rvError, rvErrorFromScatter);
+                    console.log(`RV scatter across chunks: ${rvScatter.toFixed(2)} km/s, error from scatter: ${rvErrorFromScatter.toFixed(2)} km/s`);
+                }
+                
                 console.log(`=== FINAL RV RESULT ===`);
                 console.log(`  Flattening bkspace: ${bkspaceValue}Å`);
-                console.log(`  Observed RV: ${rv.toFixed(2)} km/s`);
+                console.log(`  Observed RV: ${rv.toFixed(2)} km/s (weighted avg of ${includedResults.length} chunks)`);
                 console.log(`  Barycentric correction: ${baryCorr.toFixed(2)} km/s (${applyBaryCorr ? 'enabled' : 'disabled'})`);
                 console.log(`  RV (bary) = observed + bary = ${rv.toFixed(2)} + ${baryCorr.toFixed(2)} = ${rvBary.toFixed(2)} km/s`);
-                console.log(`  CCF peak: ${bestResult.peakCCF.toFixed(4)}`);
+                console.log(`  Best CCF peak: ${bestResult.peakCCF.toFixed(4)}`);
                 if (gaussFit.success) {
                     console.log(`  Gaussian σ: ${gaussFit.sigma.toFixed(2)} km/s`);
                 }
@@ -2200,7 +2149,7 @@
                     ccf: bestResult.ccf,
                     peakVel: rv,
                     peakVelBary: rvBary,
-                    rvError: bestResult.rvError,
+                    rvError: rvError,
                     baryCorr: baryCorr,
                     peakCCF: bestResult.peakCCF,
                     fwhm: bestResult.fwhm,
@@ -2216,7 +2165,9 @@
                     obsFluxFlattened: obsFluxFlattened,
                     gaussFit: gaussFit,
                     chunkRange: `${bestResult.chunkMin}-${bestResult.chunkMax}`,
-                    allResults: results
+                    allResults: results,
+                    includedChunks: includedResults.length,
+                    totalChunks: results.length
                 };
                 
                 // Store measured RV
@@ -2225,11 +2176,10 @@
                 document.getElementById('template-overlay-btn').style.opacity = '1';
                 
                 // Display result
-                const rvError = bestResult.rvError;
                 const errorStr = rvError ? ` ± ${rvError.toFixed(2)}` : '';
                 const fwhmStr = bestResult.fwhm ? `FWHM=${bestResult.fwhm.toFixed(1)}` : '';
                 const snrStr = bestResult.snrCCF ? `SNR=${bestResult.snrCCF.toFixed(0)}` : '';
-                const chunkNote = `${bestResult.chunkMin}-${bestResult.chunkMax}Å`;
+                const chunkNote = `${includedResults.length}/${results.length} chunks`;
                 
                 let rvDisplay;
                 if (applyBaryCorr && baryCorr !== 0) {
@@ -2247,10 +2197,18 @@
                     `;
                 }
                 
+                // CCF quality indicator
+                const ccfQuality = bestResult.peakCCF >= 0.7 ? 
+                    '<span style="color: #4ade80; font-weight: bold;" title="Excellent template match">✓ Good</span>' : 
+                    (bestResult.peakCCF >= 0.5 ? 
+                        '<span style="color: #fbbf24;" title="Acceptable match">OK</span>' : 
+                        '<span style="color: #f87171;" title="Poor match - try different template">⚠ Low</span>');
+                
                 rvResult.innerHTML = `
                     ${rvDisplay}
                     <span class="rv-label">CCF:</span>
                     <span class="rv-value">${bestResult.peakCCF.toFixed(3)}</span>
+                    ${ccfQuality}
                     <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">${fwhmStr}, ${snrStr}, ${chunkNote}</span>
                     <button class="show-ccf-btn" onclick="showCCFPlot()">Show CCF</button>
                 `;
@@ -2497,7 +2455,7 @@
             return { shapes, annotations };
         }
         
-        // Get shapes showing CCF range and exclusion regions
+        // Get shapes showing CCF range
         function getCCFRangeShapes(plotMinOverride, plotMaxOverride) {
             const shapes = [];
             
@@ -2534,30 +2492,6 @@
                     line: { width: 0 },
                     layer: 'below'
                 });
-            }
-            
-            // Show exclusion regions in red
-            const excludeStr = document.getElementById('ccf-exclude').value.trim();
-            if (excludeStr) {
-                const parts = excludeStr.split(',');
-                for (const part of parts) {
-                    const match = part.trim().match(/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/);
-                    if (match) {
-                        const exclMin = parseFloat(match[1]);
-                        const exclMax = parseFloat(match[2]);
-                        shapes.push({
-                            type: 'rect',
-                            x0: exclMin,
-                            x1: exclMax,
-                            y0: 0,
-                            y1: 1,
-                            yref: 'paper',
-                            fillcolor: 'rgba(239, 68, 68, 0.2)',
-                            line: { color: 'rgba(239, 68, 68, 0.5)', width: 1 },
-                            layer: 'below'
-                        });
-                    }
-                }
             }
             
             return shapes;
@@ -3468,7 +3402,76 @@
         function toggleRVHelp() {
             document.getElementById('rv-help-content').classList.toggle('show');
         }
-
+        
+        function toggleChunkResults() {
+            const content = document.getElementById('chunk-results-content');
+            const toggle = document.getElementById('chunk-results-toggle');
+            content.classList.toggle('show');
+            if (content.classList.contains('show')) {
+                toggle.textContent = '📊 Hide chunk breakdown';
+            } else {
+                toggle.textContent = '📊 Show chunk breakdown';
+            }
+        }
+        
+        function displayChunkResults(results, baryCorr) {
+            const container = document.getElementById('chunk-results-table');
+            const toggle = document.getElementById('chunk-results-toggle');
+            
+            if (!results || results.length === 0) {
+                toggle.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+            
+            toggle.style.display = 'inline';
+            
+            // Sort by CCF peak (best first)
+            const sortedResults = [...results].sort((a, b) => b.peakCCF - a.peakCCF);
+            
+            let html = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid #334155;">
+                            <th style="text-align: left; padding: 4px 8px;">Wavelength Range</th>
+                            <th style="text-align: right; padding: 4px 8px;">RV (obs)</th>
+                            <th style="text-align: right; padding: 4px 8px;">RV (bary)</th>
+                            <th style="text-align: right; padding: 4px 8px;">CCF Peak</th>
+                            <th style="text-align: right; padding: 4px 8px;">FWHM</th>
+                            <th style="text-align: center; padding: 4px 8px;">Quality</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            for (const r of sortedResults) {
+                const rvBary = r.rv + (baryCorr || 0);
+                const ccfColor = r.peakCCF >= 0.7 ? '#4ade80' : (r.peakCCF >= 0.5 ? '#fbbf24' : '#f87171');
+                const qualityLabel = r.peakCCF >= 0.7 ? '✓ Good' : (r.peakCCF >= 0.5 ? 'OK' : '⚠ Low');
+                
+                html += `
+                    <tr style="border-bottom: 1px solid #1e293b;">
+                        <td style="padding: 4px 8px;">${r.chunkMin.toFixed(0)}-${r.chunkMax.toFixed(0)} Å</td>
+                        <td style="text-align: right; padding: 4px 8px;">${r.rv.toFixed(2)} km/s</td>
+                        <td style="text-align: right; padding: 4px 8px; font-weight: bold;">${rvBary.toFixed(2)} km/s</td>
+                        <td style="text-align: right; padding: 4px 8px; color: ${ccfColor};">${r.peakCCF.toFixed(3)}</td>
+                        <td style="text-align: right; padding: 4px 8px;">${r.fwhm.toFixed(1)} km/s</td>
+                        <td style="text-align: center; padding: 4px 8px; color: ${ccfColor};">${qualityLabel}</td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
+                    CCF ≥ 0.7 indicates excellent template match. Final RV is weighted average of all chunks.
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
         // ============================================
         // Catalog loading
         // ============================================
