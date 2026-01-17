@@ -76,8 +76,8 @@
             .stat-value {
                 font-family: 'DM Mono', monospace;
                 font-size: 1.25rem;
-                font-weight: 600;
-                color: #1e293b;
+                font-weight: 700;
+                color: #000;
             }
             .stat-label {
                 font-size: 0.7rem;
@@ -1463,20 +1463,32 @@
                 const template = await loadTemplate(templateFile);
                 
                 // Get observed spectrum (use appropriate arm or single spectrum)
+                // CCF is always computed on OBSERVED wavelengths (no bary correction)
                 let obsWl, obsFlux;
+                const header = currentSpectrum.isMultiArm ? currentSpectrum.blue.header : currentSpectrum.header;
+                
                 if (currentSpectrum.isMultiArm) {
                     // For multi-arm, use the blue arm (typically has more lines)
-                    obsWl = currentSpectrum.blue.wavelength;
-                    obsFlux = currentSpectrum.blue.flux;
+                    obsWl = currentSpectrum.blue.wavelength.slice();
+                    obsFlux = currentSpectrum.blue.flux.slice();
                 } else {
-                    obsWl = currentSpectrum.wavelength;
-                    obsFlux = currentSpectrum.flux;
+                    obsWl = currentSpectrum.wavelength.slice();
+                    obsFlux = currentSpectrum.flux.slice();
                 }
                 
-                // Apply barycentric correction if enabled
+                // Calculate barycentric correction (but don't apply to wavelengths)
+                // CCF measures observed RV; bary correction converts to barycentric frame
+                let baryCorr = 0;
                 if (applyBaryCorr) {
-                    const header = currentSpectrum.isMultiArm ? currentSpectrum.blue.header : currentSpectrum.header;
-                    obsWl = getCorrectedWavelength(obsWl, header, currentSpectrum.gaiaId);
+                    const jd = parseDateObsToJD(header['DATE-OBS'], header['JD']);
+                    const coords = getTargetCoords(currentSpectrum.gaiaId, header);
+                    
+                    if (jd && coords) {
+                        baryCorr = calculateBarycentricVelocity(jd, coords.ra, coords.dec);
+                        console.log('Barycentric correction to be applied:', baryCorr.toFixed(3), 'km/s');
+                    } else {
+                        console.warn('Cannot calculate barycentric correction: missing JD or coordinates');
+                    }
                 }
                 
                 // Filter out invalid values
@@ -1515,11 +1527,12 @@
                     return;
                 }
                 
-                // Use current view range if smaller (but still cap at telluric cutoff)
-                const viewMin = parseFloat(document.getElementById('min-wl').value);
-                const viewMax = Math.min(parseFloat(document.getElementById('max-wl').value), telluricCutoff);
-                const rangeMin = Math.max(wlMin, viewMin);
-                const rangeMax = Math.min(wlMax, viewMax);
+                // CCF always uses full overlap range (ignore view constraints)
+                // View constraints are for plotting, not for CCF
+                const rangeMin = wlMin;
+                const rangeMax = wlMax;
+                
+                console.log('CCF range:', rangeMin.toFixed(1), '-', rangeMax.toFixed(1), 'Å');
                 
                 // Convert to log wavelength
                 const logWlMin = Math.log(rangeMin);
@@ -1531,9 +1544,26 @@
                 const dLogWl = (logWlMax - logWlMin) / nPoints;
                 const dv = C_KMS * dLogWl; // km/s per pixel
                 
+                console.log('dLogWl:', dLogWl, 'dv:', dv, 'km/s per pixel');
+                
+                if (!isFinite(dv) || dv <= 0) {
+                    rvResult.innerHTML = `<span class="error">Invalid wavelength range for CCF</span>`;
+                    return;
+                }
+                
                 // Interpolate both spectra onto the same log-wavelength grid
                 const obsInterp = interpolateToLogGrid(obsWl, obsFlux, logWlMin, logWlMax, nPoints);
                 const tmpInterp = interpolateToLogGrid(template.wavelength, template.flux, logWlMin, logWlMax, nPoints);
+                
+                // Check for valid interpolation
+                const obsValidCount = obsInterp.fluxGrid.filter(f => !isNaN(f) && isFinite(f)).length;
+                const tmpValidCount = tmpInterp.fluxGrid.filter(f => !isNaN(f) && isFinite(f)).length;
+                console.log('Valid interpolated points - obs:', obsValidCount, 'template:', tmpValidCount);
+                
+                if (obsValidCount < 100 || tmpValidCount < 100) {
+                    rvResult.innerHTML = `<span class="error">Insufficient valid points for CCF (obs: ${obsValidCount}, tmp: ${tmpValidCount})</span>`;
+                    return;
+                }
                 
                 // Normalize
                 const obsNorm = normalizeSpectrum(obsInterp.fluxGrid);
@@ -1558,29 +1588,44 @@
                 // Use Gaussian mean as final RV if fit succeeded
                 const rv = gaussFit.success ? gaussFit.mean : initialRV;
                 
-                // Convert to wavelength offset at reference wavelength (5500 Å)
-                const refWl = 5500;
-                const dWl = refWl * rv / C_KMS;
+                // Apply barycentric correction to final RV
+                const rvBary = rv + baryCorr;
                 
                 // Store CCF for optional display
                 currentSpectrum.lastCCF = {
                     velocities: velocities,
                     ccf: ccf,
                     peakVel: rv,
+                    peakVelBary: rvBary,
+                    baryCorr: baryCorr,
                     peakCCF: initialPeak.peak,
-                    dWl: dWl,
                     template: templateFile,
                     gaussFit: gaussFit
                 };
                 
                 // Display result
-                const sign = rv >= 0 ? '+' : '';
                 const fitNote = gaussFit.success ? ` (σ=${gaussFit.sigma.toFixed(1)})` : ' (no fit)';
+                
+                let rvDisplay;
+                if (applyBaryCorr && baryCorr !== 0) {
+                    // Show barycentric-corrected RV
+                    const signBary = rvBary >= 0 ? '+' : '';
+                    rvDisplay = `
+                        <span class="rv-label">RV (bary):</span>
+                        <span class="rv-value">${signBary}${rvBary.toFixed(2)} km/s${fitNote}</span>
+                        <span class="rv-label" style="font-size: 0.65rem; color: #64748b;">observed: ${rv >= 0 ? '+' : ''}${rv.toFixed(2)}, corr: ${baryCorr >= 0 ? '+' : ''}${baryCorr.toFixed(2)}</span>
+                    `;
+                } else {
+                    // Show observed RV only
+                    const sign = rv >= 0 ? '+' : '';
+                    rvDisplay = `
+                        <span class="rv-label">RV:</span>
+                        <span class="rv-value">${sign}${rv.toFixed(2)} km/s${fitNote}</span>
+                    `;
+                }
+                
                 rvResult.innerHTML = `
-                    <span class="rv-label">RV:</span>
-                    <span class="rv-value">${sign}${rv.toFixed(2)} km/s${fitNote}</span>
-                    <span class="rv-label">Δλ:</span>
-                    <span class="rv-value">${sign}${dWl.toFixed(3)} Å</span>
+                    ${rvDisplay}
                     <span class="rv-label">CCF peak:</span>
                     <span class="rv-value">${initialPeak.peak.toFixed(3)}</span>
                     <button class="show-ccf-btn" onclick="showCCFPlot()">Show CCF</button>
@@ -1634,7 +1679,8 @@
                     </div>
                     <div id="ccf-plot" style="width: 100%; height: 350px;"></div>
                     <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.5rem; font-family: 'DM Sans', sans-serif;">
-                        Template: ${ccfData.template} | Peak RV: ${ccfData.peakVel.toFixed(2)} km/s | Δλ: ${ccfData.dWl.toFixed(3)} Å
+                        Template: ${ccfData.template} | 
+                        ${ccfData.baryCorr ? `RV (bary): ${ccfData.peakVelBary.toFixed(2)} km/s (observed: ${ccfData.peakVel.toFixed(2)}, corr: ${ccfData.baryCorr >= 0 ? '+' : ''}${ccfData.baryCorr.toFixed(2)})` : `RV: ${ccfData.peakVel.toFixed(2)} km/s`}
                     </div>
                 </div>
             `;
