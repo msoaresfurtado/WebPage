@@ -708,7 +708,7 @@
                 <button class="spectrum-btn rv-btn" onclick="computeCCF()" title="Compute cross-correlation and radial velocity">
                     Compute RV
                 </button>
-                <button class="spectrum-btn" id="template-overlay-btn" onclick="toggleTemplateOverlay()" title="Show/hide RV-shifted template spectrum">Show Template</button>
+                <button class="spectrum-btn" id="template-overlay-btn" onclick="toggleTemplateOverlay()" title="Show template at rest frame (enable RV Corr to align observed spectrum)">Show Template</button>
                 <div class="rv-result" id="rv-result"></div>
                 <span class="rv-help-toggle" onclick="toggleRVHelp()">ⓘ How to measure RV</span>
             </div>
@@ -733,9 +733,9 @@
                     </ul>
                     
                     <p style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
-                        <strong>Bary (km/s)</strong> = Enter barycentric correction from barycorrpy for precision (leave empty to auto-compute).<br>
-                        <strong>Show Template</strong> overlays the RV-shifted template on the flattened spectrum (use to verify the fit).<br>
-                        <strong>RV Corr</strong> shifts the spectrum to rest frame (useful to check if lines align with markers).<br>
+                        <strong>Bary (km/s)</strong> = Enter barycentric correction from barycorrpy for precision (leave empty to use catalog value).<br>
+                        <strong>Show Template</strong> overlays the rest-frame template on the flattened spectrum.<br>
+                        <strong>RV Corr</strong> shifts the observed spectrum to rest frame (template + observed should align when enabled).<br>
                         <strong>Flatten</strong> removes the continuum shape for easier line comparison.<br>
                         <em>Note: CCF is always computed using flattened (continuum-normalized) spectra.</em>
                     </p>
@@ -955,7 +955,7 @@
             // Heliocentric velocity = dot product
             const vHelio = vx * starX + vy * starY + vz * starZ;
             
-            console.log(`Barycentric calc: JD=${jd.toFixed(2)}, RA=${raDeg.toFixed(2)}°, Dec=${decDeg.toFixed(2)}°`);
+            console.log(`Barycentric calc: JD=${Number(jd).toFixed(2)}, RA=${Number(raDeg).toFixed(2)}°, Dec=${Number(decDeg).toFixed(2)}°`);
             console.log(`  Sun ecliptic longitude: ${(lambdaSun % 360).toFixed(1)}°`);
             console.log(`  Earth velocity components: vx=${vx.toFixed(2)}, vy=${vy.toFixed(2)}, vz=${vz.toFixed(2)} km/s`);
             console.log(`  Heliocentric velocity: ${vHelio.toFixed(2)} km/s`);
@@ -1834,14 +1834,26 @@
                     } else {
                         // Check catalog for pre-computed value
                         let catalogBary = null;
+                        console.log('Looking up catalog bary_corr:');
+                        console.log('  catalogData exists:', !!catalogData);
+                        console.log('  currentSpectrum.gaiaId:', currentSpectrum.gaiaId);
+                        console.log('  currentSpectrum.obsDate:', currentSpectrum.obsDate);
+                        console.log('  currentSpectrum.filename:', currentSpectrum.filename);
+                        
                         if (catalogData && currentSpectrum.gaiaId) {
                             const target = catalogData.targets.find(t => t.gaia_dr3_id === currentSpectrum.gaiaId);
+                            console.log('  Found target:', !!target);
                             if (target && target.observations) {
+                                console.log('  Target has', target.observations.length, 'observations');
+                                for (const o of target.observations) {
+                                    console.log('    Checking obs:', o.date, o.filename, 'bary_corr:', o.bary_corr);
+                                }
                                 const obs = target.observations.find(o => 
                                     o.date === currentSpectrum.obsDate || 
                                     o.filename === currentSpectrum.filename ||
-                                    (o.blue_file && currentSpectrum.filename && currentSpectrum.filename.includes(o.blue_file.replace('.fits', '')))
+                                    (o.filename && currentSpectrum.filename && currentSpectrum.filename.includes(o.filename.replace('.fits', '').replace('_uwm', '')))
                                 );
+                                console.log('  Matched observation:', obs);
                                 if (obs && obs.bary_corr !== undefined) {
                                     catalogBary = obs.bary_corr;
                                 }
@@ -2495,13 +2507,13 @@
                 
                 console.log('Adding template overlay');
                 console.log('  templateWl length:', ccfData.templateWl.length);
-                console.log('  templateWlShifted length:', ccfData.templateWlShifted.length);
                 console.log('  templateFlux length:', ccfData.templateFlux.length);
                 console.log('  applyRVCorr:', applyRVCorr);
                 
-                // Use shifted wavelengths if RV corr is NOT applied (so template matches observed)
-                // If RV corr IS applied, use original template wavelengths (both at rest frame)
-                const templateWl = applyRVCorr ? ccfData.templateWl : ccfData.templateWlShifted;
+                // Template ALWAYS stays at rest frame wavelengths
+                // When RV Corr is ON: observed shifts to rest frame → both align
+                // When RV Corr is OFF: observed at original wavelengths → offset visible
+                const templateWl = ccfData.templateWl;
                 
                 // Trim template to current view range
                 const minWl = Math.min(...displayWl);
@@ -3523,8 +3535,8 @@
             if (showTemplate && currentSpectrum && currentSpectrum.lastCCF && currentSpectrum.lastCCF.templateWl) {
                 const ccfData = currentSpectrum.lastCCF;
                 
-                // Use shifted wavelengths if RV corr is NOT applied
-                const templateWl = applyRVCorr ? ccfData.templateWl : ccfData.templateWlShifted;
+                // Template ALWAYS stays at rest frame wavelengths
+                const templateWl = ccfData.templateWl;
                 
                 // Trim to current view
                 const trimmedWl = [];
