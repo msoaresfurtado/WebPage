@@ -42,7 +42,49 @@
             </div>
         </section>
         
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="total-nights">0</div>
+                <div class="stat-label">Nights</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="total-targets">0</div>
+                <div class="stat-label">Targets</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="total-obs">0</div>
+                <div class="stat-label">Observations</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="total-hq">0</div>
+                <div class="stat-label">High Quality</div>
+            </div>
+        </div>
+        
         <style>
+            .stats-bar {
+                display: flex;
+                justify-content: center;
+                gap: 2rem;
+                max-width: 600px;
+                margin: 1rem auto 0;
+                padding: 0.75rem 0;
+            }
+            .stat {
+                text-align: center;
+            }
+            .stat-value {
+                font-family: 'DM Mono', monospace;
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #1e293b;
+            }
+            .stat-label {
+                font-size: 0.7rem;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
             .search-section {
                 max-width: 600px;
                 margin: 0 auto;
@@ -632,25 +674,6 @@
                 <p style="margin-top: 1rem;">
                     Questions? Contact <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a>
                 </p>
-            </div>
-        </div>
-
-        <div class="stats-bar">
-            <div class="stat">
-                <div class="stat-value" id="total-nights">0</div>
-                <div class="stat-label">Nights</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="total-targets">0</div>
-                <div class="stat-label">Targets</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="total-obs">0</div>
-                <div class="stat-label">Observations</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value" id="total-hq">0</div>
-                <div class="stat-label">High Quality</div>
             </div>
         </div>
     </div>
