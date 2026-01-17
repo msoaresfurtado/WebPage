@@ -314,6 +314,82 @@
                 flex-shrink: 0;
             }
             
+            .rv-controls {
+                margin-top: 0.75rem;
+                padding-top: 0.75rem;
+                border-top: 1px solid #334155;
+            }
+            
+            .template-select {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.8rem;
+                border: 1px solid #475569;
+                border-radius: 4px;
+                background: #0f172a;
+                color: #e2e8f0;
+                font-family: 'DM Sans', sans-serif;
+                cursor: pointer;
+            }
+            
+            .template-select:focus {
+                outline: none;
+                border-color: #3b82f6;
+            }
+            
+            .rv-btn {
+                background: #7c3aed;
+                border-color: #7c3aed;
+            }
+            
+            .rv-btn:hover {
+                background: #6d28d9;
+                border-color: #6d28d9;
+            }
+            
+            .rv-result {
+                display: inline-flex;
+                align-items: center;
+                gap: 1rem;
+                margin-left: 0.5rem;
+                color: #e2e8f0;
+                font-family: 'DM Mono', monospace;
+                font-size: 0.85rem;
+            }
+            
+            .rv-result .rv-value {
+                color: #a78bfa;
+                font-weight: 600;
+            }
+            
+            .rv-result .rv-label {
+                color: #64748b;
+                font-size: 0.75rem;
+            }
+            
+            .rv-result .computing {
+                color: #94a3b8;
+            }
+            
+            .rv-result .error {
+                color: #f87171;
+            }
+            
+            .show-ccf-btn {
+                background: transparent;
+                border: 1px solid #475569;
+                color: #94a3b8;
+                padding: 0.2rem 0.5rem;
+                border-radius: 4px;
+                font-size: 0.7rem;
+                cursor: pointer;
+                margin-left: 0.5rem;
+            }
+            
+            .show-ccf-btn:hover {
+                background: #334155;
+                color: #e2e8f0;
+            }
+            
             #spectrum-plot {
                 width: 100%;
                 height: 400px;
@@ -452,6 +528,20 @@
                     <button class="spectrum-btn line-btn" id="halpha-btn" onclick="toggleLine('halpha')">Hα</button>
                     <button class="spectrum-btn line-btn" id="lithium-btn" onclick="toggleLine('lithium')">Li I</button>
                 </span>
+            </div>
+            <div class="spectrum-controls rv-controls">
+                <div class="control-group">
+                    <label>Template:</label>
+                    <select id="template-select" class="template-select">
+                        <option value="5750_spec.FITS">5750 K (Solar)</option>
+                        <option value="3500_spec.FITS">3500 K (M-type)</option>
+                        <option value="7250_spec.FITS">7250 K (F-type)</option>
+                    </select>
+                </div>
+                <button class="spectrum-btn rv-btn" onclick="computeCCF()" title="Compute cross-correlation and radial velocity">
+                    Compute RV
+                </button>
+                <div class="rv-result" id="rv-result"></div>
             </div>
             <div id="spectrum-plot"></div>
         </section>
@@ -801,6 +891,342 @@
         function formatSNR(snrResult) {
             if (!snrResult) return 'N/A';
             return snrResult.snr.toFixed(0);
+        }
+        
+        // ============================================
+        // Cross-Correlation and RV Measurement
+        // ============================================
+        
+        // Cache for loaded templates
+        const templateCache = {};
+        
+        // Load a template spectrum
+        async function loadTemplate(templateFile) {
+            if (templateCache[templateFile]) {
+                return templateCache[templateFile];
+            }
+            
+            const data = await loadFITSSpectrum(templateFile);
+            templateCache[templateFile] = data;
+            return data;
+        }
+        
+        // Interpolate spectrum onto a regular log-wavelength grid
+        function interpolateToLogGrid(wavelength, flux, logWlMin, logWlMax, nPoints) {
+            const logWlGrid = [];
+            const fluxGrid = [];
+            const step = (logWlMax - logWlMin) / (nPoints - 1);
+            
+            for (let i = 0; i < nPoints; i++) {
+                logWlGrid.push(logWlMin + i * step);
+            }
+            
+            // Convert input wavelengths to log
+            const logWl = wavelength.map(w => Math.log(w));
+            
+            // Linear interpolation onto the grid
+            for (let i = 0; i < logWlGrid.length; i++) {
+                const targetLogWl = logWlGrid[i];
+                
+                // Find bracketing points
+                let j = 0;
+                while (j < logWl.length - 1 && logWl[j + 1] < targetLogWl) {
+                    j++;
+                }
+                
+                if (j >= logWl.length - 1 || logWl[j] > targetLogWl) {
+                    fluxGrid.push(NaN);
+                } else {
+                    // Linear interpolation
+                    const t = (targetLogWl - logWl[j]) / (logWl[j + 1] - logWl[j]);
+                    fluxGrid.push(flux[j] + t * (flux[j + 1] - flux[j]));
+                }
+            }
+            
+            return { logWlGrid, fluxGrid };
+        }
+        
+        // Normalize spectrum (subtract mean, divide by std)
+        function normalizeSpectrum(flux) {
+            const validFlux = flux.filter(f => !isNaN(f) && isFinite(f));
+            if (validFlux.length === 0) return flux;
+            
+            const mean = validFlux.reduce((a, b) => a + b, 0) / validFlux.length;
+            const std = Math.sqrt(validFlux.reduce((a, b) => a + (b - mean) ** 2, 0) / validFlux.length);
+            
+            if (std === 0) return flux.map(() => 0);
+            return flux.map(f => isNaN(f) ? 0 : (f - mean) / std);
+        }
+        
+        // Compute cross-correlation function
+        function computeCrossCorrelationFunction(flux1, flux2, maxLag) {
+            const n = flux1.length;
+            const ccf = [];
+            const lags = [];
+            
+            for (let lag = -maxLag; lag <= maxLag; lag++) {
+                let sum = 0;
+                let count = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    const j = i + lag;
+                    if (j >= 0 && j < n && !isNaN(flux1[i]) && !isNaN(flux2[j])) {
+                        sum += flux1[i] * flux2[j];
+                        count++;
+                    }
+                }
+                
+                lags.push(lag);
+                ccf.push(count > 0 ? sum / count : 0);
+            }
+            
+            return { lags, ccf };
+        }
+        
+        // Find CCF peak with parabolic interpolation
+        function findCCFPeak(lags, ccf) {
+            // Find the index of maximum
+            let maxIdx = 0;
+            let maxVal = ccf[0];
+            
+            for (let i = 1; i < ccf.length; i++) {
+                if (ccf[i] > maxVal) {
+                    maxVal = ccf[i];
+                    maxIdx = i;
+                }
+            }
+            
+            // Parabolic interpolation for sub-pixel precision
+            if (maxIdx > 0 && maxIdx < ccf.length - 1) {
+                const y0 = ccf[maxIdx - 1];
+                const y1 = ccf[maxIdx];
+                const y2 = ccf[maxIdx + 1];
+                
+                const denom = 2 * (2 * y1 - y0 - y2);
+                if (Math.abs(denom) > 1e-10) {
+                    const delta = (y0 - y2) / denom;
+                    return {
+                        lag: lags[maxIdx] + delta,
+                        peak: y1 - (y0 - y2) * delta / 4,
+                        peakIdx: maxIdx
+                    };
+                }
+            }
+            
+            return { lag: lags[maxIdx], peak: maxVal, peakIdx: maxIdx };
+        }
+        
+        // Main CCF computation function
+        async function computeCCF() {
+            if (!currentSpectrum) {
+                document.getElementById('rv-result').innerHTML = '<span class="error">No spectrum loaded</span>';
+                return;
+            }
+            
+            const templateFile = document.getElementById('template-select').value;
+            if (!templateFile) {
+                document.getElementById('rv-result').innerHTML = '<span class="error">Select a template</span>';
+                return;
+            }
+            
+            const rvResult = document.getElementById('rv-result');
+            rvResult.innerHTML = '<span class="computing">Computing CCF...</span>';
+            
+            try {
+                // Load template
+                const template = await loadTemplate(templateFile);
+                
+                // Get observed spectrum (use appropriate arm or single spectrum)
+                let obsWl, obsFlux;
+                if (currentSpectrum.isMultiArm) {
+                    // For multi-arm, use the blue arm (typically has more lines)
+                    obsWl = currentSpectrum.blue.wavelength;
+                    obsFlux = currentSpectrum.blue.flux;
+                } else {
+                    obsWl = currentSpectrum.wavelength;
+                    obsFlux = currentSpectrum.flux;
+                }
+                
+                // Apply barycentric correction if enabled
+                if (applyBaryCorr) {
+                    const header = currentSpectrum.isMultiArm ? currentSpectrum.blue.header : currentSpectrum.header;
+                    obsWl = getCorrectedWavelength(obsWl, header, currentSpectrum.gaiaId);
+                }
+                
+                // Find overlapping wavelength range
+                const obsMin = Math.min(...obsWl);
+                const obsMax = Math.max(...obsWl);
+                const tmpMin = Math.min(...template.wavelength);
+                const tmpMax = Math.max(...template.wavelength);
+                
+                const wlMin = Math.max(obsMin, tmpMin);
+                const wlMax = Math.min(obsMax, tmpMax);
+                
+                if (wlMin >= wlMax) {
+                    rvResult.innerHTML = '<span class="error">No wavelength overlap with template</span>';
+                    return;
+                }
+                
+                // Use current view range if smaller
+                const viewMin = parseFloat(document.getElementById('min-wl').value);
+                const viewMax = parseFloat(document.getElementById('max-wl').value);
+                const rangeMin = Math.max(wlMin, viewMin);
+                const rangeMax = Math.min(wlMax, viewMax);
+                
+                // Convert to log wavelength
+                const logWlMin = Math.log(rangeMin);
+                const logWlMax = Math.log(rangeMax);
+                
+                // Number of points and velocity step
+                // Each pixel in log-wavelength corresponds to a fixed velocity
+                const nPoints = 4096;
+                const dLogWl = (logWlMax - logWlMin) / nPoints;
+                const dv = C_KMS * dLogWl; // km/s per pixel
+                
+                // Interpolate both spectra onto the same log-wavelength grid
+                const obsInterp = interpolateToLogGrid(obsWl, obsFlux, logWlMin, logWlMax, nPoints);
+                const tmpInterp = interpolateToLogGrid(template.wavelength, template.flux, logWlMin, logWlMax, nPoints);
+                
+                // Normalize
+                const obsNorm = normalizeSpectrum(obsInterp.fluxGrid);
+                const tmpNorm = normalizeSpectrum(tmpInterp.fluxGrid);
+                
+                // Compute CCF with max velocity range of ±500 km/s
+                const maxVel = 500; // km/s
+                const maxLag = Math.ceil(maxVel / dv);
+                
+                const { lags, ccf } = computeCrossCorrelationFunction(obsNorm, tmpNorm, maxLag);
+                
+                // Find peak
+                const peak = findCCFPeak(lags, ccf);
+                
+                // Convert lag to velocity
+                const rv = peak.lag * dv;
+                
+                // Convert lag to wavelength offset at reference wavelength (5500 Å)
+                const refWl = 5500;
+                const dWl = refWl * (Math.exp(peak.lag * dLogWl) - 1);
+                
+                // Store CCF for optional display
+                currentSpectrum.lastCCF = {
+                    velocities: lags.map(l => l * dv),
+                    ccf: ccf,
+                    peakVel: rv,
+                    peakCCF: peak.peak,
+                    dWl: dWl,
+                    template: templateFile
+                };
+                
+                // Display result
+                const sign = rv >= 0 ? '+' : '';
+                rvResult.innerHTML = `
+                    <span class="rv-label">RV:</span>
+                    <span class="rv-value">${sign}${rv.toFixed(2)} km/s</span>
+                    <span class="rv-label">Δλ:</span>
+                    <span class="rv-value">${sign}${dWl.toFixed(3)} Å</span>
+                    <span class="rv-label">CCF peak:</span>
+                    <span class="rv-value">${peak.peak.toFixed(3)}</span>
+                    <button class="show-ccf-btn" onclick="showCCFPlot()">Show CCF</button>
+                `;
+                
+            } catch (error) {
+                console.error('CCF computation error:', error);
+                rvResult.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            }
+        }
+        
+        // Show CCF plot in a modal or overlay
+        function showCCFPlot() {
+            if (!currentSpectrum || !currentSpectrum.lastCCF) return;
+            
+            const ccfData = currentSpectrum.lastCCF;
+            
+            // Create modal overlay
+            let modal = document.getElementById('ccf-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'ccf-modal';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                `;
+                modal.onclick = (e) => {
+                    if (e.target === modal) modal.style.display = 'none';
+                };
+                document.body.appendChild(modal);
+            }
+            
+            modal.innerHTML = `
+                <div style="background: #1e293b; border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 800px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #e2e8f0; margin: 0; font-family: 'DM Sans', sans-serif;">
+                            Cross-Correlation Function
+                        </h3>
+                        <button onclick="document.getElementById('ccf-modal').style.display='none'" 
+                            style="background: transparent; border: 1px solid #475569; color: #94a3b8; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer;">
+                            Close
+                        </button>
+                    </div>
+                    <div id="ccf-plot" style="width: 100%; height: 350px;"></div>
+                    <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 0.5rem; font-family: 'DM Sans', sans-serif;">
+                        Template: ${ccfData.template} | Peak RV: ${ccfData.peakVel.toFixed(2)} km/s | Δλ: ${ccfData.dWl.toFixed(3)} Å
+                    </div>
+                </div>
+            `;
+            modal.style.display = 'flex';
+            
+            // Plot CCF
+            const trace = {
+                x: ccfData.velocities,
+                y: ccfData.ccf,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#a78bfa', width: 1.5 },
+                hovertemplate: 'v = %{x:.1f} km/s<br>CCF = %{y:.4f}<extra></extra>'
+            };
+            
+            // Add vertical line at peak
+            const peakLine = {
+                x: [ccfData.peakVel, ccfData.peakVel],
+                y: [Math.min(...ccfData.ccf), ccfData.peakCCF],
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: '#f87171', width: 1.5, dash: 'dash' },
+                showlegend: false,
+                hoverinfo: 'skip'
+            };
+            
+            const layout = {
+                xaxis: { 
+                    title: { text: 'Velocity (km/s)', font: { color: '#94a3b8', size: 12 } },
+                    color: '#94a3b8',
+                    gridcolor: '#334155',
+                    zerolinecolor: '#475569',
+                    tickfont: { color: '#94a3b8' }
+                },
+                yaxis: { 
+                    title: { text: 'CCF', font: { color: '#94a3b8', size: 12 } },
+                    color: '#94a3b8',
+                    gridcolor: '#334155',
+                    zerolinecolor: '#334155',
+                    tickfont: { color: '#94a3b8' }
+                },
+                paper_bgcolor: '#0f172a',
+                plot_bgcolor: '#0f172a',
+                font: { color: '#e2e8f0', family: 'DM Sans, sans-serif' },
+                margin: { t: 20, r: 30, b: 50, l: 60 },
+                showlegend: false
+            };
+            
+            Plotly.newPlot('ccf-plot', [trace, peakLine], layout, { responsive: true });
         }
         
         function recalcSNR() {
