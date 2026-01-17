@@ -1661,20 +1661,25 @@
             const obsNorm = normalizeSpectrum(obsInterp.fluxGrid);
             const tmpNorm = normalizeSpectrum(tmpInterp.fluxGrid);
             
-            // Compute CCF
+            // Compute CCF - note: template first, then observed
+            // CCF(lag) = Σ template[i] * observed[i + lag]
+            // Positive lag means observed is shifted to longer wavelengths = redshift = positive RV
             const maxVel = 500;
             const maxLag = Math.ceil(maxVel / dv);
-            const { lags, ccf } = computeCrossCorrelationFunction(obsNorm, tmpNorm, maxLag);
+            const { lags, ccf } = computeCrossCorrelationFunction(tmpNorm, obsNorm, maxLag);
             
-            // Find peak - note: negative lag means redshift (positive RV)
-            // so we negate to get conventional RV sign
-            const velocities = lags.map(l => -l * dv);
+            // Find peak - positive lag means positive RV (redshift)
+            const velocities = lags.map(l => l * dv);
             const initialPeak = findCCFPeak(lags, ccf);
-            const initialRV = -initialPeak.lag * dv;
+            const initialRV = initialPeak.lag * dv;
+            
+            console.log(`CCF chunk ${chunkMin}-${chunkMax}Å: peak lag=${initialPeak.lag.toFixed(2)} pixels, dv=${dv.toFixed(3)} km/s/pixel, initial RV=${initialRV.toFixed(2)} km/s`);
             
             // Gaussian refinement
             const gaussFit = refineCCFPeakWithGaussian(velocities, ccf, initialRV, 100);
             const rv = gaussFit.success ? gaussFit.mean : initialRV;
+            
+            console.log(`  Gaussian fit: ${gaussFit.success ? 'success' : 'failed'}, RV=${rv.toFixed(2)} km/s`);
             
             // Estimate RV uncertainty using Tonry-Davis style approach
             // σ_RV ≈ σ_CCF / (1 + r) * sqrt(2) where r is CCF peak, σ_CCF is Gaussian width
@@ -1800,6 +1805,15 @@
                 const rv = bestResult.rv;
                 const rvBary = rv + baryCorr;
                 const gaussFit = bestResult.gaussFit;
+                
+                console.log(`=== FINAL RV RESULT ===`);
+                console.log(`  Observed RV: ${rv.toFixed(2)} km/s`);
+                console.log(`  Barycentric correction: ${baryCorr.toFixed(2)} km/s (${applyBaryCorr ? 'enabled' : 'disabled'})`);
+                console.log(`  RV (bary): ${rvBary.toFixed(2)} km/s`);
+                console.log(`  CCF peak: ${bestResult.peakCCF.toFixed(4)}`);
+                if (gaussFit.success) {
+                    console.log(`  Gaussian σ: ${gaussFit.sigma.toFixed(2)} km/s`);
+                }
                 
                 // Store template data for overplotting (RV-shifted)
                 const finalRV = applyBaryCorr && baryCorr !== 0 ? rvBary : rv;
