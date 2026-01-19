@@ -834,6 +834,47 @@
             }
             return max;
         }
+
+        function getCurrentPlotRanges() {
+            const plotDiv = document.getElementById('spectrum-plot');
+            if (!plotDiv || !plotDiv.layout) return null;
+            
+            return {
+                xaxis: {
+                    range: plotDiv.layout.xaxis.range,
+                    autorange: plotDiv.layout.xaxis.autorange
+                },
+                yaxis: {
+                    range: plotDiv.layout.yaxis.range,
+                    autorange: plotDiv.layout.yaxis.autorange
+                }
+            };
+        }
+        
+        function restorePlotRanges(ranges) {
+            if (!ranges) return;
+            
+            const plotDiv = document.getElementById('spectrum-plot');
+            if (!plotDiv) return;
+            
+            // Only restore if user had manually zoomed (autorange was false)
+            const updateObj = {};
+            
+            if (ranges.xaxis.autorange === false && ranges.xaxis.range) {
+                updateObj['xaxis.range'] = ranges.xaxis.range;
+                updateObj['xaxis.autorange'] = false;
+            }
+            
+            if (ranges.yaxis.autorange === false && ranges.yaxis.range) {
+                updateObj['yaxis.range'] = ranges.yaxis.range;
+                updateObj['yaxis.autorange'] = false;
+            }
+            
+            if (Object.keys(updateObj).length > 0) {
+                Plotly.relayout(plotDiv, updateObj);
+            }
+        }
+
         
         // Spectral line markers
         const SPECTRAL_LINES = {
@@ -1031,6 +1072,9 @@
             applyBaryCorr = !applyBaryCorr;
             document.getElementById('bary-btn').classList.toggle('active', applyBaryCorr);
             
+            // Save current zoom state
+            const ranges = getCurrentPlotRanges();
+            
             // Re-render the current spectrum
             if (currentSpectrum) {
                 if (currentSpectrum.isMultiArm) {
@@ -1038,18 +1082,25 @@
                 } else {
                     applyWavelengthRange();
                 }
+                
+                // Restore zoom state after a brief delay to let plot render
+                setTimeout(() => restorePlotRanges(ranges), 100);
             }
         }
         
-        function toggleRVCorr() {
-            if (!measuredRV && (!currentSpectrum || !currentSpectrum.lastCCF)) {
-                alert('Please compute RV first using the "Compute RV" button');
-                return;
-            }
-            
-            applyRVCorr = !applyRVCorr;
-            document.getElementById('rv-corr-btn').classList.toggle('active', applyRVCorr);
-            
+        
+            function toggleRVCorr() {
+                if (!measuredRV && (!currentSpectrum || !currentSpectrum.lastCCF)) {
+                    alert('Please compute RV first using the "Compute RV" button');
+                    return;
+                }
+                
+                applyRVCorr = !applyRVCorr;
+                document.getElementById('rv-corr-btn').classList.toggle('active', applyRVCorr);
+
+            // Save current zoom state
+            const ranges = getCurrentPlotRanges();
+
             // Re-render the current spectrum
             if (currentSpectrum) {
                 if (currentSpectrum.isMultiArm) {
@@ -1057,6 +1108,8 @@
                 } else {
                     applyWavelengthRange();
                 }
+                // Restore zoom state after a brief delay to let plot render
+                setTimeout(() => restorePlotRanges(ranges), 100);
             }
         }
         
@@ -1184,6 +1237,9 @@
             console.log('  showTemplate now:', showTemplate);
             document.getElementById('template-overlay-btn').classList.toggle('active', showTemplate);
             
+            // Save current zoom state
+            const ranges = getCurrentPlotRanges();
+            
             // Re-render the current spectrum
             if (currentSpectrum) {
                 if (currentSpectrum.isMultiArm) {
@@ -1193,6 +1249,8 @@
                     console.log('  Calling applyWavelengthRange');
                     applyWavelengthRange();
                 }
+                // Restore zoom state after a brief delay to let plot render
+                setTimeout(() => restorePlotRanges(ranges), 100);
             }
         }
         
@@ -3012,16 +3070,19 @@
                 currentSpectrum.flattenedBlueFlux = null;
                 currentSpectrum.flattenedRedFlux = null;
             }
-            
+
+            // Save current zoom state
+            const ranges = getCurrentPlotRanges();
             // Handle multi-arm case
             if (currentSpectrum.isMultiArm) {
                 plotBothArms(currentSpectrum.blue, currentSpectrum.red);
-                return;
+            } else {
+                applyWavelengthRange();
             }
             
-            applyWavelengthRange();
-        }
-        
+            // Restore zoom state after a brief delay to let plot render
+            setTimeout(() => restorePlotRanges(ranges), 100);
+        }        
         // Get flattened flux, using cache if available
         function getFlattenedFlux(wavelength, flux, cacheKey = 'flattenedFlux') {
             if (!currentSpectrum) return flux;
