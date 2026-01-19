@@ -33,6 +33,8 @@
             </div>
             <div class="search-links">
                 <a href="#" onclick="showAllTargets(); return false;">Browse all targets</a>
+                <span> · </span>
+                <a href="#" onclick="showSemesterTargets(); return false;">2025B semester targets</a>
                 <span class="simbad-link" id="simbad-link">
                     · <a href="#" id="simbad-url" target="_blank">SIMBAD ↗</a>
                 </span>
@@ -802,7 +804,7 @@
     <script>
         const DROPBOX_FOLDER = '2023-2-SCI-018';
         const SALTDATA_FOLDER = 'saltdata';  // Folder containing FITS files for web viewing
-        const MAX_RECENT_SEARCHES = 4;
+        const MAX_RECENT_SEARCHES = 8;
         const TEAM_INSPECTION_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTbg5XWBsfv8V74hLfu7e2cllY_FESOslL67pBSTQv51ZHL2ypGZC1iQyvi7QBCB_c-NWJ4HSrJRXja/pub?gid=1011669788&single=true&output=csv';
         
         let catalogData = null;
@@ -4032,6 +4034,76 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            `;
+            resultsSection.classList.add('visible');
+        }
+
+        function parseObsDate(dateStr) {
+            if (dateStr.includes('-')) {
+                return dateStr;
+            } else {
+                const year = '20' + dateStr.slice(0, 2);
+                const month = dateStr.slice(2, 4);
+                const day = dateStr.slice(4, 6);
+                return `${year}-${month}-${day}`;
+            }
+        }
+
+        function showSemesterTargets() {
+            if (!catalogData) return;
+            hideExternalLinks();
+            closeSpectrumViewer();
+            currentGaiaId = null;
+            
+            const semesterStart = new Date('2025-11-01');
+            const semesterEnd = new Date('2026-04-30');
+            
+            const semesterTargets = catalogData.targets.filter(t => {
+                return t.observations.some(obs => {
+                    const obsDateStr = parseObsDate(obs.date);
+                    const obsDate = new Date(obsDateStr);
+                    return obsDate >= semesterStart && obsDate <= semesterEnd;
+                });
+            });
+            
+            const sortedTargets = [...semesterTargets].sort((a, b) => {
+                const aInSemester = a.observations.filter(obs => {
+                    const obsDateStr = parseObsDate(obs.date);
+                    const obsDate = new Date(obsDateStr);
+                    return obsDate >= semesterStart && obsDate <= semesterEnd;
+                }).length;
+                
+                const bInSemester = b.observations.filter(obs => {
+                    const obsDateStr = parseObsDate(obs.date);
+                    const obsDate = new Date(obsDateStr);
+                    return obsDate >= semesterStart && obsDate <= semesterEnd;
+                }).length;
+                
+                return bInSemester - aInSemester;
+            });
+            
+            const resultsSection = document.getElementById('results');
+            resultsSection.innerHTML = `
+                <div class="all-targets">
+                    <h2>2025B Semester Targets (1 Nov 2025 – 30 Apr 2026)</h2>
+                    <p style="color: #64748b; margin-bottom: 1rem;">${sortedTargets.length} targets with observations in this semester</p>
+                    <div class="target-list">
+                        ${sortedTargets.map(t => {
+                            const semesterObsCount = t.observations.filter(obs => {
+                                const obsDateStr = parseObsDate(obs.date);
+                                const obsDate = new Date(obsDateStr);
+                                return obsDate >= semesterStart && obsDate <= semesterEnd;
+                            }).length;
+                            
+                            return `
+                                <div class="target-item" onclick="selectTarget('${t.gaia_dr3_id}')">
+                                    <div class="gaia-id">${t.gaia_dr3_id}</div>
+                                    <div class="obs-count">${semesterObsCount} obs (${t.observations.length} total)</div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `;
