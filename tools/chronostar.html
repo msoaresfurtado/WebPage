@@ -2120,6 +2120,8 @@ DATA SOURCES:
       if (!gaiaId || !gaiaCoords?.ra || !gaiaCoords?.dec) continue;
 
       const sepArcsec = angularSeparationDeg(raS, decS, gaiaCoords.ra, gaiaCoords.dec) * 3600;
+      const MAX_SEPARATION = 2.0; // arcsec - adjust as needed
+
       if (sepArcsec > MAX_SEPARATION) {
         console.log(`[Resolve] ${mainId}: Closest Gaia source is ${sepArcsec.toFixed(2)}" away - likely not a match`);
         continue; // Skip this candidate
