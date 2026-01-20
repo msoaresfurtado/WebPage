@@ -2115,7 +2115,11 @@ DATA SOURCES:
       if (!gaiaId || !gaiaCoords?.ra || !gaiaCoords?.dec) continue;
 
       const sepArcsec = angularSeparationDeg(raS, decS, gaiaCoords.ra, gaiaCoords.dec) * 3600;
-      if (best == null || sepArcsec < best.scoreArcsec) {
+      if (sepArcsec > MAX_SEPARATION) {
+        console.log(`[Resolve] ${mainId}: Closest Gaia source is ${sepArcsec.toFixed(2)}" away - likely not a match`);
+        continue; // Skip this candidate
+      }
+       if (best == null || sepArcsec < best.scoreArcsec) {
         best = { scoreArcsec: sepArcsec, gaiaId, resolvedName: mainId, ra: raS, dec: decS };
       }
     }
