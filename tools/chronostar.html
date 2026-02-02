@@ -967,7 +967,7 @@ DATA SOURCES:
             Search
           </button>
         </div>
-         
+
          <div class="recent-searches" id="recent-searches" style="display: none;">
            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.3rem;">Recent Searches:</div>
            <div class="recent-searches-list" id="recent-searches-list"></div>
@@ -1989,7 +1989,7 @@ DATA SOURCES:
         variants.push(`K2-${num} ${letter}`, `K2 ${num} ${letter}`);
       }
     }
-     
+
     // WASP targets (e.g., WASP-12, WASP 12)
     const waspMatch = cleaned.match(/^WASP[-\s]*(\d+[A-Za-z]?)$/i);
     if (waspMatch) variants.push(`WASP-${waspMatch[1]}`, `WASP ${waspMatch[1]}`, `WASP${waspMatch[1]}`);
@@ -2562,7 +2562,7 @@ DATA SOURCES:
 
    // High RUWE threshold
   const HIGH_RUWE_THRESHOLD = 1.4;
-     
+
 function displayCMD(candidates, target) {
     const container = document.getElementById('cmd-plot');
 
@@ -2572,7 +2572,7 @@ function displayCMD(candidates, target) {
 
     const targetBpRp = target.bp_rp;
     const targetAbsMag = calculateAbsMag(target.phot_g_mean_mag, target.parallax);
-   
+
     const shapes = spectralTypeColors.map(band => ({
       type: 'rect', xref: 'x', yref: 'paper',
       x0: band.range[0], x1: band.range[1], y0: 0, y1: 1,
@@ -2636,7 +2636,7 @@ function displayCMD(candidates, target) {
         hovertemplate: '<b>%{text}</b><br>BP-RP: %{x:.3f}<br>M_G: %{y:.2f}<extra></extra>'
       });
     }
-   
+
     if (targetBpRp != null && targetAbsMag != null) {
       traces.push({
         x: [targetBpRp], y: [targetAbsMag],
@@ -2751,19 +2751,19 @@ function displayCMD(candidates, target) {
           // Rebull+2016 - Pleiades K2 rotation
           { name: 'Rebull+2016', table: '"J/AJ/152/113/table2"', periodCol: 'Prot',
             raCol: '_RAJ2000', decCol: '_DEJ2000' },
-         
+
           { name: 'Jeffers+2025', table: '"J/A+A/696/A27/tableb1"', periodCol: 'Prot',
             raCol: '_RA', decCol: '_DE' },
-         
+
            { name: 'Garcia+2023', table: '"J/A+A/679/L12/table1"', periodCol: 'Prot',
                raCol: '_RA', decCol: '_DE' },
-   
+
            { name: 'Mazeh+2015', table: '"J/ApJ/801/3/table1"', periodCol: 'Prot',
                raCol: '_RA', decCol: '_DE' },
-   
+
            { name: 'Canto Martins+2023', table: '"J/other/NatAs/7.900/table1"', periodCol: 'Prot',
                raCol: '_RA', decCol: '_DE' },
-      
+
           // Reinhold & Hekker 2020 - K2 rotation
           { name: 'Reinhold+2020', table: '"J/A+A/635/A43/table2"', periodCol: 'Prot',
             raCol: '_RAJ2000', decCol: '_DEJ2000', ignoreByDefault: true },
@@ -3523,38 +3523,258 @@ function displayCMD(candidates, target) {
     }
   }
 
+  // Helper function to try multiple CORS proxies with better timeout handling
+  async function fetchWithCORSProxy(url, timeoutMs = 20000) {
+    const proxies = [
+      '', // Try direct first
+      'https://corsproxy.io/?',
+      'https://api.codetabs.com/v1/proxy?quest=',
+      'https://api.allorigins.win/raw?url='
+    ];
+
+    for (let i = 0; i < proxies.length; i++) {
+      const proxy = proxies[i];
+      try {
+        console.log(`Attempt ${i + 1}/${proxies.length}: ${proxy || 'direct'}...`);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+        const fetchUrl = proxy ? proxy + encodeURIComponent(url) : url;
+        const response = await fetch(fetchUrl, {
+          signal: controller.signal,
+          mode: 'cors'
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`✓ Success with ${proxy || 'direct'}`);
+          return data;
+        }
+        console.log(`✗ Failed with ${proxy || 'direct'}: ${response.status}`);
+      } catch (e) {
+        console.log(`✗ Failed with ${proxy || 'direct'}: ${e.message}`);
+        // Continue to next proxy
+        if (i === proxies.length - 1) {
+          throw new Error('All fetch attempts failed. Try using HTTPS or hosting on a web server.');
+        }
+      }
+    }
+  }
+
+  async function checkExoplanetArchive() {
+    if (!targetData) return;
+
+    const btn = document.getElementById('btn-exoplanet');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Checking...';
+
+    const container = document.getElementById('exoplanet-alert');
+
+    try {
+      let data = [];
+      const selectFields = 'hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,pl_orbsmax,st_rad,st_teff,disc_year';
+
+      // Try coordinate search first
+      if (targetData.ra && targetData.dec) {
+        console.log('[Exoplanet] Trying coordinate search...');
+        const radius = 5 / 3600;
+        const url = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+${selectFields}+FROM+pscomppars+WHERE+1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${targetData.ra},${targetData.dec},${radius}))&format=json`;
+
+        try {
+          const result = await fetchWithCORSProxy(url, 25000);
+          if (result && result.length > 0) data = result;
+        } catch (e) {
+          console.log('[Exoplanet] Coordinate search failed:', e.message);
+        }
+      }
+
+      // Fallback to Gaia ID if coordinate search failed
+      if (data.length === 0 && targetData.source_id) {
+        console.log('[Exoplanet] Trying Gaia ID search...');
+        const url = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+${selectFields}+FROM+pscomppars+WHERE+gaia_id='Gaia+DR3+${targetData.source_id}'&format=json`;
+
+        try {
+          const result = await fetchWithCORSProxy(url, 25000);
+          if (result && result.length > 0) data = result;
+        } catch (e) {
+          console.log('[Exoplanet] Gaia ID search failed:', e.message);
+        }
+      }
+
+      if (data && data.length > 0) {
+        const uniquePlanetNames = [...new Set(data.map(p => p.pl_name))];
+        const uniquePlanets = uniquePlanetNames.map(name => data.find(pl => pl.pl_name === name));
+        uniquePlanets.sort((a, b) => {
+          if (a.pl_orbper == null && b.pl_orbper == null) return 0;
+          if (a.pl_orbper == null) return 1;
+          if (b.pl_orbper == null) return -1;
+          return a.pl_orbper - b.pl_orbper;
+        });
+
+        const hostname = data[0].hostname;
+        const st_rad = data[0].st_rad;
+        const st_teff = data[0].st_teff;
+
+        exoplanetData = { hostname, st_rad, st_teff, planets: uniquePlanets };
+
+        const plottablePlanets = uniquePlanets.filter(p => p.pl_orbsmax && p.pl_rade);
+
+        let html = `
+          <div class="exoplanet-alert">
+            <div class="exoplanet-alert-header" onclick="toggleExoplanetDetails()" style="cursor:pointer; user-select:none;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              Confirmed Exoplanet Host: ${hostname}
+              <svg id="exoplanet-toggle-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto; transition:transform 0.3s;">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div id="exoplanet-details">
+              <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.5rem;">
+                T<sub>eff</sub> = ${st_teff ? st_teff.toFixed(0) + ' K' : 'N/A'} |
+                R<sub>★</sub> = ${st_rad ? st_rad.toFixed(3) + ' R☉' : 'N/A'}
+              </div>
+              <table style="width:100%; font-size:0.7rem; font-family:'IBM Plex Mono',monospace; border-collapse:collapse;">
+                <tr style="color:var(--text-muted); border-bottom:1px solid var(--border-color);">
+                  <th style="text-align:left; padding:0.25rem;">Planet</th>
+                  <th style="text-align:right; padding:0.25rem;">Period</th>
+                  <th style="text-align:right; padding:0.25rem;">Sep</th>
+                  <th style="text-align:right; padding:0.25rem;">Radius</th>
+                </tr>
+        `;
+
+        uniquePlanets.forEach(p => {
+          html += `
+            <tr style="border-bottom:1px solid var(--border-color);">
+              <td style="padding:0.25rem; color:var(--text-primary);">${p.pl_name}</td>
+              <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_orbper ? p.pl_orbper.toFixed(2) + ' d' : 'N/A'}</td>
+              <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_orbsmax ? p.pl_orbsmax.toFixed(3) + ' AU' : 'N/A'}</td>
+              <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_rade ? p.pl_rade.toFixed(2) + ' R⊕' : 'N/A'}</td>
+            </tr>
+          `;
+        });
+
+        html += `</table>`;
+
+        if (plottablePlanets.length > 0) {
+          html += `
+            <button onclick="showTeqPlot()" style="margin-top:0.7rem; background:var(--bg-tertiary); border:1px solid var(--accent-cyan); color:var(--accent-cyan); padding:0.4rem 0.8rem; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:0.3rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18"></path>
+                <circle cx="9" cy="9" r="2"></circle>
+                <circle cx="19" cy="5" r="2"></circle>
+              </svg>
+              T<sub>eq</sub> vs Radius Plot
+            </button>
+            <div id="teq-plot-container" style="display:none; margin-top:0.7rem;"></div>
+          `;
+        }
+
+        html += `
+            <a href="https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(hostname)}" target="_blank"
+               style="display:inline-block; margin-top:0.5rem; font-size:0.7rem; color:var(--accent-cyan);">
+              View on NASA Exoplanet Archive →
+            </a>
+          </div>
+        </div>`;
+
+        container.innerHTML = html;
+      } else {
+        exoplanetData = null;
+        container.innerHTML = `<div style="padding:0.5rem; font-size:0.85rem; color:var(--text-muted);">No confirmed exoplanets found in NASA Exoplanet Archive</div>`;
+      }
+    } catch (e) {
+      console.error('Exoplanet Archive error:', e);
+
+      // More helpful error message
+      let errorMsg = 'Error checking exoplanet archive';
+      if (window.location.protocol === 'file:') {
+        errorMsg = 'Error: Please host this file on a web server (HTTPS) instead of opening it directly. CORS proxies may not work from file://';
+      }
+
+      container.innerHTML = `<div style="padding:0.5rem; color:var(--warning); font-size:0.85rem;">${errorMsg}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg> Check Exoplanets`;
+    }
+  }
+
   async function searchTESSSectors() {
-      if (!targetData) return;
+    if (!targetData) return;
 
-      const btn = document.getElementById('btn-tess');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="loading-spinner"></span> Searching...';
+    const btn = document.getElementById('btn-tess');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Searching...';
 
-      const container = document.getElementById('tess-info-container');
+    const container = document.getElementById('tess-info-container');
+
+    try {
+      const ra = targetData.ra;
+      const dec = targetData.dec;
+
+      let ticId = null;
+      let tmag = null;
+
+      // Search TIC catalog via VizieR TAP (usually doesn't need proxy)
+      const tapUrl = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
+      const radiusDeg = 5 / 3600;
+
+      // Try TIC v8.2
+      let query = `
+        SELECT TOP 1 TIC, Tmag, RAJ2000, DEJ2000,
+               DISTANCE(POINT('ICRS', RAJ2000, DEJ2000), POINT('ICRS', ${ra}, ${dec})) AS dist
+        FROM "IV/39/tic82"
+        WHERE 1=CONTAINS(POINT('ICRS', RAJ2000, DEJ2000), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
+        ORDER BY dist ASC
+      `;
 
       try {
-        const ra = targetData.ra;
-        const dec = targetData.dec;
+        const params = new URLSearchParams({
+          REQUEST: 'doQuery',
+          LANG: 'ADQL',
+          FORMAT: 'json',
+          QUERY: query
+        });
 
-        let ticId = null;
-        let tmag = null;
+        const response = await fetch(tapUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
 
-        // Use TAP endpoint (same as Gaia queries) instead of conesearch
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data && data.data.length > 0) {
+            const cols = data.metadata.map(m => m.name);
+            const row = data.data[0];
+            const ticIdx = cols.findIndex(c => /^TIC$/i.test(c));
+            const tmagIdx = cols.findIndex(c => /^Tmag$/i.test(c));
+
+            if (ticIdx >= 0) {
+              ticId = String(row[ticIdx]);
+              tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('TIC v8.2 query failed:', e);
+      }
+
+      // Fallback to TIC v8.0 if needed
+      if (!ticId) {
+        query = `
+          SELECT TOP 1 TIC, Tmag, RAJ2000, DEJ2000,
+                 DISTANCE(POINT('ICRS', RAJ2000, DEJ2000), POINT('ICRS', ${ra}, ${dec})) AS dist
+          FROM "IV/38/tic"
+          WHERE 1=CONTAINS(POINT('ICRS', RAJ2000, DEJ2000), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
+          ORDER BY dist ASC
+        `;
+
         try {
-          const tapUrl = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
-          const radiusDeg = 5 / 3600; // 5 arcsec
-
-          // Query TIC v8.2 catalog via TAP
-          const query = `
-            SELECT TOP 1 TIC, Tmag, RAJ2000, DEJ2000,
-                   DISTANCE(POINT('ICRS', RAJ2000, DEJ2000), POINT('ICRS', ${ra}, ${dec})) AS dist
-            FROM "IV/39/tic82"
-            WHERE 1=CONTAINS(POINT('ICRS', RAJ2000, DEJ2000), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
-            ORDER BY dist ASC
-          `;
-
-          console.log('TIC TAP query:', query);
-
           const params = new URLSearchParams({
             REQUEST: 'doQuery',
             LANG: 'ADQL',
@@ -3570,342 +3790,146 @@ function displayCMD(candidates, target) {
 
           if (response.ok) {
             const data = await response.json();
-            console.log('TIC TAP response:', data);
-
             if (data.data && data.data.length > 0) {
               const cols = data.metadata.map(m => m.name);
               const row = data.data[0];
-
               const ticIdx = cols.findIndex(c => /^TIC$/i.test(c));
               const tmagIdx = cols.findIndex(c => /^Tmag$/i.test(c));
-
-              console.log('Columns:', cols);
-              console.log('Row:', row);
 
               if (ticIdx >= 0) {
                 ticId = String(row[ticIdx]);
                 tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
-                console.log('Found TIC:', ticId, 'Tmag:', tmag);
               }
             }
           }
         } catch (e) {
-          console.warn('TIC TAP query failed:', e);
+          console.warn('TIC v8.0 query failed:', e);
         }
+      }
 
-        // Fallback: Try TIC v8.0 if v8.2 failed
-        if (!ticId) {
+      if (ticId) {
+        ticInfo = { tic: ticId, tmag };
+        updateTargetInfoWithTIC(ticId);
+      }
+
+      // Get TESS sectors from MAST
+      let sectors = [];
+      try {
+        const mastRequest = {
+          service: "Mast.Caom.Cone",
+          params: { ra, dec, radius: 0.001 },
+          format: "json",
+          pagesize: 500
+        };
+
+        const mastUrl = 'https://mast.stsci.edu/api/v0/invoke';
+
+        // Try MAST with proxy fallback
+        const proxies = ['', 'https://corsproxy.io/?', 'https://api.codetabs.com/v1/proxy?quest='];
+
+        for (const proxy of proxies) {
           try {
-            const tapUrl = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
-            const radiusDeg = 5 / 3600;
-
-            const query = `
-              SELECT TOP 1 TIC, Tmag, RAJ2000, DEJ2000,
-                     DISTANCE(POINT('ICRS', RAJ2000, DEJ2000), POINT('ICRS', ${ra}, ${dec})) AS dist
-              FROM "IV/38/tic"
-              WHERE 1=CONTAINS(POINT('ICRS', RAJ2000, DEJ2000), CIRCLE('ICRS', ${ra}, ${dec}, ${radiusDeg}))
-              ORDER BY dist ASC
-            `;
-
-            console.log('TIC v8.0 TAP query:', query);
-
-            const params = new URLSearchParams({
-              REQUEST: 'doQuery',
-              LANG: 'ADQL',
-              FORMAT: 'json',
-              QUERY: query
-            });
-
-            const response = await fetch(tapUrl, {
+            const fetchUrl = proxy ? proxy + encodeURIComponent(mastUrl) : mastUrl;
+            const obsResp = await fetch(fetchUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: params
+              body: 'request=' + encodeURIComponent(JSON.stringify(mastRequest)),
+              signal: AbortSignal.timeout(15000)
             });
 
-            if (response.ok) {
-              const data = await response.json();
-              console.log('TIC v8.0 TAP response:', data);
+            if (obsResp.ok) {
+              const obsData = await obsResp.json();
+              if (obsData.data && obsData.data.length > 0) {
+                const tessObs = obsData.data.filter(obs =>
+                  obs.obs_collection === 'TESS' || (obs.project && obs.project.includes('TESS'))
+                );
 
-              if (data.data && data.data.length > 0) {
-                const cols = data.metadata.map(m => m.name);
-                const row = data.data[0];
+                const sectorSet = new Set();
+                for (const obs of tessObs) {
+                  const obsId = obs.obs_id || '';
+                  const seqNum = obs.sequence_number;
 
-                const ticIdx = cols.findIndex(c => /^TIC$/i.test(c));
-                const tmagIdx = cols.findIndex(c => /^Tmag$/i.test(c));
-
-                if (ticIdx >= 0) {
-                  ticId = String(row[ticIdx]);
-                  tmag = tmagIdx >= 0 ? parseFloat(row[tmagIdx]) : null;
-                  console.log('Found TIC v8.0:', ticId, 'Tmag:', tmag);
+                  const sectorMatch = obsId.match(/tess.*?-s(\d{4})/i) ||
+                    obsId.match(/tess.*?sector(\d+)/i) ||
+                    obsId.match(/-s(\d+)-/i);
+                  if (sectorMatch) sectorSet.add(parseInt(sectorMatch[1]));
+                  if (seqNum && seqNum > 0 && seqNum < 100) sectorSet.add(seqNum);
                 }
+                sectors = Array.from(sectorSet).filter(s => s > 0 && s < 100).sort((a, b) => a - b);
+                break; // Success, exit proxy loop
               }
             }
           } catch (e) {
-            console.warn('TIC v8.0 TAP query failed:', e);
+            console.warn(`MAST with ${proxy || 'direct'} failed:`, e.message);
+            continue;
           }
         }
+      } catch (e) {
+        console.warn('MAST observations query failed:', e);
+      }
 
-        if (ticId) {
-          ticInfo = { tic: ticId, tmag };
-          updateTargetInfoWithTIC(ticId);
-        }
-
-        // Search for TESS sectors via MAST
-        let sectors = [];
+      // Fallback to TESScut
+      if (sectors.length === 0) {
         try {
-          const mastRequest = {
-            service: "Mast.Caom.Cone",
-            params: { ra, dec, radius: 0.001 },
-            format: "json",
-            pagesize: 500
-          };
+          const tessecutUrl = `https://mast.stsci.edu/tesscut/api/v0.1/sector?ra=${ra}&dec=${dec}`;
+          const result = await fetchWithCORSProxy(tessecutUrl, 20000);
 
-          const mastUrl = 'https://mast.stsci.edu/api/v0/invoke';
-          const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(mastUrl)}`;
-
-          const obsResp = await fetch(proxyUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'request=' + encodeURIComponent(JSON.stringify(mastRequest))
-          });
-
-          if (obsResp.ok) {
-            const obsData = await obsResp.json();
-            if (obsData.data && obsData.data.length > 0) {
-              const tessObs = obsData.data.filter(obs =>
-                obs.obs_collection === 'TESS' || (obs.project && obs.project.includes('TESS'))
-              );
-
-              const sectorSet = new Set();
-              for (const obs of tessObs) {
-                const obsId = obs.obs_id || '';
-                const seqNum = obs.sequence_number;
-
-                const sectorMatch = obsId.match(/tess.*?-s(\d{4})/i) ||
-                  obsId.match(/tess.*?sector(\d+)/i) ||
-                  obsId.match(/-s(\d+)-/i);
-                if (sectorMatch) sectorSet.add(parseInt(sectorMatch[1]));
-                if (seqNum && seqNum > 0 && seqNum < 100) sectorSet.add(seqNum);
-              }
-              sectors = Array.from(sectorSet).filter(s => s > 0 && s < 100).sort((a, b) => a - b);
-            }
+          if (result && result.results && result.results.length > 0) {
+            sectors = result.results.map(r => r.sector).filter(s => s > 0).sort((a, b) => a - b);
           }
         } catch (e) {
-          console.warn('MAST observations query failed:', e);
+          console.warn('TESScut query failed:', e);
         }
-
-        // Fallback sector search via TESScut
-        if (sectors.length === 0) {
-          try {
-            const tessecutUrl = `https://mast.stsci.edu/tesscut/api/v0.1/sector?ra=${ra}&dec=${dec}`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(tessecutUrl)}`;
-
-            const sectResp = await fetch(proxyUrl);
-            if (sectResp.ok) {
-              const sectData = await sectResp.json();
-              if (sectData.results && sectData.results.length > 0) {
-                sectors = sectData.results.map(r => r.sector).filter(s => s > 0).sort((a, b) => a - b);
-              }
-            }
-          } catch (e) {
-            console.warn('TESScut query failed:', e);
-          }
-        }
-
-        if (ticInfo) ticInfo.sectors = sectors;
-
-        // Build display HTML
-        let html = `<div class="tess-info"><div class="tess-info-header">TESS Information</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.85rem;">`;
-
-        if (ticId) {
-          html += `<div><span style="color:var(--text-muted);">TIC ID:</span>
-            <a href="https://exofop.ipac.caltech.edu/tess/target.php?id=${ticId}" target="_blank"
-               style="color:var(--accent-cyan); font-family:'IBM Plex Mono', monospace;">${ticId}</a></div>
-            <div><span style="color:var(--text-muted);">T mag:</span> ${tmag?.toFixed(2) || 'N/A'}</div>`;
-        } else {
-          html += `<div style="grid-column:1 / -1; color:var(--text-muted);">No TIC match found within 5"</div>`;
-        }
-        html += `</div>`;
-
-        if (sectors.length > 0) {
-          html += `<div style="margin-top:0.5rem; font-size:0.85rem;">
-            <span style="color:var(--text-muted);">Observed Sectors (${sectors.length}):</span><br>
-            <span style="font-family:'IBM Plex Mono', monospace; color:var(--accent-blue);">${sectors.join(', ')}</span>
-          </div>`;
-        } else {
-          html += `<div style="margin-top:0.5rem; font-size:0.85rem;">
-            <span style="color:var(--text-muted);">Sectors:</span>
-            <a href="https://heasarc.gsfc.nasa.gov/wsgi-scripts/TESS/TESS-point_Web_Tool/TESS-point_Web_Tool/wtv_v2.0.py/?ra=${ra}&dec=${dec}" target="_blank"
-               style="color:var(--accent-cyan); margin-left:0.5rem;">Check TESS-point →</a>
-          </div>`;
-        }
-
-        html += `</div>`;
-        container.innerHTML = html;
-
-      } catch (e) {
-        console.error('TESS search error:', e);
-        container.innerHTML = `<div class="tess-info"><div class="tess-info-header">TESS Information</div><p style="color: var(--error);">Error: ${e.message}</p></div>`;
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> TESS Sectors`;
       }
-    }
 
-    async function checkExoplanetArchive() {
-      if (!targetData) return;
+      if (ticInfo) ticInfo.sectors = sectors;
 
-      const btn = document.getElementById('btn-exoplanet');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="loading-spinner"></span> Checking...';
+      // Build display HTML
+      let html = `<div class="tess-info"><div class="tess-info-header">TESS Information</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; font-size:0.85rem;">`;
 
-      const container = document.getElementById('exoplanet-alert');
-
-      // Fetch with timeout and proxy fallback
-            async function fetchWithTimeout(url, timeoutMs = 8000) {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-              try {
-                const resp = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (resp.ok) return await resp.json();
-              } catch (e) {
-                clearTimeout(timeoutId);
-                if (e.name === 'AbortError') {
-                  console.log('[Exoplanet] Direct fetch timed out, trying proxy...');
-                }
-              }
-
-              // Try CORS proxy with shorter timeout
-              try {
-                const proxyController = new AbortController();
-                const proxyTimeoutId = setTimeout(() => proxyController.abort(), 6000);
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
-                const resp = await fetch(proxyUrl, { signal: proxyController.signal });
-                clearTimeout(proxyTimeoutId);
-                if (resp.ok) return await resp.json();
-              } catch (e) {
-                console.log('[Exoplanet] Proxy fetch failed:', e.message);
-              }
-
-              return null;
-            }
-
-            try {
-              let data = [];
-              const selectFields = 'hostname,pl_name,pl_rade,pl_bmasse,pl_orbper,pl_orbsmax,st_rad,st_teff,disc_year';
-
-              // Try coordinate search FIRST (usually faster)
-              if (targetData.ra && targetData.dec) {
-                console.log('[Exoplanet] Trying coordinate search...');
-                const url = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+${selectFields}+FROM+pscomppars+WHERE+1=CONTAINS(POINT('ICRS',ra,dec),CIRCLE('ICRS',${targetData.ra},${targetData.dec},${5/3600}))&format=json`;
-                const result = await fetchWithTimeout(url);
-                if (result && result.length > 0) data = result;
-              }
-
-              // Fallback to Gaia ID if coordinate search failed
-              if (data.length === 0 && targetData.source_id) {
-                console.log('[Exoplanet] Trying Gaia ID search...');
-                const url = `https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=SELECT+${selectFields}+FROM+pscomppars+WHERE+gaia_id='Gaia+DR3+${targetData.source_id}'&format=json`;
-                const result = await fetchWithTimeout(url);
-                if (result && result.length > 0) data = result;
-              }
-
-              if (data && data.length > 0) {
-          const uniquePlanetNames = [...new Set(data.map(p => p.pl_name))];
-          const uniquePlanets = uniquePlanetNames.map(name => data.find(pl => pl.pl_name === name));
-          uniquePlanets.sort((a, b) => {
-            if (a.pl_orbper == null && b.pl_orbper == null) return 0;
-            if (a.pl_orbper == null) return 1;
-            if (b.pl_orbper == null) return -1;
-            return a.pl_orbper - b.pl_orbper;
-          });
-
-          const hostname = data[0].hostname;
-          const st_rad = data[0].st_rad;
-          const st_teff = data[0].st_teff;
-
-          exoplanetData = { hostname, st_rad, st_teff, planets: uniquePlanets };
-
-          // Check if any planet can be plotted
-          const plottablePlanets = uniquePlanets.filter(p => p.pl_orbsmax && p.pl_rade);
-
-          let html = `
-                      <div class="exoplanet-alert">
-                        <div class="exoplanet-alert-header" onclick="toggleExoplanetDetails()" style="cursor:pointer; user-select:none;">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                          Confirmed Exoplanet Host: ${hostname}
-                          <svg id="exoplanet-toggle-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:auto; transition:transform 0.3s;">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                          </svg>
-                        </div>
-                        <div id="exoplanet-details">
-                          <div style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.5rem;">
-                            T<sub>eff</sub> = ${st_teff ? st_teff.toFixed(0) + ' K' : 'N/A'} |
-                            R<sub>★</sub> = ${st_rad ? st_rad.toFixed(3) + ' R☉' : 'N/A'}
-                          </div>
-                          <table style="width:100%; font-size:0.7rem; font-family:'IBM Plex Mono',monospace; border-collapse:collapse;">
-                            <tr style="color:var(--text-muted); border-bottom:1px solid var(--border-color);">
-                              <th style="text-align:left; padding:0.25rem;">Planet</th>
-                              <th style="text-align:right; padding:0.25rem;">Period</th>
-                              <th style="text-align:right; padding:0.25rem;">Sep</th>
-                              <th style="text-align:right; padding:0.25rem;">Radius</th>
-                            </tr>
-                    `;
-
-                    uniquePlanets.forEach(p => {
-                      html += `
-                        <tr style="border-bottom:1px solid var(--border-color);">
-                          <td style="padding:0.25rem; color:var(--text-primary);">${p.pl_name}</td>
-                          <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_orbper ? p.pl_orbper.toFixed(2) + ' d' : 'N/A'}</td>
-                          <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_orbsmax ? p.pl_orbsmax.toFixed(3) + ' AU' : 'N/A'}</td>
-                          <td style="text-align:right; padding:0.25rem; color:var(--accent-cyan);">${p.pl_rade ? p.pl_rade.toFixed(2) + ' R⊕' : 'N/A'}</td>
-                        </tr>
-                      `;
-                    });
-
-                    html += `</table>`;
-
-                    if (plottablePlanets.length > 0) {
-                      html += `
-                        <button onclick="showTeqPlot()" style="margin-top:0.7rem; background:var(--bg-tertiary); border:1px solid var(--accent-cyan); color:var(--accent-cyan); padding:0.4rem 0.8rem; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:0.3rem;">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 3v18h18"></path>
-                            <circle cx="9" cy="9" r="2"></circle>
-                            <circle cx="19" cy="5" r="2"></circle>
-                          </svg>
-                          T<sub>eq</sub> vs Radius Plot
-                        </button>
-                        <div id="teq-plot-container" style="display:none; margin-top:0.7rem;"></div>
-                      `;
-                    }
-
-                    html += `
-                        <a href="https://exoplanetarchive.ipac.caltech.edu/overview/${encodeURIComponent(hostname)}" target="_blank"
-                           style="display:inline-block; margin-top:0.5rem; font-size:0.7rem; color:var(--accent-cyan);">
-                          View on NASA Exoplanet Archive →
-                        </a>
-                      </div>
-                    </div>`;
-
-                    container.innerHTML = html;
-        }
-        else {
-          exoplanetData = null;
-          container.innerHTML = `<div style="padding:0.5rem; font-size:0.85rem; color:var(--text-muted);">No confirmed exoplanets found in NASA Exoplanet Archive</div>`;
-        }
-      } catch (e) {
-        console.error('Exoplanet Archive error:', e);
-        container.innerHTML = `<div style="padding:0.5rem; color:var(--error); font-size:0.85rem;">Error checking exoplanet archive</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg> Check Exoplanets`;
+      if (ticId) {
+        html += `<div><span style="color:var(--text-muted);">TIC ID:</span>
+          <a href="https://exofop.ipac.caltech.edu/tess/target.php?id=${ticId}" target="_blank"
+             style="color:var(--accent-cyan); font-family:'IBM Plex Mono', monospace;">${ticId}</a></div>
+          <div><span style="color:var(--text-muted);">T mag:</span> ${tmag?.toFixed(2) || 'N/A'}</div>`;
+      } else {
+        html += `<div style="grid-column:1 / -1; color:var(--text-muted);">No TIC match found within 5"</div>`;
       }
+      html += `</div>`;
+
+      if (sectors.length > 0) {
+        html += `<div style="margin-top:0.5rem; font-size:0.85rem;">
+          <span style="color:var(--text-muted);">Observed Sectors (${sectors.length}):</span><br>
+          <span style="font-family:'IBM Plex Mono', monospace; color:var(--accent-blue);">${sectors.join(', ')}</span>
+        </div>`;
+      } else {
+        html += `<div style="margin-top:0.5rem; font-size:0.85rem;">
+          <span style="color:var(--text-muted);">Sectors:</span>
+          <a href="https://heasarc.gsfc.nasa.gov/wsgi-scripts/TESS/TESS-point_Web_Tool/TESS-point_Web_Tool/wtv_v2.0.py/?ra=${ra}&dec=${dec}" target="_blank"
+             style="color:var(--accent-cyan); margin-left:0.5rem;">Check TESS-point →</a>
+        </div>`;
+      }
+
+      html += `</div>`;
+      container.innerHTML = html;
+
+    } catch (e) {
+      console.error('TESS search error:', e);
+
+      let errorMsg = 'Error searching TESS data';
+      if (window.location.protocol === 'file:') {
+        errorMsg = 'Error: Please host this file on a web server (HTTPS) instead of opening it directly';
+      }
+
+      container.innerHTML = `<div class="tess-info"><div class="tess-info-header">TESS Information</div><p style="color: var(--warning);">${errorMsg}</p></div>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> TESS Sectors`;
     }
+  }
+
+
 
   // =========================
   // Main Search
