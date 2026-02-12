@@ -280,6 +280,169 @@
             font-size: 0.95em;
         }
 
+        /* ===== Supporters Section ===== */
+        .supporters-section {
+            margin: 48px 0 10px;
+            text-align: center;
+        }
+
+        .supporters-section h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.7em;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin: 0 0 6px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .supporters-subtitle {
+            font-size: 1.04em;
+            color: var(--text-muted);
+            margin: 0 auto -6px;
+            max-width: 580px;
+            line-height: 1.6;
+        }
+
+        .supporters-logos {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px 28px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .supporters-logos a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.25s ease;
+        }
+
+        .supporters-logos a:hover {
+            transform: scale(1.05);
+            text-decoration: none;
+        }
+
+        .supporters-logos img {
+            height: 74px;
+            max-width: 170px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .supporters-logos img.logo-square-lg {
+            height: 96px;
+            max-width: 96px;
+        }
+
+        .supporters-logos img.logo-square-xl {
+            height: 143px;
+            max-width: 143px;
+        }
+
+        .supporters-logos img.logo-nasa {
+            height: 129px;
+            max-width: 129px;
+        }
+
+        .supporters-logos img.logo-nsf {
+            height: 119px;
+            max-width: 119px;
+        }
+
+        .supporters-logos img.logo-square-xl-sm {
+            height: 135px;
+            max-width: 135px;
+        }
+
+        .supporters-logos img.logo-square-xxl {
+            height: 228px;
+            max-width: 228px;
+        }
+
+        .supporters-logos img.logo-wide {
+            height: 62px;
+            max-width: 210px;
+        }
+
+        .supporters-logos img.logo-wide-sm {
+            height: 48px;
+            max-width: 170px;
+        }
+
+        .supporters-logos img.logo-md {
+            height: 78px;
+            max-width: 170px;
+        }
+
+        .supporters-logos img.logo-wide-lg {
+            height: 100px;
+            max-width: 340px;
+        }
+
+        .supporters-logos img.logo-wide-md {
+            height: 85px;
+            max-width: 300px;
+        }
+
+        .supporters-logos img.logo-wide-sloan {
+            height: 75px;
+            max-width: 255px;
+        }
+
+        .supporters-logos img.logo-wide-wicor {
+            height: 103px;
+            max-width: 350px;
+        }
+
+        .supporters-logos img.logo-wide-lamat {
+            height: 83px;
+            max-width: 277px;
+        }
+
+        .supporters-logos img.logo-doe {
+            height: 116px;
+            max-width: 116px;
+        }
+
+        .supporters-logos-row2 {
+            margin-top: -12px;
+        }
+
+        .supporters-logos-row3 {
+            margin-top: 22px;
+        }
+
+        .supporters-note {
+            margin-top: 24px;
+            font-size: 1.05em;
+            color: #555;
+            letter-spacing: 0.01em;
+        }
+
+        @media only screen and (max-width: 768px) {
+            .supporters-logos { gap: 20px 28px; }
+            .supporters-logos img { height: 56px; max-width: 140px; }
+            .supporters-logos img.logo-square-lg { height: 72px; max-width: 72px; }
+            .supporters-logos img.logo-square-xl { height: 90px; max-width: 90px; }
+            .supporters-logos img.logo-nasa { height: 86px; max-width: 86px; }
+            .supporters-logos img.logo-nsf { height: 84px; max-width: 84px; }
+            .supporters-logos img.logo-square-xl-sm { height: 80px; max-width: 80px; }
+            .supporters-logos img.logo-square-xxl { height: 100px; max-width: 100px; }
+            .supporters-logos img.logo-wide { height: 48px; max-width: 170px; }
+            .supporters-logos img.logo-wide-sm { height: 38px; max-width: 140px; }
+            .supporters-logos img.logo-md { height: 60px; max-width: 140px; }
+            .supporters-logos img.logo-wide-lg { height: 62px; max-width: 230px; }
+            .supporters-logos img.logo-wide-md { height: 54px; max-width: 200px; }
+            .supporters-logos img.logo-wide-sloan { height: 49px; max-width: 172px; }
+            .supporters-logos img.logo-wide-wicor { height: 63px; max-width: 232px; }
+            .supporters-logos img.logo-wide-lamat { height: 55px; max-width: 187px; }
+            .supporters-logos img.logo-doe { height: 78px; max-width: 78px; }
+        }
+
         /* Responsive */
         @media only screen and (max-width: 768px) {
             .profile-section {
@@ -350,7 +513,7 @@
         <div class="join-section">
             <h2>🌟 Join Our Research Group</h2>
             <p>I expect to recruit students in the next cycle, with projects starting in Fall 2027. If you're interested in joining my team, please check back or reach out to express your interest.</p>
-            
+
             <p>Future opportunities will include projects in:</p>
             <ul>
                 <li><strong>Stellar age determination</strong> — developing machine learning approaches for gyrochronology and spectroscopic age indicators</li>
@@ -418,6 +581,69 @@
                 </div>
             </article>
         </div>
+
+        <!-- ===== Supporters Section ===== -->
+        <section class="supporters-section">
+            <h2>With Gratitude to Our Supporters</h2>
+            <p class="supporters-subtitle">
+                Our research and outreach programs are made possible through the generous support of the following organizations.
+            </p>
+
+            <div class="supporters-logos">
+                <a href="https://www.wisc.edu/" target="_blank" rel="noopener noreferrer" aria-label="University of Wisconsin-Madison">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_uw_madison.png"
+                         alt="University of Wisconsin-Madison" class="logo-square-xxl">
+                </a>
+                <a href="https://www.warf.org/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Alumni Research Foundation">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_warf.png"
+                         alt="Wisconsin Alumni Research Foundation" class="logo-wide-md">
+                </a>
+                <a href="https://www.nasa.gov/" target="_blank" rel="noopener noreferrer" aria-label="NASA">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nasa.png"
+                         alt="NASA" class="logo-nasa">
+                </a>
+                <a href="https://www.nsf.gov/" target="_blank" rel="noopener noreferrer" aria-label="National Science Foundation">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nsf.png"
+                         alt="National Science Foundation" class="logo-nsf">
+                </a>
+            </div>
+            <div class="supporters-logos supporters-logos-row2">
+                <a href="https://www.astro.wisc.edu/undergraduate-program/department-awards/" target="_blank" rel="noopener noreferrer" aria-label="Peter Livingston Scholars Program">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_livingston.png"
+                         alt="Peter Livingston Scholars Program" class="logo-wide-lg">
+                </a>
+                <a href="https://lamat.science.ucsc.edu/" target="_blank" rel="noopener noreferrer" aria-label="LAMAT">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_lamat.png"
+                         alt="LAMAT" class="logo-wide-lamat">
+                </a>
+                <a href="https://sloan.org/" target="_blank" rel="noopener noreferrer" aria-label="Alfred P. Sloan Foundation">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_sloan.png"
+                         alt="Alfred P. Sloan Foundation" class="logo-wide-sloan">
+                </a>
+            </div>
+            <div class="supporters-logos supporters-logos-row3">
+                <a href="https://spacegrant.carthage.edu/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Space Grant Consortium">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_wsgc.png"
+                         alt="Wisconsin Space Grant Consortium" class="logo-square-xl-sm">
+                </a>
+                <a href="https://public.nrao.edu/" target="_blank" rel="noopener noreferrer" aria-label="National Radio Astronomy Observatory">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nrao.png"
+                         alt="National Radio Astronomy Observatory" class="logo-wide">
+                </a>
+                <a href="https://wicor.wisc.edu/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Center for Origins Research">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_wicor.png"
+                         alt="Wisconsin Center for Origins Research (WiCOR)" class="logo-wide-wicor">
+                </a>
+                <a href="https://www.ed.gov/" target="_blank" rel="noopener noreferrer" aria-label="U.S. Department of Education">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_doe.png"
+                         alt="U.S. Department of Education" class="logo-doe">
+                </a>
+            </div>
+
+            <p class="supporters-note">
+                Funding acknowledgments reflect current and past support for research and student programs.
+            </p>
+        </section>
 
         <!-- Footer will be loaded here -->
         <div id="footer-container"></div>
