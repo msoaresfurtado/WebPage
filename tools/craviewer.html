@@ -61,7 +61,7 @@
             position: relative;
             z-index: 1;
             display: grid;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 340px 1fr;
             grid-template-rows: auto 1fr auto;
             height: 100vh;
             gap: 1px;
@@ -116,7 +116,7 @@
             display: flex;
             flex-direction: column;
             gap: 0.4rem;
-            min-height: 0; /* Required for grid children to scroll properly */
+            min-height: 0;
         }
 
         .panel {
@@ -124,7 +124,7 @@
             border: 1px solid var(--border-color);
             border-radius: 5px;
             overflow: hidden;
-            flex-shrink: 0; /* Prevent panels from compressing */
+            flex-shrink: 0;
         }
 
         .panel-header {
@@ -386,6 +386,7 @@
         .color-swatch-pink { background: #ff4adc; }
         .color-swatch-cyan { background: #4afff4; }
         .color-swatch-red { background: #ff4a4a; }
+        .color-swatch-white { background: #ffffff; }
 
         .toast {
             position: fixed;
@@ -492,33 +493,6 @@
             white-space: nowrap;
         }
 
-        .footprint-list {
-            max-height: 70px;
-            overflow-y: auto;
-            margin-top: 0.3rem;
-        }
-
-        .footprint-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.25rem 0.4rem;
-            background: var(--bg-primary);
-            border-radius: 3px;
-            margin-bottom: 0.2rem;
-            font-size: 0.5rem;
-        }
-
-        .footprint-item-roman { border-left: 2px solid var(--roman-color); }
-        .footprint-item-jwst { border-left: 2px solid var(--jwst-color); }
-
-        .footprint-remove-btn {
-            width: auto;
-            padding: 0.08rem 0.25rem;
-            margin: 0;
-            font-size: 0.4rem;
-        }
-
         .source-count {
             font-size: 0.55rem;
             color: var(--accent-primary);
@@ -541,15 +515,6 @@
         }
 
         .footer a:hover { color: var(--accent-secondary); }
-
-        .catalog-info {
-            font-size: 0.5rem;
-            color: var(--text-secondary);
-            margin-top: 0.3rem;
-            padding: 0.3rem;
-            background: var(--bg-primary);
-            border-radius: 3px;
-        }
 
         .footprint-count-display {
             margin-top: 0.5rem;
@@ -589,17 +554,140 @@
             display: none;
         }
 
-        .optimize-status.active {
-            display: block;
+        .optimize-status.active { display: block; }
+        .optimize-status.searching { color: var(--warning); }
+        .optimize-status.complete { color: var(--success); }
+
+        /* Catalog list items */
+        .catalog-list {
+            max-height: 140px;
+            overflow-y: auto;
+            margin-top: 0.4rem;
         }
 
-        .optimize-status.searching {
-            color: var(--warning);
+        .catalog-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.3rem 0.4rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            margin-bottom: 0.2rem;
+            font-size: 0.5rem;
         }
 
-        .optimize-status.complete {
+        .catalog-item-info {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .catalog-item-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .catalog-item-name {
+            color: var(--text-primary);
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .catalog-item-count {
+            color: var(--text-secondary);
+            font-size: 0.45rem;
+            flex-shrink: 0;
+            margin-left: 0.3rem;
+        }
+
+        .catalog-remove-btn {
+            width: auto;
+            padding: 0.08rem 0.25rem;
+            margin: 0;
+            font-size: 0.4rem;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+            margin-left: 0.3rem;
+        }
+
+        .catalog-remove-btn:hover {
+            color: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+        }
+
+        .preset-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.3rem;
+        }
+
+        .preset-row button {
+            font-size: 0.5rem;
+            padding: 0.35rem 0.3rem;
+        }
+
+        .section-label {
+            font-size: 0.45rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 0.5rem;
+            margin-bottom: 0.25rem;
+            padding-bottom: 0.2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cone-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .cone-toggle label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .cone-toggle input[type="checkbox"] {
+            accent-color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .cone-fields { margin-bottom: 0.3rem; }
+        .cone-fields.hidden { display: none; }
+
+        .total-sources-bar {
+            padding: 0.35rem 0.5rem;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            border-left: 2px solid var(--success);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.4rem;
+        }
+
+        .total-sources-label {
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .total-sources-value {
+            font-size: 0.65rem;
+            font-weight: 600;
             color: var(--success);
         }
+
+        .total-sources-value.empty { color: var(--text-secondary); }
     </style>
 </head>
 <body>
@@ -637,8 +725,8 @@
                 </div>
             </div>
 
-            <!-- Catalog Panel -->
-            <div class="panel collapsed" id="panel-catalog">
+            <!-- Catalogs Panel -->
+            <div class="panel" id="panel-catalog">
                 <div class="panel-header" onclick="togglePanel('panel-catalog')">
                     <div class="panel-header-left">
                         <div class="panel-header-dot"></div>
@@ -647,16 +735,83 @@
                     <span class="panel-toggle">▼</span>
                 </div>
                 <div class="panel-content">
-                    <button class="btn-catalog" onclick="loadCrACatalog()">Load CrA Substellar (2025)</button>
-                    <div class="input-group btn-spacing">
-                        <label>Sgr Stream Max Sources</label>
-                        <input type="number" id="sgr-max-sources" value="50000" min="1000" max="800000" step="10000">
+                    <div class="section-label">Quick Presets</div>
+                    <div class="preset-row">
+                        <button class="btn-catalog" onclick="loadPresetCatalog('cra')">CrA Substellar</button>
+                        <button class="btn-sgr" onclick="loadPresetCatalog('sgr')">Sgr Stream</button>
                     </div>
-                    <button class="btn-sgr" onclick="loadSgrStreamCatalog()">Load Sgr Stream Stars</button>
-                    <div class="catalog-info" id="catalog-info">
-                        CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1
+
+                    <div class="section-label">Load Any VizieR Catalog</div>
+                    <div class="input-group">
+                        <label>VizieR Table ID</label>
+                        <input type="text" id="vizier-table-id" placeholder="e.g. J/A+A/701/A147/tablea1">
                     </div>
-                    <button class="btn-secondary btn-spacing" onclick="clearCatalog()">Clear All Catalogs</button>
+
+                    <div class="cone-toggle">
+                        <input type="checkbox" id="cone-search-toggle" onchange="toggleConeFields()">
+                        <label for="cone-search-toggle">Cone search (limit by region)</label>
+                    </div>
+
+                    <div class="cone-fields hidden" id="cone-fields">
+                        <div class="coord-row" style="margin-bottom: 0.3rem;">
+                            <div class="input-group" style="margin-bottom:0">
+                                <label>Center RA (deg)</label>
+                                <input type="text" id="cone-ra" placeholder="auto">
+                            </div>
+                            <div class="input-group" style="margin-bottom:0">
+                                <label>Center Dec (deg)</label>
+                                <input type="text" id="cone-dec" placeholder="auto">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Radius (deg)</label>
+                            <input type="number" id="cone-radius" value="2" min="0.01" max="180" step="0.1">
+                        </div>
+                    </div>
+
+                    <div class="coord-row">
+                        <div class="input-group">
+                            <label>Max Sources</label>
+                            <input type="number" id="cat-max-sources" value="50000" min="100" max="800000" step="1000">
+                        </div>
+                        <div class="input-group">
+                            <label>Display As</label>
+                            <select id="cat-shape">
+                                <option value="circle">Circle</option>
+                                <option value="square">Square</option>
+                                <option value="plus">Plus</option>
+                                <option value="cross">Cross</option>
+                                <option value="diamond">Diamond</option>
+                                <option value="triangle">Triangle</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="color-picker-row" style="margin-bottom: 0.3rem;">
+                        <span class="color-picker-label">Color:</span>
+                        <div class="color-swatch color-swatch-cyan active" data-color="#4afff4" data-panel="catalog"></div>
+                        <div class="color-swatch color-swatch-orange" data-color="#ff6b4a" data-panel="catalog"></div>
+                        <div class="color-swatch color-swatch-green" data-color="#4aff9f" data-panel="catalog"></div>
+                        <div class="color-swatch color-swatch-yellow" data-color="#ffd24a" data-panel="catalog"></div>
+                        <div class="color-swatch color-swatch-pink" data-color="#ff4adc" data-panel="catalog"></div>
+                        <div class="color-swatch color-swatch-blue" data-color="#4a9eff" data-panel="catalog"></div>
+                        <div class="color-swatch color-swatch-red" data-color="#ff4a4a" data-panel="catalog"></div>
+                        <div class="color-swatch color-swatch-white" data-color="#ffffff" data-panel="catalog"></div>
+                    </div>
+
+                    <button onclick="loadCustomCatalog()">Load Catalog</button>
+
+                    <div class="section-label">Loaded Catalogs</div>
+                    <div class="catalog-list" id="catalog-list">
+                        <p class="info-text">No catalogs loaded.</p>
+                    </div>
+
+                    <div class="total-sources-bar">
+                        <span class="total-sources-label">Total catalog sources</span>
+                        <span class="total-sources-value empty" id="total-sources-value">0</span>
+                    </div>
+
+                    <button class="btn-secondary btn-spacing" onclick="clearAllCatalogs()">Clear All Catalogs</button>
                 </div>
             </div>
 
@@ -697,7 +852,7 @@
                     <div class="optimize-status" id="optimize-status"></div>
                     <div class="footprint-count-display" id="footprint-count-display">
                         <span class="footprint-count-label">Catalog sources in footprint:</span>
-                        <span class="footprint-count-value empty" id="footprint-count-value">—</span>
+                        <span class="footprint-count-value empty" id="footprint-count-value">---</span>
                     </div>
                 </div>
             </div>
@@ -850,30 +1005,51 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // CrA center coordinates (R CrA / Coronet cluster)
+        // ==================== State ====================
+
         var CRA_RA = 285.47;
         var CRA_DEC = -36.95;
 
         var aladin;
-        var sources = [];
+        var sources = [];              // individual plotted sources (manual, simbad, csv)
         var currentFITSLayer = null;
         var currentFITSUrl = null;
-        var craCatalogSources = null;
-        var sgrCatalogSources = null;
-        var craData = [];
-        var sgrData = [];
         var pastObjects = JSON.parse(localStorage.getItem('craPastObjects') || '[]');
 
-        // NEW: footprint count state
+        // Unified catalog system: array of { uid, name, tableId, data: [{ra,dec,id}], aladinCat, color, shape }
+        var loadedCatalogs = [];
+        var catalogUidCounter = 0;
+
         var catalogInFootprintCount = 0;
 
         var selectedColors = {
             simbad: '#4a9eff',
             manual: '#ff6b4a',
-            bulk: '#4aff9f'
+            bulk: '#4aff9f',
+            catalog: '#4afff4'
         };
 
-        // Roman WFI detector positions (flipped 180°)
+        // Preset catalog definitions
+        var PRESET_CATALOGS = {
+            cra: {
+                tableId: 'J/A+A/701/A147/tablea1',
+                name: 'CrA Substellar (2025)',
+                color: '#4afff4',
+                shape: 'circle',
+                maxSources: 'unlimited',
+                extraParams: ''
+            },
+            sgr: {
+                tableId: 'J/A+A/666/A64/tablec1',
+                name: 'Sgr Stream',
+                color: '#ffd24a',
+                shape: 'square',
+                maxSources: 50000,
+                extraParams: ''
+            }
+        };
+
+        // Roman WFI detector positions
         var ROMAN_WFI_DETECTORS = [
             [+0.335, -0.18], [+0.335, -0.03], [+0.335, +0.10],
             [+0.200, -0.11], [+0.200, +0.03], [+0.200, +0.16],
@@ -884,6 +1060,8 @@
         ];
 
         var ROMAN_DET_SIZE = 0.11;
+
+        // ==================== Init ====================
 
         A.init.then(function() {
             aladin = A.aladin('#aladin-container', {
@@ -905,13 +1083,31 @@
                 }
             });
 
-            // Populate past objects datalist
             updatePastObjectsDatalist();
-
-            // Initialize footprint controls
             initFootprintControls();
-
             showToast('Viewer initialized · Centered on CrA', 'success');
+        });
+
+        // ==================== Utility ====================
+
+        function togglePanel(panelId) {
+            document.getElementById(panelId).classList.toggle('collapsed');
+        }
+
+        function toggleConeFields() {
+            var checked = document.getElementById('cone-search-toggle').checked;
+            document.getElementById('cone-fields').classList.toggle('hidden', !checked);
+        }
+
+        document.querySelectorAll('.color-swatch').forEach(function(swatch) {
+            swatch.addEventListener('click', function() {
+                var panel = swatch.dataset.panel;
+                document.querySelectorAll('.color-swatch[data-panel="' + panel + '"]').forEach(function(s) {
+                    s.classList.remove('active');
+                });
+                swatch.classList.add('active');
+                selectedColors[panel] = swatch.dataset.color;
+            });
         });
 
         function updatePastObjectsDatalist() {
@@ -930,125 +1126,252 @@
             }
         }
 
-        function togglePanel(panelId) {
-            document.getElementById(panelId).classList.toggle('collapsed');
+        function showLoading(show, text) {
+            var el = document.getElementById('loading-overlay');
+            el.querySelector('.loading-text').textContent = text || 'Loading...';
+            if (show) el.classList.add('active');
+            else el.classList.remove('active');
         }
 
-        document.querySelectorAll('.color-swatch').forEach(function(swatch) {
-            swatch.addEventListener('click', function() {
-                var panel = swatch.dataset.panel;
-                document.querySelectorAll('.color-swatch[data-panel="' + panel + '"]').forEach(function(s) {
-                    s.classList.remove('active');
-                });
-                swatch.classList.add('active');
-                selectedColors[panel] = swatch.dataset.color;
+        function showToast(msg, type) {
+            var t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast toast-' + (type || 'success') + ' show';
+            setTimeout(function() { t.classList.remove('show'); }, 3000);
+        }
+
+        // ==================== Unified Catalog System ====================
+
+        function getAllCatalogData() {
+            var all = [];
+            loadedCatalogs.forEach(function(cat) {
+                all = all.concat(cat.data);
             });
-        });
-
-        // NEW: point-in-rotated-rectangle test (RA/Dec degrees; small-field approximation)
-        function isPointInRotRect(ra, dec, centerRa, centerDec, widthDeg, heightDeg, paDeg) {
-            // convert RA offset to "true" degrees at this Dec
-            var cosDec = Math.cos(centerDec * Math.PI / 180);
-            var dx = (ra - centerRa) * cosDec;
-            var dy = (dec - centerDec);
-
-            // rotate into detector frame (inverse of drawing rotation sign convention)
-            var rad = paDeg * Math.PI / 180;
-            var x = dx * Math.cos(rad) - dy * Math.sin(rad);
-            var y = dx * Math.sin(rad) + dy * Math.cos(rad);
-
-            return (Math.abs(x) <= widthDeg / 2) && (Math.abs(y) <= heightDeg / 2);
+            return all;
         }
 
-        // NEW: compute total # catalog sources inside current footprint
-        function computeCatalogCountInActiveFootprint() {
-            // need a footprint and some catalog data
-            if (!activeFootprintOverlay) return 0;
-            var instrument = document.getElementById('footprint-instrument').value;
-            var ra0 = parseFloat(document.getElementById('footprint-ra-slider').value);
-            var dec0 = parseFloat(document.getElementById('footprint-dec-slider').value);
-            var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
-
+        function getTotalCatalogCount() {
             var n = 0;
-
-            function countForDataset(dataset) {
-                if (!dataset || !dataset.length) return 0;
-                var local = 0;
-
-                dataset.forEach(function(d) {
-                    if (instrument === 'roman') {
-                        // union over 18 detectors
-                        for (var i = 0; i < ROMAN_WFI_DETECTORS.length; i++) {
-                            var det = ROMAN_WFI_DETECTORS[i];
-                            var inside = isPointInRotRect(
-                                d.ra, d.dec,
-                                ra0, dec0,
-                                ROMAN_DET_SIZE, ROMAN_DET_SIZE,
-                                pa
-                            );
-
-                            if (!inside) {
-                                // test in detector-centered frame by shifting the point relative to detector center
-                                // easiest: test against rectangle centered at (ra_det, dec_det)
-                                var detCenter = offsetToRaDec(ra0, dec0,
-                                    rotatePoint(det[0], det[1], pa).x,
-                                    rotatePoint(det[0], det[1], pa).y
-                                );
-                                inside = isPointInRotRect(
-                                    d.ra, d.dec,
-                                    detCenter[0], detCenter[1],
-                                    ROMAN_DET_SIZE, ROMAN_DET_SIZE,
-                                    pa
-                                );
-                            }
-
-                            if (inside) { local++; break; }
-                        }
-                    } else {
-                        // JWST NIRCam: two modules
-                        var modSize = 0.037;
-                        var gap = 0.012;
-                        var insideAny = false;
-
-                        [-1, 1].forEach(function(side) {
-                            if (insideAny) return;
-                            var dx = side * (modSize / 2 + gap);
-                            var rot = rotatePoint(dx, 0, pa);
-                            var modCenter = offsetToRaDec(ra0, dec0, rot.x, rot.y);
-
-                            if (isPointInRotRect(d.ra, d.dec, modCenter[0], modCenter[1], modSize, modSize, pa)) {
-                                insideAny = true;
-                            }
-                        });
-
-                        if (insideAny) local++;
-                    }
-                });
-
-                return local;
-            }
-
-            n += countForDataset(craData);
-            n += countForDataset(sgrData);
-
+            loadedCatalogs.forEach(function(cat) { n += cat.data.length; });
             return n;
         }
 
-        // NEW: update persistent display with total count
-        function updateFootprintCatalogCountUI() {
-            catalogInFootprintCount = computeCatalogCountInActiveFootprint();
-            var countEl = document.getElementById('footprint-count-value');
+        function updateCatalogListUI() {
+            var el = document.getElementById('catalog-list');
+            var totalEl = document.getElementById('total-sources-value');
+            var total = getTotalCatalogCount();
 
-            if (!activeFootprintOverlay) {
-                countEl.textContent = '—';
-                countEl.classList.add('empty');
-            } else if (craData.length === 0 && sgrData.length === 0) {
-                countEl.textContent = 'No catalog';
-                countEl.classList.add('empty');
-            } else {
-                countEl.textContent = catalogInFootprintCount;
-                countEl.classList.remove('empty');
+            if (loadedCatalogs.length === 0) {
+                el.innerHTML = '<p class="info-text">No catalogs loaded.</p>';
+                totalEl.textContent = '0';
+                totalEl.classList.add('empty');
+                return;
             }
+
+            totalEl.textContent = total.toLocaleString();
+            totalEl.classList.remove('empty');
+
+            el.innerHTML = loadedCatalogs.map(function(cat) {
+                var shortName = cat.name.length > 28 ? cat.name.substring(0, 28) + '...' : cat.name;
+                return '<div class="catalog-item">' +
+                    '<div class="catalog-item-info">' +
+                    '<div class="catalog-item-dot" style="background:' + cat.color + '"></div>' +
+                    '<span class="catalog-item-name" title="' + cat.name + ' (' + cat.tableId + ')">' + shortName + '</span>' +
+                    '<span class="catalog-item-count">' + cat.data.length.toLocaleString() + '</span>' +
+                    '</div>' +
+                    '<button class="catalog-remove-btn" onclick="removeCatalog(' + cat.uid + ')">✕</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function loadVizierCatalog(tableId, name, color, shape, maxSources, coneRa, coneDec, coneRadius) {
+            showLoading(true, 'Loading ' + name + '...');
+
+            // Build VizieR URL
+            var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?-source=' + encodeURIComponent(tableId);
+
+            // Cone search parameters
+            if (coneRa !== null && coneDec !== null && coneRadius !== null) {
+                url += '&-c=' + coneRa + '%20' + coneDec + '&-c.rd=' + coneRadius;
+            }
+
+            if (maxSources === 'unlimited') {
+                url += '&-out.max=unlimited';
+            } else {
+                url += '&-out.max=' + maxSources;
+            }
+
+            // Request RA/Dec columns (VizieR computed columns)
+            url += '&-out=_RAJ2000,_DEJ2000,*';
+
+            console.log('Fetching VizieR:', url);
+
+            fetch(url)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.text();
+                })
+                .then(function(text) {
+                    console.log('Response length:', text.length);
+
+                    var data = parseVOTableSimple(text);
+                    console.log('Parsed:', data.length, 'sources from', tableId);
+
+                    if (data.length === 0) {
+                        showLoading(false);
+                        showToast('No sources found in ' + tableId, 'error');
+                        return;
+                    }
+
+                    // Create Aladin catalog overlay
+                    var aladinCat = A.catalog({
+                        name: name,
+                        sourceSize: 10,
+                        color: color,
+                        shape: shape
+                    });
+
+                    var aladinSources = data.map(function(d) {
+                        return A.source(d.ra, d.dec, { name: d.id || name });
+                    });
+
+                    aladinCat.addSources(aladinSources);
+                    aladin.addCatalog(aladinCat);
+
+                    // Store in unified catalog list
+                    var uid = ++catalogUidCounter;
+                    loadedCatalogs.push({
+                        uid: uid,
+                        name: name,
+                        tableId: tableId,
+                        data: data,
+                        aladinCat: aladinCat,
+                        color: color,
+                        shape: shape
+                    });
+
+                    showLoading(false);
+                    updateCatalogListUI();
+                    updateFootprintCatalogCountUI();
+                    showToast('Loaded ' + data.length.toLocaleString() + ' sources from ' + name, 'success');
+                })
+                .catch(function(error) {
+                    showLoading(false);
+                    showToast('Error loading ' + tableId + ': ' + error.message, 'error');
+                    console.error('Catalog error:', error);
+                });
+        }
+
+        function parseVOTableSimple(text) {
+            var data = [];
+            var trMatch = text.match(/<TR>([\s\S]*?)<\/TR>/gi);
+            if (!trMatch) {
+                console.log('No TR elements found in VOTable');
+                return data;
+            }
+
+            console.log('Found', trMatch.length, 'TR rows');
+
+            trMatch.forEach(function(tr, idx) {
+                var tdMatch = tr.match(/<TD[^>]*>([^<]*)<\/TD>/gi);
+                if (!tdMatch || tdMatch.length < 2) return;
+
+                var values = tdMatch.map(function(td) {
+                    return td.replace(/<[^>]*>/g, '').trim();
+                });
+
+                // First two columns = _RAJ2000, _DEJ2000
+                var ra = parseFloat(values[0]);
+                var dec = parseFloat(values[1]);
+                if (isNaN(ra) || isNaN(dec)) return;
+
+                // Try to grab an ID from the third column
+                var id = values.length > 2 ? values[2] : '';
+
+                if (idx < 3) {
+                    console.log('Sample row', idx, ':', ra, dec, id);
+                }
+
+                data.push({ ra: ra, dec: dec, id: id });
+            });
+
+            return data;
+        }
+
+        // Load a preset catalog
+        function loadPresetCatalog(key) {
+            var preset = PRESET_CATALOGS[key];
+            if (!preset) return;
+
+            var max = preset.maxSources;
+            if (key === 'sgr') {
+                max = parseInt(document.getElementById('cat-max-sources').value) || 50000;
+            }
+
+            loadVizierCatalog(preset.tableId, preset.name, preset.color, preset.shape, max, null, null, null);
+        }
+
+        // Load a custom catalog from user input
+        function loadCustomCatalog() {
+            var tableId = document.getElementById('vizier-table-id').value.trim();
+            if (!tableId) {
+                showToast('Enter a VizieR table ID', 'error');
+                return;
+            }
+
+            var color = selectedColors.catalog;
+            var shape = document.getElementById('cat-shape').value;
+            var maxSources = parseInt(document.getElementById('cat-max-sources').value) || 50000;
+
+            // Cone search?
+            var coneRa = null, coneDec = null, coneRadius = null;
+            if (document.getElementById('cone-search-toggle').checked) {
+                var raStr = document.getElementById('cone-ra').value.trim();
+                var decStr = document.getElementById('cone-dec').value.trim();
+
+                if (raStr && decStr) {
+                    coneRa = parseFloat(raStr);
+                    coneDec = parseFloat(decStr);
+                } else {
+                    // Default to current view center
+                    var center = aladin.getRaDec();
+                    coneRa = center[0];
+                    coneDec = center[1];
+                }
+                coneRadius = parseFloat(document.getElementById('cone-radius').value) || 2;
+            }
+
+            // Build a display name from the table ID
+            var shortId = tableId.split('/').pop() || tableId;
+            var name = shortId;
+            if (coneRa !== null) {
+                name += ' (r=' + coneRadius + '°)';
+            }
+
+            loadVizierCatalog(tableId, name, color, shape, maxSources, coneRa, coneDec, coneRadius);
+        }
+
+        function removeCatalog(uid) {
+            var idx = loadedCatalogs.findIndex(function(c) { return c.uid === uid; });
+            if (idx === -1) return;
+
+            var cat = loadedCatalogs[idx];
+            try { aladin.removeLayers([cat.aladinCat]); } catch(e) {}
+            loadedCatalogs.splice(idx, 1);
+
+            updateCatalogListUI();
+            updateFootprintCatalogCountUI();
+            showToast('Removed ' + cat.name, 'success');
+        }
+
+        function clearAllCatalogs() {
+            loadedCatalogs.forEach(function(cat) {
+                try { aladin.removeLayers([cat.aladinCat]); } catch(e) {}
+            });
+            loadedCatalogs = [];
+            updateCatalogListUI();
+            updateFootprintCatalogCountUI();
+            showToast('All catalogs cleared', 'success');
         }
 
         // ==================== FITS ====================
@@ -1057,18 +1380,12 @@
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
                 try { if (currentFITSLayer.remove) currentFITSLayer.remove(); } catch(e) {}
-
-                if (currentFITSUrl) {
-                    URL.revokeObjectURL(currentFITSUrl);
-                    currentFITSUrl = null;
-                }
-
+                if (currentFITSUrl) { URL.revokeObjectURL(currentFITSUrl); currentFITSUrl = null; }
                 currentFITSLayer = null;
                 document.getElementById('fits-name').textContent = 'No FITS loaded';
                 document.getElementById('fits-status').classList.remove('loaded');
                 document.getElementById('file-input-label').textContent = 'Upload FITS file';
                 document.getElementById('fits-file').value = '';
-
                 showToast('FITS cleared', 'success');
             } else {
                 showToast('No FITS to clear', 'error');
@@ -1088,7 +1405,6 @@
 
             try {
                 currentFITSUrl = URL.createObjectURL(file);
-
                 currentFITSLayer = aladin.createImageFITS(currentFITSUrl, {
                     name: file.name,
                     opacity: 1.0
@@ -1099,7 +1415,6 @@
                     }
                     showLoading(false);
                 });
-
                 aladin.setOverlayImageLayer(currentFITSLayer);
                 document.getElementById('file-input-label').textContent = file.name;
                 document.getElementById('fits-name').textContent = file.name;
@@ -1111,216 +1426,15 @@
             }
         });
 
-        // ==================== Catalogs ====================
-
-        function loadCrACatalog() {
-            showLoading(true, 'Loading CrA catalog...');
-
-            if (craCatalogSources) {
-                try { aladin.removeLayers([craCatalogSources]); } catch(e) {}
-                craCatalogSources = null;
-            }
-            craData = [];
-
-            // Use VizieR votable endpoint with CORS-friendly format
-            var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?-source=J/A+A/701/A147/tablea1&-out.max=unlimited&-out=_RAJ2000,_DEJ2000,Gaia';
-
-            console.log('Fetching CrA:', url);
-
-            fetch(url)
-                .then(function(response) {
-                    console.log('CrA response status:', response.status);
-                    return response.text();
-                })
-                .then(function(text) {
-                    console.log('CrA response length:', text.length);
-                    console.log('CrA response preview:', text.substring(0, 300));
-
-                    var data = parseVOTableSimple(text);
-                    console.log('Parsed CrA data:', data.length, 'sources');
-
-                    if (data.length === 0) {
-                        showLoading(false);
-                        showToast('No CrA sources found', 'error');
-                        return;
-                    }
-
-                    craData = data;
-                    craCatalogSources = plotCatalogSources(craData, '#4afff4', 'circle', 'CrA Substellar');
-
-                    showLoading(false);
-                    updateCatalogInfo();
-                    // NEW: compute count if a footprint is active
-                    updateFootprintCatalogCountUI();
-                    showToast('Loaded ' + craData.length + ' CrA substellar objects', 'success');
-                })
-                .catch(function(error) {
-                    showLoading(false);
-                    showToast('Error: ' + error.message, 'error');
-                    console.error('CrA catalog error:', error);
-                });
-        }
-
-        function loadSgrStreamCatalog() {
-            showLoading(true, 'Loading Sgr stream catalog...');
-
-            if (sgrCatalogSources) {
-                try { aladin.removeLayers([sgrCatalogSources]); } catch(e) {}
-                sgrCatalogSources = null;
-            }
-            sgrData = [];
-
-            // Get max sources from input
-            var maxSources = parseInt(document.getElementById('sgr-max-sources').value) || 50000;
-            maxSources = Math.max(1000, Math.min(500000, maxSources)); // Clamp to valid range
-
-            var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?-source=J/A+A/666/A64/tablec1' +
-                '&-out.max=' + maxSources +
-                '&-out=_RAJ2000,_DEJ2000,GaiaDR3';
-
-            console.log('Fetching Sgr:', url);
-
-            fetch(url)
-                .then(function(response) {
-                    console.log('Sgr response status:', response.status);
-                    return response.text();
-                })
-                .then(function(text) {
-                    console.log('Sgr response length:', text.length);
-
-                    var data = parseVOTableSimple(text);
-                    console.log('Parsed Sgr data:', data.length, 'sources');
-
-                    if (data.length === 0) {
-                        showLoading(false);
-                        showToast('No Sgr sources found', 'error');
-                        return;
-                    }
-
-                    sgrData = data;
-                    sgrCatalogSources = plotCatalogSources(sgrData, '#ffd24a', 'square', 'Sgr Stream');
-
-                    showLoading(false);
-                    updateCatalogInfo();
-                    // NEW: compute count if a footprint is active
-                    updateFootprintCatalogCountUI();
-                    showToast('Loaded ' + sgrData.length + ' Sgr stream stars', 'success');
-                })
-                .catch(function(error) {
-                    showLoading(false);
-                    showToast('Error: ' + error.message, 'error');
-                    console.error('Sgr catalog error:', error);
-                });
-        }
-
-        function parseVOTableSimple(text) {
-            // Simple regex-based parser for VOTable
-            var data = [];
-
-            // Find all TR rows
-            var trMatch = text.match(/<TR>([\s\S]*?)<\/TR>/gi);
-            if (!trMatch) {
-                console.log('No TR elements found');
-                return data;
-            }
-
-            console.log('Found', trMatch.length, 'TR rows');
-
-            trMatch.forEach(function(tr, idx) {
-                var tdMatch = tr.match(/<TD[^>]*>([^<]*)<\/TD>/gi);
-                if (!tdMatch || tdMatch.length < 2) return;
-
-                var values = tdMatch.map(function(td) {
-                    return td.replace(/<[^>]*>/g, '').trim();
-                });
-
-                // First two columns should be RA and Dec
-                var ra = parseFloat(values[0]);
-                var dec = parseFloat(values[1]);
-
-                if (isNaN(ra) || isNaN(dec)) return;
-
-                var id = values.length > 2 ? values[2] : '';
-
-                if (idx < 3) {
-                    console.log('Sample row', idx, ':', ra, dec, id);
-                }
-
-                data.push({ ra: ra, dec: dec, id: id });
-            });
-
-            return data;
-        }
-
-        function updateCatalogInfo() {
-            var parts = [];
-            if (craData.length > 0) parts.push('CrA Substellar: ' + craData.length);
-            if (sgrData.length > 0) parts.push('Sgr Stream: ' + sgrData.length);
-
-            if (parts.length === 0) {
-                document.getElementById('catalog-info').innerHTML = 'CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1';
-            } else {
-                document.getElementById('catalog-info').textContent = parts.join(' · ') + ' sources';
-            }
-        }
-
-        function plotCatalogSources(data, color, shape, name) {
-            console.log('plotCatalogSources called with', data.length, 'sources');
-
-            var cat = A.catalog({
-                name: name,
-                sourceSize: 10,
-                color: color,
-                shape: shape
-            });
-
-            var aladinSources = data.map(function(d) {
-                return A.source(d.ra, d.dec, { name: d.id || name + ' source' });
-            });
-
-            console.log('updateFootprintCatalogCountUI called with', data.length, 'sources');
-
-            cat.addSources(aladinSources);
-            aladin.addCatalog(cat);
-
-            console.log('Catalog added to Aladin');
-
-            return cat;
-        }
-
-        function clearCatalog() {
-            if (craCatalogSources) {
-                try { aladin.removeLayers([craCatalogSources]); } catch(e) {}
-                craCatalogSources = null;
-            }
-            if (sgrCatalogSources) {
-                try { aladin.removeLayers([sgrCatalogSources]); } catch(e) {}
-                sgrCatalogSources = null;
-            }
-            craData = [];
-            sgrData = [];
-            document.getElementById('catalog-info').innerHTML =
-                'CrA Substellar: J/A+A/701/A147/tablea1<br>Sgr Stream: J/A+A/666/A64/tablec1';
-            updateFootprintCatalogCountUI();
-            showToast('All catalogs cleared', 'success');
-        }
-
         // ==================== Footprints ====================
 
         var activeFootprintOverlay = null;
 
         function initFootprintControls() {
-            var raSlider = document.getElementById('footprint-ra-slider');
-            var decSlider = document.getElementById('footprint-dec-slider');
-            var paSlider = document.getElementById('footprint-pa-slider');
-            var instrumentSelect = document.getElementById('footprint-instrument');
-
-            raSlider.addEventListener('input', updateFootprintRealtime);
-            decSlider.addEventListener('input', updateFootprintRealtime);
-            paSlider.addEventListener('input', updateFootprintRealtime);
-            instrumentSelect.addEventListener('change', updateFootprintRealtime);
-
-            // Don't draw initially - wait for user to open panel
+            document.getElementById('footprint-ra-slider').addEventListener('input', updateFootprintRealtime);
+            document.getElementById('footprint-dec-slider').addEventListener('input', updateFootprintRealtime);
+            document.getElementById('footprint-pa-slider').addEventListener('input', updateFootprintRealtime);
+            document.getElementById('footprint-instrument').addEventListener('change', updateFootprintRealtime);
         }
 
         function updateFootprintRealtime() {
@@ -1329,17 +1443,14 @@
             var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
             var instrument = document.getElementById('footprint-instrument').value;
 
-            // Update displays
             document.getElementById('fp-ra-display').textContent = ra.toFixed(4);
             document.getElementById('fp-dec-display').textContent = dec.toFixed(4);
             document.getElementById('fp-pa-display').textContent = pa.toFixed(0);
 
-            // Clear existing footprint
             if (activeFootprintOverlay) {
                 try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
             }
 
-            // Draw new footprint
             var color = instrument === 'roman' ? '#ff4adc' : '#ffd24a';
             activeFootprintOverlay = A.graphicOverlay({ color: color, lineWidth: 2 });
             aladin.addOverlay(activeFootprintOverlay);
@@ -1359,23 +1470,19 @@
                 });
             }
 
-            // NEW: recompute count whenever footprint changes
             updateFootprintCatalogCountUI();
         }
 
         function centerFootprintOnView() {
             var center = aladin.getRaDec();
-            document.getElementById('footprint-ra-slider').value = center[0];
-            document.getElementById('footprint-dec-slider').value = center[1];
-
-            // Update slider ranges to be centered on current view
             var raSlider = document.getElementById('footprint-ra-slider');
             var decSlider = document.getElementById('footprint-dec-slider');
             raSlider.min = center[0] - 5;
             raSlider.max = center[0] + 5;
+            raSlider.value = center[0];
             decSlider.min = center[1] - 5;
             decSlider.max = center[1] + 5;
-
+            decSlider.value = center[1];
             updateFootprintRealtime();
             showToast('Footprint centered on view', 'success');
         }
@@ -1384,196 +1491,13 @@
             if (activeFootprintOverlay) {
                 try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
                 activeFootprintOverlay = null;
-                // NEW: reset count display
                 catalogInFootprintCount = 0;
                 updateFootprintCatalogCountUI();
                 showToast('Footprint cleared', 'success');
             }
         }
 
-        // Optimization: find optimal RA, Dec, PA for Roman WFI
-        function findOptimalOrientation() {
-            var allData = craData.concat(sgrData);
-            if (allData.length === 0) {
-                showToast('Load a catalog first', 'error');
-                return;
-            }
-
-            // Only works for Roman
-            document.getElementById('footprint-instrument').value = 'roman';
-
-            var statusEl = document.getElementById('optimize-status');
-            var btn = document.getElementById('optimize-btn');
-            btn.disabled = true;
-            statusEl.className = 'optimize-status active searching';
-            statusEl.textContent = 'Analyzing ' + allData.length + ' sources...';
-
-            // Use setTimeout to allow UI to update
-            setTimeout(function() {
-                var result = runOptimization(allData);
-
-                // Update sliders to optimal values
-                var raSlider = document.getElementById('footprint-ra-slider');
-                var decSlider = document.getElementById('footprint-dec-slider');
-
-                // Adjust slider ranges to include optimal position
-                raSlider.min = result.ra - 5;
-                raSlider.max = result.ra + 5;
-                decSlider.min = result.dec - 5;
-                decSlider.max = result.dec + 5;
-
-                raSlider.value = result.ra;
-                decSlider.value = result.dec;
-                document.getElementById('footprint-pa-slider').value = result.pa;
-
-                // Draw the footprint
-                updateFootprintRealtime();
-
-                // Center view on optimal position
-                aladin.gotoRaDec(result.ra, result.dec);
-
-                statusEl.className = 'optimize-status active complete';
-                statusEl.textContent = 'Optimal: RA=' + result.ra.toFixed(3) + '°, Dec=' + result.dec.toFixed(3) + '°, PA=' + result.pa + '° (' + result.count + ' sources)';
-                btn.disabled = false;
-
-                showToast('Found optimal orientation: ' + result.count + ' sources', 'success');
-            }, 50);
-        }
-
-        function runOptimization(data) {
-            var n = data.length;
-
-            // Adaptive parameters based on catalog size
-            var gridSize, paStep, topCandidates;
-            if (n > 20000) {
-                gridSize = 0.2;      // Very coarse spatial grid
-                paStep = 45;         // Only 4 angles: 0, 45, 90, 135
-                topCandidates = 10;  // Only refine top 10 dense cells
-            } else if (n > 5000) {
-                gridSize = 0.15;
-                paStep = 30;         // 6 angles
-                topCandidates = 20;
-            } else {
-                gridSize = 0.08;
-                paStep = 15;         // 12 angles
-                topCandidates = 50;
-            }
-
-            // Step 1: Bin sources into spatial grid and find densest cells
-            var grid = {};
-            data.forEach(function(d) {
-                var key = Math.floor(d.ra / gridSize) + ',' + Math.floor(d.dec / gridSize);
-                if (!grid[key]) {
-                    grid[key] = {
-                        ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize,
-                        dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize,
-                        count: 0
-                    };
-                }
-                grid[key].count++;
-            });
-
-            // Sort cells by density and take top candidates
-            var cells = Object.values(grid);
-            cells.sort(function(a, b) { return b.count - a.count; });
-            var candidates = cells.slice(0, Math.min(topCandidates, cells.length));
-
-            console.log('Optimization: testing ' + candidates.length + ' dense regions, PA step=' + paStep);
-
-            // Step 2: Test each candidate with coarse PA
-            var bestRa = candidates[0].ra;
-            var bestDec = candidates[0].dec;
-            var bestPa = 0;
-            var bestCount = 0;
-
-            var paValues = [];
-            for (var pa = 0; pa < 180; pa += paStep) {
-                paValues.push(pa);
-            }
-
-            candidates.forEach(function(c) {
-                paValues.forEach(function(pa) {
-                    var count = countSourcesInRomanFootprintFast(data, c.ra, c.dec, pa);
-                    if (count > bestCount) {
-                        bestCount = count;
-                        bestRa = c.ra;
-                        bestDec = c.dec;
-                        bestPa = pa;
-                    }
-                });
-            });
-
-            // Step 3: Fine refinement around best position (limited iterations)
-            var offsets = [-0.04, -0.02, 0, 0.02, 0.04];
-            var finePaOffsets = [-10, -5, 0, 5, 10];
-
-            offsets.forEach(function(dra) {
-                offsets.forEach(function(ddec) {
-                    finePaOffsets.forEach(function(dpa) {
-                        var testPa = ((bestPa + dpa) % 360 + 360) % 360;
-                        var count = countSourcesInRomanFootprintFast(data, bestRa + dra, bestDec + ddec, testPa);
-                        if (count > bestCount) {
-                            bestCount = count;
-                            bestRa = bestRa + dra;
-                            bestDec = bestDec + ddec;
-                            bestPa = testPa;
-                        }
-                    });
-                });
-            });
-
-            return { ra: bestRa, dec: bestDec, pa: Math.round(bestPa), count: bestCount };
-        }
-
-        function countSourcesInRomanFootprintFast(data, ra0, dec0, pa) {
-            var count = 0;
-            var cosDec0 = Math.cos(dec0 * Math.PI / 180);
-
-            // Precompute detector centers
-            var rad = -pa * Math.PI / 180;
-            var cosPA = Math.cos(rad);
-            var sinPA = Math.sin(rad);
-
-            var detCenters = ROMAN_WFI_DETECTORS.map(function(det) {
-                var rx = det[0] * cosPA - det[1] * sinPA;
-                var ry = det[0] * sinPA + det[1] * cosPA;
-                return [ra0 + rx / cosDec0, dec0 + ry];
-            });
-
-            // Precompute for point-in-rect test
-            var halfSize = ROMAN_DET_SIZE / 2;
-            var testRad = pa * Math.PI / 180;
-            var testCos = Math.cos(testRad);
-            var testSin = Math.sin(testRad);
-
-            for (var i = 0; i < data.length; i++) {
-                var d = data[i];
-
-                // Quick bounding box rejection (footprint is ~0.8 deg)
-                var dra = (d.ra - ra0) * cosDec0;
-                var ddec = d.dec - dec0;
-                if (dra < -0.5 || dra > 0.5 || ddec < -0.5 || ddec > 0.5) continue;
-
-                // Check each detector
-                for (var j = 0; j < detCenters.length; j++) {
-                    var dc = detCenters[j];
-                    var cosDet = Math.cos(dc[1] * Math.PI / 180);
-                    var dx = (d.ra - dc[0]) * cosDet;
-                    var dy = d.dec - dc[1];
-
-                    // Rotate into detector frame
-                    var x = dx * testCos - dy * testSin;
-                    var y = dx * testSin + dy * testCos;
-
-                    if (x >= -halfSize && x <= halfSize && y >= -halfSize && y <= halfSize) {
-                        count++;
-                        break;
-                    }
-                }
-            }
-
-            return count;
-        }
+        // ==================== Footprint Geometry ====================
 
         function rotatePoint(x, y, paDeg) {
             var rad = -paDeg * Math.PI / 180;
@@ -1596,7 +1520,6 @@
                 {x: centerDx + hs, y: centerDy + hs},
                 {x: centerDx - hs, y: centerDy + hs}
             ];
-
             var coords = corners.map(function(c) {
                 var rot = rotatePoint(c.x, c.y, pa);
                 return offsetToRaDec(ra, dec, rot.x, rot.y);
@@ -1605,24 +1528,304 @@
             return coords;
         }
 
+        function isPointInRotRect(ra, dec, centerRa, centerDec, widthDeg, heightDeg, paDeg) {
+            var cosDec = Math.cos(centerDec * Math.PI / 180);
+            var dx = (ra - centerRa) * cosDec;
+            var dy = (dec - centerDec);
+            var rad = paDeg * Math.PI / 180;
+            var x = dx * Math.cos(rad) - dy * Math.sin(rad);
+            var y = dx * Math.sin(rad) + dy * Math.cos(rad);
+            return (Math.abs(x) <= widthDeg / 2) && (Math.abs(y) <= heightDeg / 2);
+        }
+
+        // ==================== Footprint Source Counting ====================
+
+        function computeCatalogCountInActiveFootprint() {
+            if (!activeFootprintOverlay) return 0;
+            var instrument = document.getElementById('footprint-instrument').value;
+            var ra0 = parseFloat(document.getElementById('footprint-ra-slider').value);
+            var dec0 = parseFloat(document.getElementById('footprint-dec-slider').value);
+            var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
+
+            var allData = getAllCatalogData();
+            if (allData.length === 0) return 0;
+
+            if (instrument === 'roman') {
+                return countSourcesInRomanFootprintFast(allData, ra0, dec0, pa);
+            } else {
+                return countSourcesInJWSTFootprint(allData, ra0, dec0, pa);
+            }
+        }
+
+        function countSourcesInJWSTFootprint(data, ra0, dec0, pa) {
+            var modSize = 0.037;
+            var gap = 0.012;
+            var count = 0;
+
+            // Precompute module centers
+            var modules = [-1, 1].map(function(side) {
+                var dx = side * (modSize / 2 + gap);
+                var rot = rotatePoint(dx, 0, pa);
+                return offsetToRaDec(ra0, dec0, rot.x, rot.y);
+            });
+
+            data.forEach(function(d) {
+                for (var m = 0; m < modules.length; m++) {
+                    if (isPointInRotRect(d.ra, d.dec, modules[m][0], modules[m][1], modSize, modSize, pa)) {
+                        count++;
+                        break;
+                    }
+                }
+            });
+
+            return count;
+        }
+
+        function updateFootprintCatalogCountUI() {
+            catalogInFootprintCount = computeCatalogCountInActiveFootprint();
+            var countEl = document.getElementById('footprint-count-value');
+
+            if (!activeFootprintOverlay) {
+                countEl.textContent = '---';
+                countEl.classList.add('empty');
+            } else if (loadedCatalogs.length === 0) {
+                countEl.textContent = 'No catalog';
+                countEl.classList.add('empty');
+            } else {
+                countEl.textContent = catalogInFootprintCount.toLocaleString();
+                countEl.classList.remove('empty');
+            }
+        }
+
+        // ==================== Optimization ====================
+
+        function findOptimalOrientation() {
+            var allData = getAllCatalogData();
+            if (allData.length === 0) {
+                showToast('Load a catalog first', 'error');
+                return;
+            }
+
+            var instrument = document.getElementById('footprint-instrument').value;
+
+            var statusEl = document.getElementById('optimize-status');
+            var btn = document.getElementById('optimize-btn');
+            btn.disabled = true;
+            statusEl.className = 'optimize-status active searching';
+            statusEl.textContent = 'Analyzing ' + allData.length.toLocaleString() + ' sources...';
+
+            setTimeout(function() {
+                var result;
+                if (instrument === 'roman') {
+                    result = runOptimization(allData);
+                } else {
+                    result = runOptimizationJWST(allData);
+                }
+
+                var raSlider = document.getElementById('footprint-ra-slider');
+                var decSlider = document.getElementById('footprint-dec-slider');
+                raSlider.min = result.ra - 5;
+                raSlider.max = result.ra + 5;
+                raSlider.value = result.ra;
+                decSlider.min = result.dec - 5;
+                decSlider.max = result.dec + 5;
+                decSlider.value = result.dec;
+                document.getElementById('footprint-pa-slider').value = result.pa;
+
+                updateFootprintRealtime();
+                aladin.gotoRaDec(result.ra, result.dec);
+
+                statusEl.className = 'optimize-status active complete';
+                statusEl.textContent = 'Optimal: RA=' + result.ra.toFixed(3) + '°, Dec=' + result.dec.toFixed(3) + '°, PA=' + result.pa + '° (' + result.count + ' sources)';
+                btn.disabled = false;
+
+                showToast('Found optimal: ' + result.count + ' sources in ' + instrument.toUpperCase(), 'success');
+            }, 50);
+        }
+
+        function runOptimization(data) {
+            var n = data.length;
+
+            var gridSize, paStep, topCandidates;
+            if (n > 20000) {
+                gridSize = 0.2; paStep = 45; topCandidates = 10;
+            } else if (n > 5000) {
+                gridSize = 0.15; paStep = 30; topCandidates = 20;
+            } else {
+                gridSize = 0.08; paStep = 15; topCandidates = 50;
+            }
+
+            // Step 1: Spatial binning
+            var grid = {};
+            data.forEach(function(d) {
+                var key = Math.floor(d.ra / gridSize) + ',' + Math.floor(d.dec / gridSize);
+                if (!grid[key]) {
+                    grid[key] = {
+                        ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize,
+                        dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize,
+                        count: 0
+                    };
+                }
+                grid[key].count++;
+            });
+
+            var cells = Object.values(grid);
+            cells.sort(function(a, b) { return b.count - a.count; });
+            var candidates = cells.slice(0, Math.min(topCandidates, cells.length));
+
+            console.log('Optimization: testing ' + candidates.length + ' dense regions, PA step=' + paStep);
+
+            // Step 2: Coarse search
+            var bestRa = candidates[0].ra, bestDec = candidates[0].dec, bestPa = 0, bestCount = 0;
+            var paValues = [];
+            for (var pa = 0; pa < 180; pa += paStep) paValues.push(pa);
+
+            candidates.forEach(function(c) {
+                paValues.forEach(function(pa) {
+                    var count = countSourcesInRomanFootprintFast(data, c.ra, c.dec, pa);
+                    if (count > bestCount) {
+                        bestCount = count; bestRa = c.ra; bestDec = c.dec; bestPa = pa;
+                    }
+                });
+            });
+
+            // Step 3: Fine refinement
+            var offsets = [-0.04, -0.02, 0, 0.02, 0.04];
+            var finePaOffsets = [-10, -5, 0, 5, 10];
+            offsets.forEach(function(dra) {
+                offsets.forEach(function(ddec) {
+                    finePaOffsets.forEach(function(dpa) {
+                        var testPa = ((bestPa + dpa) % 360 + 360) % 360;
+                        var count = countSourcesInRomanFootprintFast(data, bestRa + dra, bestDec + ddec, testPa);
+                        if (count > bestCount) {
+                            bestCount = count; bestRa = bestRa + dra; bestDec = bestDec + ddec; bestPa = testPa;
+                        }
+                    });
+                });
+            });
+
+            return { ra: bestRa, dec: bestDec, pa: Math.round(bestPa), count: bestCount };
+        }
+
+        function runOptimizationJWST(data) {
+            var n = data.length;
+
+            var gridSize, paStep, topCandidates;
+            if (n > 20000) {
+                gridSize = 0.05; paStep = 45; topCandidates = 15;
+            } else if (n > 5000) {
+                gridSize = 0.03; paStep = 30; topCandidates = 30;
+            } else {
+                gridSize = 0.015; paStep = 15; topCandidates = 60;
+            }
+
+            var grid = {};
+            data.forEach(function(d) {
+                var key = Math.floor(d.ra / gridSize) + ',' + Math.floor(d.dec / gridSize);
+                if (!grid[key]) {
+                    grid[key] = {
+                        ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize,
+                        dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize,
+                        count: 0
+                    };
+                }
+                grid[key].count++;
+            });
+
+            var cells = Object.values(grid);
+            cells.sort(function(a, b) { return b.count - a.count; });
+            var candidates = cells.slice(0, Math.min(topCandidates, cells.length));
+
+            var bestRa = candidates[0].ra, bestDec = candidates[0].dec, bestPa = 0, bestCount = 0;
+            var paValues = [];
+            for (var pa = 0; pa < 180; pa += paStep) paValues.push(pa);
+
+            candidates.forEach(function(c) {
+                paValues.forEach(function(pa) {
+                    var count = countSourcesInJWSTFootprint(data, c.ra, c.dec, pa);
+                    if (count > bestCount) {
+                        bestCount = count; bestRa = c.ra; bestDec = c.dec; bestPa = pa;
+                    }
+                });
+            });
+
+            var offsets = [-0.01, -0.005, 0, 0.005, 0.01];
+            var finePaOffsets = [-10, -5, 0, 5, 10];
+            offsets.forEach(function(dra) {
+                offsets.forEach(function(ddec) {
+                    finePaOffsets.forEach(function(dpa) {
+                        var testPa = ((bestPa + dpa) % 360 + 360) % 360;
+                        var count = countSourcesInJWSTFootprint(data, bestRa + dra, bestDec + ddec, testPa);
+                        if (count > bestCount) {
+                            bestCount = count; bestRa = bestRa + dra; bestDec = bestDec + ddec; bestPa = testPa;
+                        }
+                    });
+                });
+            });
+
+            return { ra: bestRa, dec: bestDec, pa: Math.round(bestPa), count: bestCount };
+        }
+
+        function countSourcesInRomanFootprintFast(data, ra0, dec0, pa) {
+            var count = 0;
+            var cosDec0 = Math.cos(dec0 * Math.PI / 180);
+
+            var rad = -pa * Math.PI / 180;
+            var cosPA = Math.cos(rad);
+            var sinPA = Math.sin(rad);
+
+            var detCenters = ROMAN_WFI_DETECTORS.map(function(det) {
+                var rx = det[0] * cosPA - det[1] * sinPA;
+                var ry = det[0] * sinPA + det[1] * cosPA;
+                return [ra0 + rx / cosDec0, dec0 + ry];
+            });
+
+            var halfSize = ROMAN_DET_SIZE / 2;
+            var testRad = pa * Math.PI / 180;
+            var testCos = Math.cos(testRad);
+            var testSin = Math.sin(testRad);
+
+            for (var i = 0; i < data.length; i++) {
+                var d = data[i];
+
+                var dra = (d.ra - ra0) * cosDec0;
+                var ddec = d.dec - dec0;
+                if (dra < -0.5 || dra > 0.5 || ddec < -0.5 || ddec > 0.5) continue;
+
+                for (var j = 0; j < detCenters.length; j++) {
+                    var dc = detCenters[j];
+                    var cosDet = Math.cos(dc[1] * Math.PI / 180);
+                    var dx = (d.ra - dc[0]) * cosDet;
+                    var dy = d.dec - dc[1];
+
+                    var x = dx * testCos - dy * testSin;
+                    var y = dx * testSin + dy * testCos;
+
+                    if (x >= -halfSize && x <= halfSize && y >= -halfSize && y <= halfSize) {
+                        count++;
+                        break;
+                    }
+                }
+            }
+
+            return count;
+        }
+
         // ==================== Object Resolution ====================
 
         function resolveObject(identifier, callback) {
             var url = 'https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-ox/SNV?' + encodeURIComponent(identifier);
-
             fetch(url)
                 .then(function(r) { return r.text(); })
                 .then(function(text) {
                     var parser = new DOMParser();
                     var xml = parser.parseFromString(text, 'text/xml');
                     var resolvers = xml.querySelectorAll('Resolver');
-
                     for (var i = 0; i < resolvers.length; i++) {
                         var r = resolvers[i];
                         var jra = r.querySelector('jradeg');
                         var jde = r.querySelector('jdedeg');
                         var oname = r.querySelector('oname');
-
                         if (jra && jde) {
                             var ra = parseFloat(jra.textContent);
                             var dec = parseFloat(jde.textContent);
@@ -1642,17 +1845,10 @@
             if (!id) { showToast('Enter an identifier', 'error'); return; }
 
             showLoading(true, 'Resolving ' + id + '...');
-
             resolveObject(id, function(result) {
                 showLoading(false);
                 if (result) {
-                    addSourceToMap({
-                        name: result.name,
-                        ra: result.ra,
-                        dec: result.dec,
-                        color: selectedColors.simbad,
-                        type: 'catalog'
-                    });
+                    addSourceToMap({ name: result.name, ra: result.ra, dec: result.dec, color: selectedColors.simbad, type: 'catalog' });
                     aladin.gotoRaDec(result.ra, result.dec);
                     addToPastObjects(id);
                     document.getElementById('simbad-id').value = '';
@@ -1663,7 +1859,7 @@
             });
         }
 
-        // ==================== Sources ====================
+        // ==================== Individual Sources ====================
 
         function addManualSource() {
             var ra = parseFloat(document.getElementById('ra-input').value);
@@ -1708,18 +1904,15 @@
                 el.innerHTML = '<p class="info-text">No sources added yet.</p>';
                 return;
             }
-
             var display = sources.slice(-12);
             var hidden = sources.length - display.length;
             var html = hidden > 0 ? '<p class="info-text">+' + hidden + ' more</p>' : '';
-
             html += display.map(function(s) {
                 var name = s.name.length > 18 ? s.name.substring(0, 18) + '...' : s.name;
                 return '<div class="source-item"><div><div class="source-name"><span style="color:' + s.color + '">●</span> ' +
                     name + '</div><div class="source-coords">' + s.ra.toFixed(4) + '°, ' + s.dec.toFixed(4) + '°</div></div>' +
                     '<button class="remove-btn" onclick="removeSource(' + s.id + ')">✕</button></div>';
             }).join('');
-
             el.innerHTML = html;
         }
 
@@ -1751,7 +1944,7 @@
             showToast('Exported', 'success');
         }
 
-        // ==================== CSV ====================
+        // ==================== CSV Upload ====================
 
         document.getElementById('csv-file').addEventListener('change', function(e) {
             var file = e.target.files[0];
@@ -1767,7 +1960,6 @@
                 if (first.includes('source') || first.includes('ra') || first.includes('id') || first.includes('name')) {
                     lines = lines.slice(1);
                 }
-
                 if (format === 'simbad') {
                     processSimbadCSV(lines);
                 } else {
@@ -1782,7 +1974,6 @@
         function processSimbadCSV(entries) {
             showLoading(true, 'Querying ' + entries.length + ' sources...');
             var success = 0, fail = 0, i = 0;
-
             function next() {
                 if (i >= entries.length) {
                     updateSourceList();
@@ -1791,11 +1982,9 @@
                     showToast('Added ' + success + (fail ? ' (' + fail + ' failed)' : ''), 'success');
                     return;
                 }
-
                 var id = entries[i].replace(/['"]/g, '').trim();
                 i++;
                 if (!id) { next(); return; }
-
                 resolveObject(id, function(result) {
                     if (result) {
                         addSourceToMap({ name: result.name, ra: result.ra, dec: result.dec, color: selectedColors.bulk, type: 'catalog' }, false);
@@ -1821,22 +2010,6 @@
             updateSourceList();
             updateSourceCount();
             showToast('Added ' + count + ' sources', 'success');
-        }
-
-        // ==================== Utils ====================
-
-        function showLoading(show, text) {
-            var el = document.getElementById('loading-overlay');
-            el.querySelector('.loading-text').textContent = text || 'Loading...';
-            if (show) el.classList.add('active');
-            else el.classList.remove('active');
-        }
-
-        function showToast(msg, type) {
-            var t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = 'toast toast-' + (type || 'success') + ' show';
-            setTimeout(function() { t.classList.remove('show'); }, 3000);
         }
     </script>
 </body>
