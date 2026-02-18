@@ -1081,12 +1081,12 @@
             </div>
         </aside>
 
-        <main class="main-content">
+        <main class="main-content" style="position:relative;">
             <div id="aladin-container">
-                <div class="loading-overlay" id="loading-overlay">
-                    <div class="spinner"></div>
-                    <div class="loading-text">Loading...</div>
-                </div>
+            </div>
+            <div class="loading-overlay" id="loading-overlay">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading...</div>
             </div>
             <div class="status-bar">
                 <div class="status-indicator">
@@ -3068,7 +3068,21 @@
                     }
 
                     showLoading(false);
-                    showToast('PNG capture failed. Open browser console for details.', 'error');
+                    // If JPG overlay is active, save it even without Aladin background
+                    if (jpgOverlay && jpgOverlay.canvas && jpgOverlay.markerCanvas) {
+                        var comp = document.createElement('canvas');
+                        comp.width = jpgOverlay.canvas.width;
+                        comp.height = jpgOverlay.canvas.height;
+                        var ctx = comp.getContext('2d');
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(0, 0, comp.width, comp.height);
+                        ctx.drawImage(jpgOverlay.canvas, 0, 0);
+                        ctx.drawImage(jpgOverlay.markerCanvas, 0, 0);
+                        savePngBlob(comp);
+                        showToast('Saved JPG overlay (Aladin background capture failed)', 'success');
+                    } else {
+                        showToast('PNG capture failed. Open browser console for details.', 'error');
+                    }
 
                 } catch(err) {
                     showLoading(false);
