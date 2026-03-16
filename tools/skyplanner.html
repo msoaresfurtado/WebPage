@@ -518,7 +518,6 @@
 
         .footer a:hover { color: var(--accent-secondary); }
 
-
         .download-btn {
             width: auto;
             margin: 0;
@@ -550,6 +549,52 @@
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
+        }
+
+        /* Export controls row */
+        .export-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .export-scale-select {
+            padding: 0.25rem 0.35rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.55rem;
+            cursor: pointer;
+            width: auto;
+        }
+
+        .export-scale-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .export-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+            text-transform: none;
+            letter-spacing: 0;
+            margin-bottom: 0;
+        }
+
+        .export-checkbox-label input[type="checkbox"] {
+            width: auto;
+            padding: 0;
+            background: none;
+            border: none;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
         }
 
         .footprint-count-display {
@@ -733,7 +778,17 @@
                 <div class="logo-icon">✦</div>
                 <h1><span class="logo-highlight">Sky</span>Planner</h1>
             </div>
-            <div style="display:flex;align-items:center;gap:0.75rem;">
+            <!-- Export controls: resolution + frame option + download -->
+            <div class="export-controls">
+                <label class="export-checkbox-label" title="Center and frame the active footprint before saving">
+                    <input type="checkbox" id="png-frame-footprint">
+                    Frame footprint
+                </label>
+                <select id="png-scale" class="export-scale-select" title="Export resolution multiplier">
+                    <option value="1">1×</option>
+                    <option value="2" selected>2×</option>
+                    <option value="3">3×</option>
+                </select>
                 <button class="download-btn" onclick="downloadFieldPNG()" title="Download field as PNG">
                     <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span>PNG</span>
@@ -1111,18 +1166,16 @@
         var ONC_DEC = -5.3897;
 
         var aladin;
-        var sources = [];              // individual plotted sources (manual, simbad, csv)
+        var sources = [];
         var currentFITSLayer = null;
         var currentFITSUrl = null;
-        var jpgOverlay = null;  // { img, url, canvas, markerCanvas, corners, animFrameId }
-        var jpgOverlayFootprintPolys = [];  // [[ra,dec],...] arrays for each detector
+        var jpgOverlay = null;
+        var jpgOverlayFootprintPolys = [];
         var pastObjects = JSON.parse(localStorage.getItem('skyPlannerPastObjects') || '[]');
         var pastVizierTables = JSON.parse(localStorage.getItem('skyPlannerPastVizierTables') || '[]');
 
-        // Unified catalog system: array of { uid, name, tableId, data: [{ra,dec,id}], aladinCat, color, shape }
         var loadedCatalogs = [];
         var catalogUidCounter = 0;
-
         var catalogInFootprintCount = 0;
 
         var selectedColors = {
@@ -1135,7 +1188,6 @@
 
         var footprintFillOpacity = 0;
 
-        // Preset catalog definitions
         var PRESET_CATALOGS = {
             coup: {
                 tableId: 'J/ApJS/160/319/coup',
@@ -1172,13 +1224,11 @@
             }
         };
 
-        // Proper motion vector settings
-        var pmVectorScale = 50;  // arcsec per mas/yr
+        var pmVectorScale = 50;
         var showPMVectors = false;
         var pmVectorOverlay = null;
 
-        // Roman WFI detector polygons from PySIAF (SIAF)
-        // Each entry is 4 corners in [dV2, dV3] arcsec, offset from WFI_CEN
+        // Roman WFI SIAF detector corners [dV2, dV3] arcsec offset from WFI_CEN
         var ROMAN_WFI_SIAF = [
             [[70.67,-62.89],[-155.48,-451.63],[-539.82,-232.74],[-312.8,158.26]],
             [[522.07,-325.07],[297.43,-710.45],[-79.02,-496.97],[146.88,-108.76]],
@@ -1200,24 +1250,21 @@
             [[1362.74,874.82],[1151.84,490.45],[784.24,711.0],[997.91,1097.3]]
         ];
 
-        // Convert V2/V3 offset (arcsec) to RA/Dec given pointing center and PA
         function v2v3ToSky(ra0, dec0, paDeg, dv2, dv3) {
             var paRad = paDeg * Math.PI / 180;
             var cosDec = Math.cos(dec0 * Math.PI / 180);
             var cosPA = Math.cos(paRad);
             var sinPA = Math.sin(paRad);
-            // V2+ = East, V3+ = North when PA=0; PA rotates V3 from N through E
             var dra  = ( dv2 * cosPA - dv3 * sinPA) / 3600 / cosDec;
             var ddec = ( dv2 * sinPA + dv3 * cosPA) / 3600;
             return [ra0 + dra, dec0 + ddec];
         }
 
-        // Convert a full SIAF detector polygon to sky coordinates
         function siafDetToSkyPoly(ra, dec, pa, detCorners) {
             var poly = detCorners.map(function(c) {
                 return v2v3ToSky(ra, dec, pa, c[0], c[1]);
             });
-            poly.push(poly[0]); // close polygon
+            poly.push(poly[0]);
             return poly;
         }
 
@@ -1324,9 +1371,7 @@
 
         function getAllCatalogData() {
             var all = [];
-            loadedCatalogs.forEach(function(cat) {
-                all = all.concat(cat.data);
-            });
+            loadedCatalogs.forEach(function(cat) { all = all.concat(cat.data); });
             return all;
         }
 
@@ -1366,24 +1411,16 @@
 
         function loadVizierCatalog(tableId, name, color, shape, maxSources, coneRa, coneDec, coneRadius) {
             showLoading(true, 'Loading ' + name + '...');
-
-            // Build VizieR URL
             var url = 'https://vizier.cds.unistra.fr/viz-bin/votable?-source=' + encodeURIComponent(tableId);
-
-            // Cone search parameters
             if (coneRa !== null && coneDec !== null && coneRadius !== null) {
                 url += '&-c=' + coneRa + '%20' + coneDec + '&-c.rd=' + coneRadius;
             }
-
             if (maxSources === 'unlimited') {
                 url += '&-out.max=unlimited';
             } else {
                 url += '&-out.max=' + maxSources;
             }
-
-            // Request RA/Dec columns (VizieR computed columns)
             url += '&-out=_RAJ2000,_DEJ2000,*';
-
             console.log('Fetching VizieR:', url);
 
             fetch(url)
@@ -1392,78 +1429,42 @@
                     return response.text();
                 })
                 .then(function(text) {
-                    console.log('Response length:', text.length);
-
                     var result = parseVOTableSimple(text);
                     var data = result.data;
                     var hasPM = result.hasPM;
-                    console.log('Parsed:', data.length, 'sources from', tableId, hasPM ? '(with PMs)' : '');
-
                     if (data.length === 0) {
                         showLoading(false);
                         showToast('No sources found in ' + tableId, 'error');
                         return;
                     }
-
-                    // Create Aladin catalog overlay
-                    var aladinCat = A.catalog({
-                        name: name,
-                        sourceSize: 10,
-                        color: color,
-                        shape: shape
-                    });
-
+                    var aladinCat = A.catalog({ name: name, sourceSize: 10, color: color, shape: shape });
                     var aladinSources = data.map(function(d) {
                         return A.source(d.ra, d.dec, { name: d.id || name });
                     });
-
                     aladinCat.addSources(aladinSources);
                     aladin.addCatalog(aladinCat);
-
-                    // Store in unified catalog list
                     var uid = ++catalogUidCounter;
-                    loadedCatalogs.push({
-                        uid: uid,
-                        name: name,
-                        tableId: tableId,
-                        data: data,
-                        aladinCat: aladinCat,
-                        color: color,
-                        shape: shape,
-                        hasPM: hasPM
-                    });
-
+                    loadedCatalogs.push({ uid: uid, name: name, tableId: tableId, data: data, aladinCat: aladinCat, color: color, shape: shape, hasPM: hasPM });
                     showLoading(false);
                     updateCatalogListUI();
                     updateFootprintCatalogCountUI();
                     addToPastVizierTables(tableId);
-
-                    // Show PM vector controls if this catalog has PM data
-                    if (hasPM) {
-                        document.getElementById('pm-vector-controls').style.display = 'block';
-                    }
-
-                    showToast('Loaded ' + data.length.toLocaleString() + ' sources from ' + name + (hasPM ? ' (with PMs)' : ''), 'success');
+                    if (hasPM) document.getElementById('pm-vector-controls').style.display = 'block';
+                    showToast('Loaded ' + data.length.toLocaleString() + ' sources from ' + name, 'success');
                 })
                 .catch(function(error) {
                     showLoading(false);
                     showToast('Error loading ' + tableId + ': ' + error.message, 'error');
-                    console.error('Catalog error:', error);
                 });
         }
 
         function parseVOTableSimple(text) {
             var data = [];
-
-            // Extract FIELD definitions to find column names
             var fieldMatch = text.match(/<FIELD[^>]*>/gi) || [];
             var colNames = fieldMatch.map(function(f) {
                 var nameM = f.match(/name="([^"]+)"/i) || f.match(/name='([^']+)'/i);
                 return nameM ? nameM[1] : '';
             });
-            console.log('VOTable columns:', colNames.join(', '));
-
-            // Find pmRA and pmDE column indices (check common VizieR names)
             var pmRaIdx = -1, pmDeIdx = -1;
             var pmRaNames = ['pmRA', 'pmRAcosDEC', 'pmRa', 'pmra', '_pmRA', 'pmRAcosDE'];
             var pmDeNames = ['pmDE', 'pmDEC', 'pmDe', 'pmde', '_pmDE', 'pmDec'];
@@ -1471,118 +1472,68 @@
                 pmRaNames.forEach(function(pn) { if (name === pn) pmRaIdx = i; });
                 pmDeNames.forEach(function(pn) { if (name === pn) pmDeIdx = i; });
             });
-            if (pmRaIdx >= 0 || pmDeIdx >= 0) {
-                console.log('PM columns found: pmRA at', pmRaIdx, ', pmDE at', pmDeIdx);
-            }
-
             var trMatch = text.match(/<TR>([\s\S]*?)<\/TR>/gi);
-            if (!trMatch) {
-                console.log('No TR elements found in VOTable');
-                return { data: data, hasPM: false };
-            }
-
-            console.log('Found', trMatch.length, 'TR rows');
-
-            trMatch.forEach(function(tr, idx) {
+            if (!trMatch) return { data: data, hasPM: false };
+            trMatch.forEach(function(tr) {
                 var tdMatch = tr.match(/<TD[^>]*>([^<]*)<\/TD>/gi);
                 if (!tdMatch || tdMatch.length < 2) return;
-
-                var values = tdMatch.map(function(td) {
-                    return td.replace(/<[^>]*>/g, '').trim();
-                });
-
-                // First two columns = _RAJ2000, _DEJ2000
+                var values = tdMatch.map(function(td) { return td.replace(/<[^>]*>/g, '').trim(); });
                 var ra = parseFloat(values[0]);
                 var dec = parseFloat(values[1]);
                 if (isNaN(ra) || isNaN(dec)) return;
-
-                // Try to grab an ID from the third column
                 var id = values.length > 2 ? values[2] : '';
-
                 var entry = { ra: ra, dec: dec, id: id };
-
-                // Extract proper motions if available
                 if (pmRaIdx >= 0 && pmDeIdx >= 0 && values.length > Math.max(pmRaIdx, pmDeIdx)) {
                     var pmra = parseFloat(values[pmRaIdx]);
                     var pmde = parseFloat(values[pmDeIdx]);
-                    if (!isNaN(pmra) && !isNaN(pmde)) {
-                        entry.pmRA = pmra;
-                        entry.pmDE = pmde;
-                    }
+                    if (!isNaN(pmra) && !isNaN(pmde)) { entry.pmRA = pmra; entry.pmDE = pmde; }
                 }
-
-                if (idx < 3) {
-                    console.log('Sample row', idx, ':', ra, dec, id, entry.pmRA !== undefined ? 'pm=' + entry.pmRA + ',' + entry.pmDE : '');
-                }
-
                 data.push(entry);
             });
-
             var hasPM = data.length > 0 && data[0].pmRA !== undefined;
             return { data: data, hasPM: hasPM };
         }
 
-        // Load a preset catalog
         function loadPresetCatalog(key) {
             var preset = PRESET_CATALOGS[key];
             if (!preset) return;
-
             var max = preset.maxSources;
-            if (key === 'sgr') {
-                max = parseInt(document.getElementById('cat-max-sources').value) || 50000;
-            }
-
+            if (key === 'sgr') max = parseInt(document.getElementById('cat-max-sources').value) || 50000;
             loadVizierCatalog(preset.tableId, preset.name, preset.color, preset.shape, max, null, null, null);
         }
 
-        // Load a custom catalog from user input
         function loadCustomCatalog() {
             var tableId = document.getElementById('vizier-table-id').value.trim();
-            if (!tableId) {
-                showToast('Enter a VizieR table ID', 'error');
-                return;
-            }
-
+            if (!tableId) { showToast('Enter a VizieR table ID', 'error'); return; }
             var color = selectedColors.catalog;
             var shape = document.getElementById('cat-shape').value;
             var maxSources = parseInt(document.getElementById('cat-max-sources').value) || 50000;
-
-            // Cone search?
             var coneRa = null, coneDec = null, coneRadius = null;
             if (document.getElementById('cone-search-toggle').checked) {
                 var raStr = document.getElementById('cone-ra').value.trim();
                 var decStr = document.getElementById('cone-dec').value.trim();
-
                 if (raStr && decStr) {
                     coneRa = parseFloat(raStr);
                     coneDec = parseFloat(decStr);
                 } else {
-                    // Default to current view center
                     var center = aladin.getRaDec();
                     coneRa = center[0];
                     coneDec = center[1];
                 }
                 coneRadius = parseFloat(document.getElementById('cone-radius').value) || 2;
             }
-
-            // Build a display name from the table ID
             var shortId = tableId.split('/').pop() || tableId;
             var name = shortId;
-            if (coneRa !== null) {
-                name += ' (r=' + coneRadius + '°)';
-            }
-
+            if (coneRa !== null) name += ' (r=' + coneRadius + '°)';
             loadVizierCatalog(tableId, name, color, shape, maxSources, coneRa, coneDec, coneRadius);
         }
 
         function removeCatalog(uid) {
             var idx = loadedCatalogs.findIndex(function(c) { return c.uid === uid; });
             if (idx === -1) return;
-
             var cat = loadedCatalogs[idx];
             try { aladin.removeLayer(cat.aladinCat); } catch(e) {}
             loadedCatalogs.splice(idx, 1);
-
             updateCatalogListUI();
             updateFootprintCatalogCountUI();
             updatePMControlsVisibility();
@@ -1591,27 +1542,19 @@
         }
 
         function clearAllCatalogs() {
-            loadedCatalogs.forEach(function(cat) {
-                try { aladin.removeLayer(cat.aladinCat); } catch(e) {}
-            });
+            loadedCatalogs.forEach(function(cat) { try { aladin.removeLayer(cat.aladinCat); } catch(e) {} });
             loadedCatalogs = [];
             updateCatalogListUI();
             updateFootprintCatalogCountUI();
             updatePMControlsVisibility();
-            if (pmVectorOverlay) {
-                try { aladin.removeLayer(pmVectorOverlay); } catch(e) {}
-                pmVectorOverlay = null;
-            }
+            if (pmVectorOverlay) { try { aladin.removeLayer(pmVectorOverlay); } catch(e) {} pmVectorOverlay = null; }
             showToast('All catalogs cleared', 'success');
         }
 
         function updatePMControlsVisibility() {
             var anyPM = loadedCatalogs.some(function(c) { return c.hasPM; });
             document.getElementById('pm-vector-controls').style.display = anyPM ? 'block' : 'none';
-            if (!anyPM) {
-                showPMVectors = false;
-                document.getElementById('pm-vector-toggle').checked = false;
-            }
+            if (!anyPM) { showPMVectors = false; document.getElementById('pm-vector-toggle').checked = false; }
         }
 
         // ==================== Image Overlay (FITS / JPG+WCS) ====================
@@ -1620,7 +1563,6 @@
         var pendingWcsFile = null;
 
         function clearImageOverlay() {
-            // Clean up FITS overlay
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(currentFITSLayer, null); } catch(e) {}
                 try { aladin.removeImageLayer(currentFITSLayer); } catch(e) {}
@@ -1628,17 +1570,10 @@
                 try { if (typeof currentFITSLayer.remove === 'function') currentFITSLayer.remove(); } catch(e) {}
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
             }
-            try {
-                var currentSurvey = aladin.getBaseImageLayer();
-                if (currentSurvey) aladin.setImageLayer(currentSurvey);
-            } catch(e) {}
-
+            try { var cs = aladin.getBaseImageLayer(); if (cs) aladin.setImageLayer(cs); } catch(e) {}
             if (currentFITSUrl) { URL.revokeObjectURL(currentFITSUrl); currentFITSUrl = null; }
             currentFITSLayer = null;
-
-            // Clean up JPG canvas overlay
             removeJpgOverlay();
-
             document.getElementById('fits-name').textContent = 'No image loaded';
             document.getElementById('fits-status').classList.remove('loaded');
             document.getElementById('file-input-label').textContent = 'Upload FITS file';
@@ -1652,30 +1587,20 @@
             showToast('Image cleared', 'success');
         }
 
-        // --- Standard FITS upload ---
         document.getElementById('fits-file').addEventListener('change', function(e) {
             var file = e.target.files[0];
             if (!file) return;
-
             if (currentFITSLayer) {
                 try { aladin.setOverlayImageLayer(null); } catch(e) {}
                 try { if (currentFITSLayer.remove) currentFITSLayer.remove(); } catch(e) {}
                 if (currentFITSUrl) URL.revokeObjectURL(currentFITSUrl);
                 currentFITSLayer = null;
             }
-
             showLoading(true, 'Loading FITS...');
-
             try {
                 currentFITSUrl = URL.createObjectURL(file);
-                currentFITSLayer = aladin.createImageFITS(currentFITSUrl, {
-                    name: file.name,
-                    opacity: 1.0
-                }, function(ra, dec, fov) {
-                    if (ra && dec) {
-                        aladin.gotoRaDec(ra, dec);
-                        if (fov) aladin.setFoV(fov * 1.2);
-                    }
+                currentFITSLayer = aladin.createImageFITS(currentFITSUrl, { name: file.name, opacity: 1.0 }, function(ra, dec, fov) {
+                    if (ra && dec) { aladin.gotoRaDec(ra, dec); if (fov) aladin.setFoV(fov * 1.2); }
                     showLoading(false);
                 });
                 aladin.setOverlayImageLayer(currentFITSLayer);
@@ -1686,72 +1611,48 @@
             } catch (error) {
                 showLoading(false);
                 showToast('Error loading FITS: ' + error.message, 'error');
-                console.error('FITS load error:', error);
             }
         });
 
-        // --- JPG + WCS file selection ---
         document.getElementById('jpg-file').addEventListener('change', function(e) {
             pendingJpgFile = e.target.files[0] || null;
-            if (pendingJpgFile) {
-                document.getElementById('jpg-input-label').textContent = pendingJpgFile.name;
-            }
+            if (pendingJpgFile) document.getElementById('jpg-input-label').textContent = pendingJpgFile.name;
         });
 
         document.getElementById('wcs-file').addEventListener('change', function(e) {
             pendingWcsFile = e.target.files[0] || null;
-            if (pendingWcsFile) {
-                document.getElementById('wcs-input-label').textContent = pendingWcsFile.name;
-            }
+            if (pendingWcsFile) document.getElementById('wcs-input-label').textContent = pendingWcsFile.name;
         });
 
         document.getElementById('jpg-opacity-slider').addEventListener('input', function() {
             var val = parseInt(this.value);
             document.getElementById('jpg-opacity-display').textContent = val + '%';
-            if (jpgOverlay) {
-                jpgOverlay.opacity = val / 100;
-            }
+            if (jpgOverlay) jpgOverlay.opacity = val / 100;
         });
 
         function loadJpgWithWcs() {
-            if (!pendingJpgFile) {
-                showToast('Select an image file first', 'error');
-                return;
-            }
-            if (!pendingWcsFile) {
-                showToast('Select a WCS FITS file', 'error');
-                return;
-            }
-
+            if (!pendingJpgFile) { showToast('Select an image file first', 'error'); return; }
+            if (!pendingWcsFile) { showToast('Select a WCS FITS file', 'error'); return; }
             showLoading(true, 'Reading WCS header...');
-
-            // Read the WCS FITS header
             var wcsReader = new FileReader();
             wcsReader.onload = function(ev) {
                 try {
                     var wcsHeader = parseFITSHeader(new Uint8Array(ev.target.result));
-                    console.log('Parsed WCS header:', wcsHeader);
-
                     if (!wcsHeader.CRVAL1 || !wcsHeader.CRVAL2) {
                         showLoading(false);
                         showToast('No WCS found in FITS header (missing CRVAL)', 'error');
                         return;
                     }
-
-                    // Now read the JPG image
                     showLoading(true, 'Building overlay...');
                     loadImageAsColorOverlay(pendingJpgFile, wcsHeader);
-
                 } catch (err) {
                     showLoading(false);
                     showToast('Error parsing WCS: ' + err.message, 'error');
-                    console.error('WCS parse error:', err);
                 }
             };
             wcsReader.readAsArrayBuffer(pendingWcsFile);
         }
 
-        // Remote image presets
         var REMOTE_IMAGE_PRESETS = {
             orion: {
                 name: 'Orion Nebula',
@@ -1763,91 +1664,51 @@
         function loadRemoteImageWcs(presetKey) {
             var preset = REMOTE_IMAGE_PRESETS[presetKey];
             if (!preset) { showToast('Unknown preset', 'error'); return; }
-
             showLoading(true, 'Downloading ' + preset.name + '...');
-
-            // Fetch both files in parallel
             Promise.all([
-                fetch(preset.jpgUrl).then(function(r) {
-                    if (!r.ok) throw new Error('Image fetch failed: ' + r.status);
-                    return r.blob();
-                }),
-                fetch(preset.wcsUrl).then(function(r) {
-                    if (!r.ok) throw new Error('WCS fetch failed: ' + r.status);
-                    return r.arrayBuffer();
-                })
+                fetch(preset.jpgUrl).then(function(r) { if (!r.ok) throw new Error('Image fetch failed: ' + r.status); return r.blob(); }),
+                fetch(preset.wcsUrl).then(function(r) { if (!r.ok) throw new Error('WCS fetch failed: ' + r.status); return r.arrayBuffer(); })
             ]).then(function(results) {
-                var jpgBlob = results[0];
-                var wcsBuffer = results[1];
-
-                showLoading(true, 'Reading WCS header...');
-                var wcsHeader = parseFITSHeader(new Uint8Array(wcsBuffer));
-                console.log('Remote WCS header:', wcsHeader);
-
+                var wcsHeader = parseFITSHeader(new Uint8Array(results[1]));
                 if (!wcsHeader.CRVAL1 || !wcsHeader.CRVAL2) {
                     showLoading(false);
-                    showToast('No WCS found in FITS header (missing CRVAL)', 'error');
+                    showToast('No WCS found in FITS header', 'error');
                     return;
                 }
-
-                // Create a File-like object from the blob
-                var jpgFile = new File([jpgBlob], preset.name + '.jpg', { type: 'image/jpeg' });
-
+                var jpgFile = new File([results[0]], preset.name + '.jpg', { type: 'image/jpeg' });
                 showLoading(true, 'Building overlay...');
                 loadImageAsColorOverlay(jpgFile, wcsHeader);
-
             }).catch(function(err) {
                 showLoading(false);
                 showToast('Failed to load: ' + err.message, 'error');
-                console.error('Remote image load error:', err);
             });
         }
 
-        // Parse FITS header cards into a dictionary
         function parseFITSHeader(bytes) {
             var header = {};
             var blockSize = 2880;
             var offset = 0;
             var done = false;
-
             while (!done && offset < bytes.length) {
-                // Read up to one FITS block at a time
                 var end = Math.min(offset + blockSize, bytes.length);
                 for (var i = offset; i < end; i += 80) {
                     if (i + 80 > bytes.length) break;
                     var card = '';
-                    for (var j = 0; j < 80; j++) {
-                        card += String.fromCharCode(bytes[i + j]);
-                    }
+                    for (var j = 0; j < 80; j++) card += String.fromCharCode(bytes[i + j]);
                     var key = card.substring(0, 8).trim();
                     if (key === 'END') { done = true; break; }
                     if (card.charAt(8) !== '=') continue;
-
                     var valStr = card.substring(10).trim();
-                    // Remove inline comment
-                    var slashIdx = valStr.indexOf('/');
-                    // Be careful: slash inside quotes is not a comment
-                    var inQuote = false;
-                    var commentIdx = -1;
+                    var inQuote = false, commentIdx = -1;
                     for (var ci = 0; ci < valStr.length; ci++) {
                         if (valStr[ci] === "'") inQuote = !inQuote;
                         if (valStr[ci] === '/' && !inQuote) { commentIdx = ci; break; }
                     }
                     if (commentIdx >= 0) valStr = valStr.substring(0, commentIdx).trim();
-
-                    // Parse value
-                    if (valStr.charAt(0) === "'") {
-                        // String value
-                        header[key] = valStr.replace(/^'|'$/g, '').trim();
-                    } else if (valStr === 'T') {
-                        header[key] = true;
-                    } else if (valStr === 'F') {
-                        header[key] = false;
-                    } else {
-                        var num = parseFloat(valStr);
-                        if (!isNaN(num)) header[key] = num;
-                        else header[key] = valStr;
-                    }
+                    if (valStr.charAt(0) === "'") header[key] = valStr.replace(/^'|'$/g, '').trim();
+                    else if (valStr === 'T') header[key] = true;
+                    else if (valStr === 'F') header[key] = false;
+                    else { var num = parseFloat(valStr); if (!isNaN(num)) header[key] = num; else header[key] = valStr; }
                 }
                 offset = end;
             }
@@ -1857,13 +1718,10 @@
         function loadImageAsColorOverlay(jpgFile, wcsHeader) {
             var img = new Image();
             var jpgUrl = URL.createObjectURL(jpgFile);
-
             img.onload = function() {
                 try {
                     var w = img.naturalWidth;
                     var h = img.naturalHeight;
-                    console.log('Image size:', w, 'x', h);
-
                     var cd = extractCDMatrix(wcsHeader);
                     var crpix1 = wcsHeader.CRPIX1 || w / 2;
                     var crpix2 = wcsHeader.CRPIX2 || h / 2;
@@ -1872,26 +1730,17 @@
                     var cosDec = Math.cos(crval2 * Math.PI / 180);
 
                     function jpgToWorld(jx, jy) {
-                        var fx = jx + 1;
-                        var fy = jy + 1;
-                        var dx = fx - crpix1;
-                        var dy = fy - crpix2;
-                        var xi = cd[0][0] * dx + cd[0][1] * dy;
-                        var eta = cd[1][0] * dx + cd[1][1] * dy;
-                        return [crval1 + xi / cosDec, crval2 + eta];
+                        var dx = (jx + 1) - crpix1;
+                        var dy = (jy + 1) - crpix2;
+                        return [crval1 + (cd[0][0] * dx + cd[0][1] * dy) / cosDec,
+                                crval2 + (cd[1][0] * dx + cd[1][1] * dy)];
                     }
 
-                    var corners = {
-                        tl: jpgToWorld(0, 0),
-                        tr: jpgToWorld(w, 0),
-                        bl: jpgToWorld(0, h)
-                    };
+                    var corners = { tl: jpgToWorld(0, 0), tr: jpgToWorld(w, 0), bl: jpgToWorld(0, h) };
                     var center = jpgToWorld(w / 2, h / 2);
-
                     removeJpgOverlay();
 
                     var container = document.getElementById('aladin-container');
-
                     var jpgCanvas = document.createElement('canvas');
                     jpgCanvas.id = 'jpg-overlay-canvas';
                     jpgCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;';
@@ -1902,8 +1751,6 @@
                     markerCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:11;';
                     container.appendChild(markerCanvas);
 
-                    // Continuously ensure Aladin UI stays above our canvases.
-                    // Boosts any positioned element (Aladin creates UI dynamically).
                     function boostEl(el) {
                         if (el.nodeType !== 1) return;
                         if (el.tagName === 'CANVAS') return;
@@ -1911,274 +1758,179 @@
                         if (el.classList && el.classList.contains('loading-overlay')) return;
                         var pos = getComputedStyle(el).position;
                         if (pos === 'absolute' || pos === 'relative' || pos === 'fixed') {
-                            var curZ = parseInt(getComputedStyle(el).zIndex) || 0;
-                            if (curZ < 20) el.style.zIndex = '20';
+                            if ((parseInt(getComputedStyle(el).zIndex) || 0) < 20) el.style.zIndex = '20';
                         }
                     }
-                    function boostAll() {
-                        container.querySelectorAll('*').forEach(boostEl);
-                    }
-                    boostAll();
-
-                    // Watch for dynamically added UI elements (dropdowns, popups, etc.)
+                    container.querySelectorAll('*').forEach(boostEl);
                     var uiObserver = new MutationObserver(function(mutations) {
                         mutations.forEach(function(m) {
                             m.addedNodes.forEach(function(node) {
-                                if (node.nodeType === 1) {
-                                    boostEl(node);
-                                    // Also boost children (for complex UI panels)
-                                    if (node.querySelectorAll) {
-                                        node.querySelectorAll('*').forEach(boostEl);
-                                    }
-                                }
+                                if (node.nodeType === 1) { boostEl(node); if (node.querySelectorAll) node.querySelectorAll('*').forEach(boostEl); }
                             });
                         });
                     });
                     uiObserver.observe(container, { childList: true, subtree: true });
 
-                    // Store observer so we can disconnect on removal
                     jpgOverlay = {
-                        img: img,
-                        url: jpgUrl,
-                        canvas: jpgCanvas,
-                        markerCanvas: markerCanvas,
-                        uiObserver: uiObserver,
-                        corners: corners,
-                        imgWidth: w,
-                        imgHeight: h,
+                        img: img, url: jpgUrl, canvas: jpgCanvas, markerCanvas: markerCanvas,
+                        uiObserver: uiObserver, corners: corners, imgWidth: w, imgHeight: h,
                         animFrameId: null,
                         opacity: parseFloat(document.getElementById('jpg-opacity-slider').value) / 100
                     };
 
                     function renderFrame() {
                         if (!jpgOverlay) return;
-
                         var cw = container.clientWidth;
                         var ch = container.clientHeight;
-
-                        // Resize both canvases
-                        if (jpgCanvas.width !== cw || jpgCanvas.height !== ch) {
-                            jpgCanvas.width = cw;
-                            jpgCanvas.height = ch;
-                        }
-                        if (markerCanvas.width !== cw || markerCanvas.height !== ch) {
-                            markerCanvas.width = cw;
-                            markerCanvas.height = ch;
-                        }
+                        if (jpgCanvas.width !== cw || jpgCanvas.height !== ch) { jpgCanvas.width = cw; jpgCanvas.height = ch; }
+                        if (markerCanvas.width !== cw || markerCanvas.height !== ch) { markerCanvas.width = cw; markerCanvas.height = ch; }
 
                         var ctx = jpgCanvas.getContext('2d');
                         ctx.clearRect(0, 0, cw, ch);
-
                         var mctx = markerCanvas.getContext('2d');
                         mctx.clearRect(0, 0, cw, ch);
 
-                        // Project corners
                         var stl, str, sbl;
-                        try {
-                            stl = aladin.world2pix(corners.tl[0], corners.tl[1]);
-                            str = aladin.world2pix(corners.tr[0], corners.tr[1]);
-                            sbl = aladin.world2pix(corners.bl[0], corners.bl[1]);
-                        } catch(e) {
-                            jpgOverlay.animFrameId = requestAnimationFrame(renderFrame);
-                            return;
-                        }
+                        try { stl = aladin.world2pix(corners.tl[0], corners.tl[1]); str = aladin.world2pix(corners.tr[0], corners.tr[1]); sbl = aladin.world2pix(corners.bl[0], corners.bl[1]); }
+                        catch(e) { jpgOverlay.animFrameId = requestAnimationFrame(renderFrame); return; }
+                        if (!stl || !str || !sbl) { jpgOverlay.animFrameId = requestAnimationFrame(renderFrame); return; }
 
-                        if (!stl || !str || !sbl) {
-                            jpgOverlay.animFrameId = requestAnimationFrame(renderFrame);
-                            return;
-                        }
-
-                        // Draw JPG with affine transform
-                        var a = (str[0] - stl[0]) / w;
-                        var b = (str[1] - stl[1]) / w;
-                        var c = (sbl[0] - stl[0]) / h;
-                        var d = (sbl[1] - stl[1]) / h;
-                        var e = stl[0];
-                        var f = stl[1];
-
+                        var a = (str[0] - stl[0]) / w, b = (str[1] - stl[1]) / w;
+                        var c = (sbl[0] - stl[0]) / h, d = (sbl[1] - stl[1]) / h;
                         ctx.globalAlpha = jpgOverlay.opacity;
-                        ctx.setTransform(a, b, c, d, e, f);
+                        ctx.setTransform(a, b, c, d, stl[0], stl[1]);
                         ctx.drawImage(img, 0, 0);
                         ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-                        // Draw markers and footprints on the overlay canvas
-                        try { drawOverlayMarkers(mctx, cw, ch); } catch(e) { console.warn('Marker draw error:', e); }
-
+                        try { drawOverlayMarkers(mctx, cw, ch, 1); } catch(e) {}
                         jpgOverlay.animFrameId = requestAnimationFrame(renderFrame);
                     }
-
                     renderFrame();
 
                     aladin.gotoRaDec(center[0], center[1]);
-                    var fovRa = Math.abs(corners.tr[0] - corners.tl[0]);
-                    var fovDec = Math.abs(corners.tl[1] - corners.bl[1]);
-                    aladin.setFoV(Math.max(fovRa, fovDec) * 1.3);
-
+                    aladin.setFoV(Math.max(Math.abs(corners.tr[0] - corners.tl[0]), Math.abs(corners.tl[1] - corners.bl[1])) * 1.3);
                     document.getElementById('fits-name').textContent = jpgFile.name + ' + WCS';
                     document.getElementById('fits-status').classList.add('loaded');
                     showLoading(false);
                     showToast('Loaded ' + jpgFile.name + ' with WCS', 'success');
-
                 } catch(err) {
                     showLoading(false);
                     showToast('Error: ' + err.message, 'error');
-                    console.error('Color overlay error:', err);
                 }
             };
-            img.onerror = function() {
-                URL.revokeObjectURL(jpgUrl);
-                showLoading(false);
-                showToast('Could not read image file', 'error');
-            };
+            img.onerror = function() { URL.revokeObjectURL(jpgUrl); showLoading(false); showToast('Could not read image file', 'error'); };
             img.src = jpgUrl;
         }
 
-        // Re-render catalog markers, individual sources, and footprints on our own canvas
-        function drawOverlayMarkers(ctx, cw, ch) {
-            // Draw catalog sources with correct shape
+        // ==================== Overlay Marker Rendering ====================
+        // scale param: 1 for live display, >1 for high-res export
+        // All pixel coordinates come from world2pix (screen-space), multiplied by scale for export
+
+        function drawOverlayMarkers(ctx, origCw, origCh, scale) {
+            scale = scale || 1;
+
+            // Catalog sources
             loadedCatalogs.forEach(function(cat) {
-                var color = cat.color || '#4afff4';
-                var shape = cat.shape || 'circle';
-                ctx.fillStyle = color;
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1.5;
+                ctx.fillStyle = cat.color || '#4afff4';
+                ctx.strokeStyle = cat.color || '#4afff4';
+                ctx.lineWidth = 1.5 * scale;
                 cat.data.forEach(function(src) {
                     var pix = null;
                     try { pix = aladin.world2pix(src.ra, src.dec); } catch(e) {}
-                    if (pix && pix[0] > -10 && pix[0] < cw + 10 && pix[1] > -10 && pix[1] < ch + 10) {
-                        drawShape(ctx, pix[0], pix[1], 4, shape);
+                    if (pix && pix[0] > -10 && pix[0] < origCw + 10 && pix[1] > -10 && pix[1] < origCh + 10) {
+                        drawShape(ctx, pix[0] * scale, pix[1] * scale, 4 * scale, cat.shape || 'circle');
                     }
                 });
             });
 
-            // Draw individual sources
+            // Individual sources
             sources.forEach(function(s) {
-                var color = s.color || '#ff6b4a';
-                ctx.fillStyle = color;
-                ctx.strokeStyle = color;
+                ctx.fillStyle = s.color || '#ff6b4a';
+                ctx.strokeStyle = s.color || '#ff6b4a';
                 var pix = null;
                 try { pix = aladin.world2pix(s.ra, s.dec); } catch(e) {}
-                if (pix && pix[0] > -10 && pix[0] < cw + 10 && pix[1] > -10 && pix[1] < ch + 10) {
-                    drawShape(ctx, pix[0], pix[1], 5, 'circle');
-                    // Crosshair
-                    ctx.lineWidth = 1;
+                if (pix && pix[0] > -10 && pix[0] < origCw + 10 && pix[1] > -10 && pix[1] < origCh + 10) {
+                    drawShape(ctx, pix[0] * scale, pix[1] * scale, 5 * scale, 'circle');
+                    ctx.lineWidth = scale;
                     ctx.beginPath();
-                    ctx.moveTo(pix[0] - 8, pix[1]); ctx.lineTo(pix[0] + 8, pix[1]);
-                    ctx.moveTo(pix[0], pix[1] - 8); ctx.lineTo(pix[0], pix[1] + 8);
+                    ctx.moveTo((pix[0] - 8) * scale, pix[1] * scale); ctx.lineTo((pix[0] + 8) * scale, pix[1] * scale);
+                    ctx.moveTo(pix[0] * scale, (pix[1] - 8) * scale); ctx.lineTo(pix[0] * scale, (pix[1] + 8) * scale);
                     ctx.stroke();
                 }
             });
 
-            // Draw active footprint polygons
+            // Footprint polygons
             if (jpgOverlayFootprintPolys.length > 0) {
                 var fpColor = selectedColors.footprint || '#ff4adc';
-
-                // Draw fills first (footprintFillOpacity is already 0-1)
                 if (footprintFillOpacity > 0) {
                     ctx.globalAlpha = footprintFillOpacity;
                     ctx.fillStyle = fpColor;
                     jpgOverlayFootprintPolys.forEach(function(poly) {
-                        drawPolyPath(ctx, poly, cw, ch);
+                        drawPolyPathScaled(ctx, poly, origCw, origCh, scale);
                         ctx.fill();
                     });
                     ctx.globalAlpha = 1.0;
                 }
-
-                // Draw outlines
                 ctx.strokeStyle = fpColor;
-                ctx.lineWidth = 1;
+                ctx.lineWidth = Math.max(1, scale);
                 jpgOverlayFootprintPolys.forEach(function(poly) {
-                    drawPolyPath(ctx, poly, cw, ch);
+                    drawPolyPathScaled(ctx, poly, origCw, origCh, scale);
                     ctx.stroke();
                 });
             }
 
-            // Draw PM vectors if enabled
-            drawPMVectorsOnCanvas(ctx, cw, ch);
+            // PM vectors
+            drawPMVectorsOnCanvas(ctx, origCw, origCh, scale);
         }
 
-        function drawShape(ctx, x, y, r, shape) {
-            switch (shape) {
-                case 'square':
-                    ctx.fillRect(x - r, y - r, r * 2, r * 2);
-                    break;
-                case 'plus':
-                case 'cross':
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(x - r, y); ctx.lineTo(x + r, y);
-                    ctx.moveTo(x, y - r); ctx.lineTo(x, y + r);
-                    ctx.stroke();
-                    break;
-                case 'diamond':
-                    ctx.beginPath();
-                    ctx.moveTo(x, y - r); ctx.lineTo(x + r, y);
-                    ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
-                    ctx.closePath(); ctx.fill();
-                    break;
-                case 'triangle':
-                    ctx.beginPath();
-                    ctx.moveTo(x, y - r);
-                    ctx.lineTo(x + r, y + r);
-                    ctx.lineTo(x - r, y + r);
-                    ctx.closePath(); ctx.fill();
-                    break;
-                default: // circle
-                    ctx.beginPath();
-                    ctx.arc(x, y, r, 0, Math.PI * 2);
-                    ctx.fill();
-                    break;
-            }
-        }
-
-        function drawPolyPath(ctx, poly, cw, ch) {
+        function drawPolyPathScaled(ctx, poly, origCw, origCh, scale) {
             ctx.beginPath();
             for (var i = 0; i < poly.length; i++) {
                 var pix = null;
                 try { pix = aladin.world2pix(poly[i][0], poly[i][1]); } catch(e) {}
                 if (!pix) return;
-                if (i === 0) ctx.moveTo(pix[0], pix[1]);
-                else ctx.lineTo(pix[0], pix[1]);
+                if (i === 0) ctx.moveTo(pix[0] * scale, pix[1] * scale);
+                else ctx.lineTo(pix[0] * scale, pix[1] * scale);
             }
             ctx.closePath();
         }
 
-        // Extract a CD matrix from WCS header, handling CD, PC+CDELT, and CDELT+CROTA conventions
+        function drawShape(ctx, x, y, r, shape) {
+            switch (shape) {
+                case 'square': ctx.fillRect(x - r, y - r, r * 2, r * 2); break;
+                case 'plus': case 'cross':
+                    ctx.lineWidth = Math.max(1, r / 2);
+                    ctx.beginPath();
+                    ctx.moveTo(x - r, y); ctx.lineTo(x + r, y);
+                    ctx.moveTo(x, y - r); ctx.lineTo(x, y + r);
+                    ctx.stroke(); break;
+                case 'diamond':
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
+                    ctx.closePath(); ctx.fill(); break;
+                case 'triangle':
+                    ctx.beginPath();
+                    ctx.moveTo(x, y - r); ctx.lineTo(x + r, y + r); ctx.lineTo(x - r, y + r);
+                    ctx.closePath(); ctx.fill(); break;
+                default:
+                    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); break;
+            }
+        }
+
         function extractCDMatrix(h) {
-            // Direct CD matrix
-            if (h.CD1_1 !== undefined) {
-                return [
-                    [h.CD1_1, h.CD1_2 || 0],
-                    [h.CD2_1 || 0, h.CD2_2 || 0]
-                ];
-            }
-            var cdelt1 = h.CDELT1 || 0;
-            var cdelt2 = h.CDELT2 || 0;
-            // PC matrix + CDELT
-            if (h.PC1_1 !== undefined) {
-                return [
-                    [cdelt1 * (h.PC1_1 || 1), cdelt1 * (h.PC1_2 || 0)],
-                    [cdelt2 * (h.PC2_1 || 0), cdelt2 * (h.PC2_2 || 1)]
-                ];
-            }
-            // CDELT + CROTA
+            if (h.CD1_1 !== undefined) return [[h.CD1_1, h.CD1_2 || 0], [h.CD2_1 || 0, h.CD2_2 || 0]];
+            var cdelt1 = h.CDELT1 || 0, cdelt2 = h.CDELT2 || 0;
+            if (h.PC1_1 !== undefined) return [[cdelt1 * (h.PC1_1 || 1), cdelt1 * (h.PC1_2 || 0)], [cdelt2 * (h.PC2_1 || 0), cdelt2 * (h.PC2_2 || 1)]];
             var crota = (h.CROTA2 || h.CROTA1 || 0) * Math.PI / 180;
-            return [
-                [cdelt1 * Math.cos(crota), -cdelt2 * Math.sin(crota)],
-                [cdelt1 * Math.sin(crota),  cdelt2 * Math.cos(crota)]
-            ];
+            return [[cdelt1 * Math.cos(crota), -cdelt2 * Math.sin(crota)], [cdelt1 * Math.sin(crota), cdelt2 * Math.cos(crota)]];
         }
 
         function removeJpgOverlay() {
             if (jpgOverlay) {
                 if (jpgOverlay.animFrameId) cancelAnimationFrame(jpgOverlay.animFrameId);
                 if (jpgOverlay.uiObserver) jpgOverlay.uiObserver.disconnect();
-                if (jpgOverlay.canvas && jpgOverlay.canvas.parentNode) {
-                    jpgOverlay.canvas.parentNode.removeChild(jpgOverlay.canvas);
-                }
-                if (jpgOverlay.markerCanvas && jpgOverlay.markerCanvas.parentNode) {
-                    jpgOverlay.markerCanvas.parentNode.removeChild(jpgOverlay.markerCanvas);
-                }
+                if (jpgOverlay.canvas && jpgOverlay.canvas.parentNode) jpgOverlay.canvas.parentNode.removeChild(jpgOverlay.canvas);
+                if (jpgOverlay.markerCanvas && jpgOverlay.markerCanvas.parentNode) jpgOverlay.markerCanvas.parentNode.removeChild(jpgOverlay.markerCanvas);
                 if (jpgOverlay.url) URL.revokeObjectURL(jpgOverlay.url);
                 jpgOverlay = null;
             }
@@ -2198,83 +1950,54 @@
         }
 
         function drawPMVectorOverlay() {
-            // Remove old overlay
-            if (pmVectorOverlay) {
-                try { aladin.removeLayer(pmVectorOverlay); } catch(e) {}
-                pmVectorOverlay = null;
-            }
+            if (pmVectorOverlay) { try { aladin.removeLayer(pmVectorOverlay); } catch(e) {} pmVectorOverlay = null; }
             if (!showPMVectors) return;
-
             pmVectorOverlay = A.graphicOverlay({ color: '#ffd24a', lineWidth: 1 });
             aladin.addOverlay(pmVectorOverlay);
-
             loadedCatalogs.forEach(function(cat) {
                 if (!cat.hasPM) return;
-                var color = cat.color || '#ffd24a';
-                cat.data.forEach(function(d) {
-                    if (d.pmRA === undefined || d.pmDE === undefined) return;
-                    var pm = Math.sqrt(d.pmRA * d.pmRA + d.pmDE * d.pmDE);
-                    if (pm < 0.1) return; // skip negligible PMs
-
-                    // Convert PM to sky offset: scale * pm (mas/yr) -> arcsec -> degrees
-                    var cosDec = Math.cos(d.dec * Math.PI / 180);
-                    var dra = d.pmRA * pmVectorScale / 3600 / cosDec;
-                    var ddec = d.pmDE * pmVectorScale / 3600;
-                    var endRa = d.ra + dra;
-                    var endDec = d.dec + ddec;
-
-                    pmVectorOverlay.add(A.polyline(
-                        [[d.ra, d.dec], [endRa, endDec]],
-                        { color: color, lineWidth: 1 }
-                    ));
-                });
-            });
-        }
-
-        // Draw PM vectors on canvas (for JPG overlay mode)
-        function drawPMVectorsOnCanvas(ctx, cw, ch) {
-            if (!showPMVectors) return;
-            loadedCatalogs.forEach(function(cat) {
-                if (!cat.hasPM) return;
-                var color = cat.color || '#ffd24a';
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1;
-
                 cat.data.forEach(function(d) {
                     if (d.pmRA === undefined || d.pmDE === undefined) return;
                     var pm = Math.sqrt(d.pmRA * d.pmRA + d.pmDE * d.pmDE);
                     if (pm < 0.1) return;
+                    var cosDec = Math.cos(d.dec * Math.PI / 180);
+                    pmVectorOverlay.add(A.polyline([[d.ra, d.dec], [d.ra + d.pmRA * pmVectorScale / 3600 / cosDec, d.dec + d.pmDE * pmVectorScale / 3600]], { color: cat.color || '#ffd24a', lineWidth: 1 }));
+                });
+            });
+        }
 
+        function drawPMVectorsOnCanvas(ctx, origCw, origCh, scale) {
+            scale = scale || 1;
+            if (!showPMVectors) return;
+            loadedCatalogs.forEach(function(cat) {
+                if (!cat.hasPM) return;
+                ctx.strokeStyle = cat.color || '#ffd24a';
+                ctx.lineWidth = scale;
+                cat.data.forEach(function(d) {
+                    if (d.pmRA === undefined || d.pmDE === undefined) return;
+                    var pm = Math.sqrt(d.pmRA * d.pmRA + d.pmDE * d.pmDE);
+                    if (pm < 0.1) return;
                     var startPix = null;
                     try { startPix = aladin.world2pix(d.ra, d.dec); } catch(e) {}
-                    if (!startPix || startPix[0] < -50 || startPix[0] > cw + 50 || startPix[1] < -50 || startPix[1] > ch + 50) return;
-
+                    if (!startPix || startPix[0] < -50 || startPix[0] > origCw + 50 || startPix[1] < -50 || startPix[1] > origCh + 50) return;
                     var cosDec = Math.cos(d.dec * Math.PI / 180);
-                    var endRa = d.ra + d.pmRA * pmVectorScale / 3600 / cosDec;
-                    var endDec = d.dec + d.pmDE * pmVectorScale / 3600;
                     var endPix = null;
-                    try { endPix = aladin.world2pix(endRa, endDec); } catch(e) {}
+                    try { endPix = aladin.world2pix(d.ra + d.pmRA * pmVectorScale / 3600 / cosDec, d.dec + d.pmDE * pmVectorScale / 3600); } catch(e) {}
                     if (!endPix) return;
-
-                    // Draw line
                     ctx.beginPath();
-                    ctx.moveTo(startPix[0], startPix[1]);
-                    ctx.lineTo(endPix[0], endPix[1]);
+                    ctx.moveTo(startPix[0] * scale, startPix[1] * scale);
+                    ctx.lineTo(endPix[0] * scale, endPix[1] * scale);
                     ctx.stroke();
-
-                    // Draw arrowhead
-                    var dx = endPix[0] - startPix[0];
-                    var dy = endPix[1] - startPix[1];
+                    var dx = endPix[0] - startPix[0], dy = endPix[1] - startPix[1];
                     var len = Math.sqrt(dx * dx + dy * dy);
                     if (len > 3) {
-                        var ax = dx / len;
-                        var ay = dy / len;
-                        var headLen = Math.min(5, len * 0.3);
+                        var ax = dx / len, ay = dy / len;
+                        var headLen = Math.min(5, len * 0.3) * scale;
                         ctx.beginPath();
-                        ctx.moveTo(endPix[0], endPix[1]);
-                        ctx.lineTo(endPix[0] - headLen * (ax + ay * 0.4), endPix[1] - headLen * (ay - ax * 0.4));
-                        ctx.moveTo(endPix[0], endPix[1]);
-                        ctx.lineTo(endPix[0] - headLen * (ax - ay * 0.4), endPix[1] - headLen * (ay + ax * 0.4));
+                        ctx.moveTo(endPix[0] * scale, endPix[1] * scale);
+                        ctx.lineTo(endPix[0] * scale - headLen * (ax + ay * 0.4), endPix[1] * scale - headLen * (ay - ax * 0.4));
+                        ctx.moveTo(endPix[0] * scale, endPix[1] * scale);
+                        ctx.lineTo(endPix[0] * scale - headLen * (ax - ay * 0.4), endPix[1] * scale - headLen * (ay + ax * 0.4));
                         ctx.stroke();
                     }
                 });
@@ -2294,48 +2017,27 @@
             var decInput = document.getElementById('fp-dec-input');
             var paInput = document.getElementById('fp-pa-input');
 
-            // Slider -> input sync
-            raSlider.addEventListener('input', function() {
-                raInput.value = parseFloat(this.value).toFixed(4);
-                updateFootprintRealtime();
-            });
-            decSlider.addEventListener('input', function() {
-                decInput.value = parseFloat(this.value).toFixed(4);
-                updateFootprintRealtime();
-            });
-            paSlider.addEventListener('input', function() {
-                paInput.value = parseFloat(this.value).toFixed(0);
-                updateFootprintRealtime();
-            });
+            raSlider.addEventListener('input', function() { raInput.value = parseFloat(this.value).toFixed(4); updateFootprintRealtime(); });
+            decSlider.addEventListener('input', function() { decInput.value = parseFloat(this.value).toFixed(4); updateFootprintRealtime(); });
+            paSlider.addEventListener('input', function() { paInput.value = parseFloat(this.value).toFixed(0); updateFootprintRealtime(); });
 
-            // Input -> slider sync (adjust slider range to accommodate typed value)
             raInput.addEventListener('change', function() {
-                var v = parseFloat(this.value);
-                if (isNaN(v)) return;
+                var v = parseFloat(this.value); if (isNaN(v)) return;
                 raSlider.min = Math.min(parseFloat(raSlider.min), v - 5);
                 raSlider.max = Math.max(parseFloat(raSlider.max), v + 5);
-                raSlider.value = v;
-                updateFootprintRealtime();
+                raSlider.value = v; updateFootprintRealtime();
             });
             decInput.addEventListener('change', function() {
-                var v = parseFloat(this.value);
-                if (isNaN(v)) return;
-                v = Math.max(-90, Math.min(90, v));
-                this.value = v;
+                var v = parseFloat(this.value); if (isNaN(v)) return;
+                v = Math.max(-90, Math.min(90, v)); this.value = v;
                 decSlider.min = Math.min(parseFloat(decSlider.min), v - 5);
                 decSlider.max = Math.max(parseFloat(decSlider.max), v + 5);
-                decSlider.value = v;
-                updateFootprintRealtime();
+                decSlider.value = v; updateFootprintRealtime();
             });
             paInput.addEventListener('change', function() {
-                var v = parseFloat(this.value);
-                if (isNaN(v)) return;
-                v = ((v % 360) + 360) % 360;
-                this.value = v;
-                paSlider.value = v;
-                updateFootprintRealtime();
+                var v = parseFloat(this.value); if (isNaN(v)) return;
+                v = ((v % 360) + 360) % 360; this.value = v; paSlider.value = v; updateFootprintRealtime();
             });
-
             document.getElementById('footprint-instrument').addEventListener('change', updateFootprintRealtime);
             document.getElementById('footprint-opacity-slider').addEventListener('input', function() {
                 footprintFillOpacity = parseInt(this.value) / 100;
@@ -2357,17 +2059,12 @@
             var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
             var instrument = document.getElementById('footprint-instrument').value;
 
-            // Keep inputs in sync (slider may have been set programmatically)
             document.getElementById('fp-ra-input').value = ra.toFixed(4);
             document.getElementById('fp-dec-input').value = dec.toFixed(4);
             document.getElementById('fp-pa-input').value = pa.toFixed(0);
 
-            if (activeFootprintOverlay) {
-                try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
-            }
-            if (activeFootprintFillOverlay) {
-                try { aladin.removeLayer(activeFootprintFillOverlay); } catch(e) {}
-            }
+            if (activeFootprintOverlay) { try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {} }
+            if (activeFootprintFillOverlay) { try { aladin.removeLayer(activeFootprintFillOverlay); } catch(e) {} }
 
             var color = selectedColors.footprint;
             var opacity = footprintFillOpacity;
@@ -2375,11 +2072,8 @@
 
             activeFootprintOverlay = A.graphicOverlay({ color: color, lineWidth: 1 });
             aladin.addOverlay(activeFootprintOverlay);
-
-            // Store polygons for our own canvas rendering (when JPG overlay is active)
             jpgOverlayFootprintPolys = [];
 
-            // Separate overlay for fills (drawn first so outlines render on top)
             if (fillColor) {
                 activeFootprintFillOverlay = A.graphicOverlay({ color: fillColor, lineWidth: 0 });
                 aladin.addOverlay(activeFootprintFillOverlay);
@@ -2389,48 +2083,29 @@
                 ROMAN_WFI_SIAF.forEach(function(detCorners) {
                     var poly = siafDetToSkyPoly(ra, dec, pa, detCorners);
                     jpgOverlayFootprintPolys.push(poly);
-                    activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 1}));
-                    if (fillColor) {
-                        addFilledPoly(activeFootprintFillOverlay, poly, color, fillColor);
-                    }
+                    activeFootprintOverlay.add(A.polyline(poly, { color: color, lineWidth: 1 }));
+                    if (fillColor) addFilledPoly(activeFootprintFillOverlay, poly, color, fillColor);
                 });
             } else {
-                var modSize = 0.037;
-                var gap = 0.012;
+                var modSize = 0.037, gap = 0.012;
                 [-1, 1].forEach(function(side) {
                     var dx = side * (modSize / 2 + gap);
                     var poly = createDetectorPoly(ra, dec, dx, 0, modSize, pa);
                     jpgOverlayFootprintPolys.push(poly);
-                    activeFootprintOverlay.add(A.polyline(poly, {color: color, lineWidth: 1}));
-                    if (fillColor) {
-                        addFilledPoly(activeFootprintFillOverlay, poly, color, fillColor);
-                    }
+                    activeFootprintOverlay.add(A.polyline(poly, { color: color, lineWidth: 1 }));
+                    if (fillColor) addFilledPoly(activeFootprintFillOverlay, poly, color, fillColor);
                 });
             }
-
             updateFootprintCatalogCountUI();
         }
 
-        // Try multiple Aladin API approaches for filled polygons
         function addFilledPoly(overlay, poly, strokeColor, fillColor) {
-            // poly has closing point repeated; polygon API typically doesn't need it
             var coords = poly.slice(0, -1);
             try {
-                // Aladin Lite v3 A.polygon with fill options
-                overlay.add(A.polygon(coords, {
-                    color: strokeColor,
-                    lineWidth: 0,
-                    fill: true,
-                    fillColor: fillColor
-                }));
+                overlay.add(A.polygon(coords, { color: strokeColor, lineWidth: 0, fill: true, fillColor: fillColor }));
             } catch(e) {
-                try {
-                    // Fallback: try polygon without fill options (just colored)
-                    overlay.add(A.polygon(coords, { color: fillColor, lineWidth: 0 }));
-                } catch(e2) {
-                    // Last fallback: draw a thick semi-transparent polyline
-                    overlay.add(A.polyline(poly, { color: fillColor, lineWidth: 4 }));
-                }
+                try { overlay.add(A.polygon(coords, { color: fillColor, lineWidth: 0 })); }
+                catch(e2) { overlay.add(A.polyline(poly, { color: fillColor, lineWidth: 4 })); }
             }
         }
 
@@ -2438,25 +2113,15 @@
             var center = aladin.getRaDec();
             var raSlider = document.getElementById('footprint-ra-slider');
             var decSlider = document.getElementById('footprint-dec-slider');
-            raSlider.min = center[0] - 5;
-            raSlider.max = center[0] + 5;
-            raSlider.value = center[0];
-            decSlider.min = center[1] - 5;
-            decSlider.max = center[1] + 5;
-            decSlider.value = center[1];
+            raSlider.min = center[0] - 5; raSlider.max = center[0] + 5; raSlider.value = center[0];
+            decSlider.min = center[1] - 5; decSlider.max = center[1] + 5; decSlider.value = center[1];
             updateFootprintRealtime();
             showToast('Footprint centered on view', 'success');
         }
 
         function clearActiveFootprint() {
-            if (activeFootprintOverlay) {
-                try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {}
-                activeFootprintOverlay = null;
-            }
-            if (activeFootprintFillOverlay) {
-                try { aladin.removeLayer(activeFootprintFillOverlay); } catch(e) {}
-                activeFootprintFillOverlay = null;
-            }
+            if (activeFootprintOverlay) { try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {} activeFootprintOverlay = null; }
+            if (activeFootprintFillOverlay) { try { aladin.removeLayer(activeFootprintFillOverlay); } catch(e) {} activeFootprintFillOverlay = null; }
             jpgOverlayFootprintPolys = [];
             catalogInFootprintCount = 0;
             updateFootprintCatalogCountUI();
@@ -2467,37 +2132,24 @@
 
         function rotatePoint(x, y, paDeg) {
             var rad = -paDeg * Math.PI / 180;
-            return {
-                x: x * Math.cos(rad) - y * Math.sin(rad),
-                y: x * Math.sin(rad) + y * Math.cos(rad)
-            };
+            return { x: x * Math.cos(rad) - y * Math.sin(rad), y: x * Math.sin(rad) + y * Math.cos(rad) };
         }
 
         function offsetToRaDec(ra, dec, dx, dy) {
-            var cosDec = Math.cos(dec * Math.PI / 180);
-            return [ra + dx / cosDec, dec + dy];
+            return [ra + dx / Math.cos(dec * Math.PI / 180), dec + dy];
         }
 
         function createDetectorPoly(ra, dec, centerDx, centerDy, size, pa) {
             var hs = size / 2;
-            var corners = [
-                {x: centerDx - hs, y: centerDy - hs},
-                {x: centerDx + hs, y: centerDy - hs},
-                {x: centerDx + hs, y: centerDy + hs},
-                {x: centerDx - hs, y: centerDy + hs}
-            ];
-            var coords = corners.map(function(c) {
-                var rot = rotatePoint(c.x, c.y, pa);
-                return offsetToRaDec(ra, dec, rot.x, rot.y);
-            });
+            var corners = [{x:centerDx-hs,y:centerDy-hs},{x:centerDx+hs,y:centerDy-hs},{x:centerDx+hs,y:centerDy+hs},{x:centerDx-hs,y:centerDy+hs}];
+            var coords = corners.map(function(c) { var rot = rotatePoint(c.x, c.y, pa); return offsetToRaDec(ra, dec, rot.x, rot.y); });
             coords.push(coords[0]);
             return coords;
         }
 
         function isPointInRotRect(ra, dec, centerRa, centerDec, widthDeg, heightDeg, paDeg) {
             var cosDec = Math.cos(centerDec * Math.PI / 180);
-            var dx = (ra - centerRa) * cosDec;
-            var dy = (dec - centerDec);
+            var dx = (ra - centerRa) * cosDec, dy = dec - centerDec;
             var rad = paDeg * Math.PI / 180;
             var x = dx * Math.cos(rad) - dy * Math.sin(rad);
             var y = dx * Math.sin(rad) + dy * Math.cos(rad);
@@ -2512,263 +2164,124 @@
             var ra0 = parseFloat(document.getElementById('footprint-ra-slider').value);
             var dec0 = parseFloat(document.getElementById('footprint-dec-slider').value);
             var pa = parseFloat(document.getElementById('footprint-pa-slider').value);
-
             var allData = getAllCatalogData();
             if (allData.length === 0) return 0;
-
-            if (instrument === 'roman') {
-                return countSourcesInRomanFootprintFast(allData, ra0, dec0, pa);
-            } else {
-                return countSourcesInJWSTFootprint(allData, ra0, dec0, pa);
-            }
+            return instrument === 'roman'
+                ? countSourcesInRomanFootprintFast(allData, ra0, dec0, pa)
+                : countSourcesInJWSTFootprint(allData, ra0, dec0, pa);
         }
 
         function countSourcesInJWSTFootprint(data, ra0, dec0, pa) {
-            var modSize = 0.037;
-            var gap = 0.012;
-            var count = 0;
-
-            // Precompute module centers
+            var modSize = 0.037, gap = 0.012, count = 0;
             var modules = [-1, 1].map(function(side) {
-                var dx = side * (modSize / 2 + gap);
-                var rot = rotatePoint(dx, 0, pa);
+                var rot = rotatePoint(side * (modSize / 2 + gap), 0, pa);
                 return offsetToRaDec(ra0, dec0, rot.x, rot.y);
             });
-
             data.forEach(function(d) {
                 for (var m = 0; m < modules.length; m++) {
-                    if (isPointInRotRect(d.ra, d.dec, modules[m][0], modules[m][1], modSize, modSize, pa)) {
-                        count++;
-                        break;
-                    }
+                    if (isPointInRotRect(d.ra, d.dec, modules[m][0], modules[m][1], modSize, modSize, pa)) { count++; break; }
                 }
             });
-
             return count;
         }
 
         function updateFootprintCatalogCountUI() {
             catalogInFootprintCount = computeCatalogCountInActiveFootprint();
             var countEl = document.getElementById('footprint-count-value');
-
-            if (!activeFootprintOverlay) {
-                countEl.textContent = '---';
-                countEl.classList.add('empty');
-            } else if (loadedCatalogs.length === 0) {
-                countEl.textContent = 'No catalog';
-                countEl.classList.add('empty');
-            } else {
-                countEl.textContent = catalogInFootprintCount.toLocaleString();
-                countEl.classList.remove('empty');
-            }
+            if (!activeFootprintOverlay) { countEl.textContent = '---'; countEl.classList.add('empty'); }
+            else if (loadedCatalogs.length === 0) { countEl.textContent = 'No catalog'; countEl.classList.add('empty'); }
+            else { countEl.textContent = catalogInFootprintCount.toLocaleString(); countEl.classList.remove('empty'); }
         }
 
         // ==================== Optimization ====================
 
         function findOptimalOrientation() {
             var allData = getAllCatalogData();
-            if (allData.length === 0) {
-                showToast('Load a catalog first', 'error');
-                return;
-            }
-
+            if (allData.length === 0) { showToast('Load a catalog first', 'error'); return; }
             var instrument = document.getElementById('footprint-instrument').value;
-
             var statusEl = document.getElementById('optimize-status');
             var btn = document.getElementById('optimize-btn');
             btn.disabled = true;
             statusEl.className = 'optimize-status active searching';
             statusEl.textContent = 'Analyzing ' + allData.length.toLocaleString() + ' sources...';
-
             setTimeout(function() {
-                var result;
-                if (instrument === 'roman') {
-                    result = runOptimization(allData);
-                } else {
-                    result = runOptimizationJWST(allData);
-                }
-
+                var result = instrument === 'roman' ? runOptimization(allData) : runOptimizationJWST(allData);
                 var raSlider = document.getElementById('footprint-ra-slider');
                 var decSlider = document.getElementById('footprint-dec-slider');
-                raSlider.min = result.ra - 5;
-                raSlider.max = result.ra + 5;
-                raSlider.value = result.ra;
-                decSlider.min = result.dec - 5;
-                decSlider.max = result.dec + 5;
-                decSlider.value = result.dec;
+                raSlider.min = result.ra - 5; raSlider.max = result.ra + 5; raSlider.value = result.ra;
+                decSlider.min = result.dec - 5; decSlider.max = result.dec + 5; decSlider.value = result.dec;
                 document.getElementById('footprint-pa-slider').value = result.pa;
-
                 updateFootprintRealtime();
                 aladin.gotoRaDec(result.ra, result.dec);
-
                 statusEl.className = 'optimize-status active complete';
                 statusEl.textContent = 'Optimal: RA=' + result.ra.toFixed(3) + '°, Dec=' + result.dec.toFixed(3) + '°, PA=' + result.pa + '° (' + result.count + ' sources)';
                 btn.disabled = false;
-
                 showToast('Found optimal: ' + result.count + ' sources in ' + instrument.toUpperCase(), 'success');
             }, 50);
         }
 
         function runOptimization(data) {
             var n = data.length;
-
-            var gridSize, paStep, topCandidates;
-            if (n > 20000) {
-                gridSize = 0.2; paStep = 45; topCandidates = 10;
-            } else if (n > 5000) {
-                gridSize = 0.15; paStep = 30; topCandidates = 20;
-            } else {
-                gridSize = 0.08; paStep = 15; topCandidates = 50;
-            }
-
-            // Step 1: Spatial binning
+            var gridSize = n > 20000 ? 0.2 : n > 5000 ? 0.15 : 0.08;
+            var paStep = n > 20000 ? 45 : n > 5000 ? 30 : 15;
+            var topCandidates = n > 20000 ? 10 : n > 5000 ? 20 : 50;
             var grid = {};
             data.forEach(function(d) {
                 var key = Math.floor(d.ra / gridSize) + ',' + Math.floor(d.dec / gridSize);
-                if (!grid[key]) {
-                    grid[key] = {
-                        ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize,
-                        dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize,
-                        count: 0
-                    };
-                }
+                if (!grid[key]) grid[key] = { ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize, dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize, count: 0 };
                 grid[key].count++;
             });
-
-            var cells = Object.values(grid);
-            cells.sort(function(a, b) { return b.count - a.count; });
-            var candidates = cells.slice(0, Math.min(topCandidates, cells.length));
-
-            console.log('Optimization: testing ' + candidates.length + ' dense regions, PA step=' + paStep);
-
-            // Step 2: Coarse search
+            var candidates = Object.values(grid).sort(function(a, b) { return b.count - a.count; }).slice(0, Math.min(topCandidates, Object.values(grid).length));
             var bestRa = candidates[0].ra, bestDec = candidates[0].dec, bestPa = 0, bestCount = 0;
-            var paValues = [];
-            for (var pa = 0; pa < 180; pa += paStep) paValues.push(pa);
-
-            candidates.forEach(function(c) {
-                paValues.forEach(function(pa) {
-                    var count = countSourcesInRomanFootprintFast(data, c.ra, c.dec, pa);
-                    if (count > bestCount) {
-                        bestCount = count; bestRa = c.ra; bestDec = c.dec; bestPa = pa;
-                    }
-                });
-            });
-
-            // Step 3: Fine refinement
+            var paValues = []; for (var pa = 0; pa < 180; pa += paStep) paValues.push(pa);
+            candidates.forEach(function(c) { paValues.forEach(function(pa) { var count = countSourcesInRomanFootprintFast(data, c.ra, c.dec, pa); if (count > bestCount) { bestCount = count; bestRa = c.ra; bestDec = c.dec; bestPa = pa; } }); });
             var offsets = [-0.04, -0.02, 0, 0.02, 0.04];
             var finePaOffsets = [-10, -5, 0, 5, 10];
-            offsets.forEach(function(dra) {
-                offsets.forEach(function(ddec) {
-                    finePaOffsets.forEach(function(dpa) {
-                        var testPa = ((bestPa + dpa) % 360 + 360) % 360;
-                        var count = countSourcesInRomanFootprintFast(data, bestRa + dra, bestDec + ddec, testPa);
-                        if (count > bestCount) {
-                            bestCount = count; bestRa = bestRa + dra; bestDec = bestDec + ddec; bestPa = testPa;
-                        }
-                    });
-                });
-            });
-
+            offsets.forEach(function(dra) { offsets.forEach(function(ddec) { finePaOffsets.forEach(function(dpa) { var tp = ((bestPa + dpa) % 360 + 360) % 360; var count = countSourcesInRomanFootprintFast(data, bestRa + dra, bestDec + ddec, tp); if (count > bestCount) { bestCount = count; bestRa += dra; bestDec += ddec; bestPa = tp; } }); }); });
             return { ra: bestRa, dec: bestDec, pa: Math.round(bestPa), count: bestCount };
         }
 
         function runOptimizationJWST(data) {
             var n = data.length;
-
-            var gridSize, paStep, topCandidates;
-            if (n > 20000) {
-                gridSize = 0.05; paStep = 45; topCandidates = 15;
-            } else if (n > 5000) {
-                gridSize = 0.03; paStep = 30; topCandidates = 30;
-            } else {
-                gridSize = 0.015; paStep = 15; topCandidates = 60;
-            }
-
+            var gridSize = n > 20000 ? 0.05 : n > 5000 ? 0.03 : 0.015;
+            var paStep = n > 20000 ? 45 : n > 5000 ? 30 : 15;
+            var topCandidates = n > 20000 ? 15 : n > 5000 ? 30 : 60;
             var grid = {};
             data.forEach(function(d) {
                 var key = Math.floor(d.ra / gridSize) + ',' + Math.floor(d.dec / gridSize);
-                if (!grid[key]) {
-                    grid[key] = {
-                        ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize,
-                        dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize,
-                        count: 0
-                    };
-                }
+                if (!grid[key]) grid[key] = { ra: (Math.floor(d.ra / gridSize) + 0.5) * gridSize, dec: (Math.floor(d.dec / gridSize) + 0.5) * gridSize, count: 0 };
                 grid[key].count++;
             });
-
-            var cells = Object.values(grid);
-            cells.sort(function(a, b) { return b.count - a.count; });
-            var candidates = cells.slice(0, Math.min(topCandidates, cells.length));
-
+            var candidates = Object.values(grid).sort(function(a, b) { return b.count - a.count; }).slice(0, Math.min(topCandidates, Object.values(grid).length));
             var bestRa = candidates[0].ra, bestDec = candidates[0].dec, bestPa = 0, bestCount = 0;
-            var paValues = [];
-            for (var pa = 0; pa < 180; pa += paStep) paValues.push(pa);
-
-            candidates.forEach(function(c) {
-                paValues.forEach(function(pa) {
-                    var count = countSourcesInJWSTFootprint(data, c.ra, c.dec, pa);
-                    if (count > bestCount) {
-                        bestCount = count; bestRa = c.ra; bestDec = c.dec; bestPa = pa;
-                    }
-                });
-            });
-
+            var paValues = []; for (var pa = 0; pa < 180; pa += paStep) paValues.push(pa);
+            candidates.forEach(function(c) { paValues.forEach(function(pa) { var count = countSourcesInJWSTFootprint(data, c.ra, c.dec, pa); if (count > bestCount) { bestCount = count; bestRa = c.ra; bestDec = c.dec; bestPa = pa; } }); });
             var offsets = [-0.01, -0.005, 0, 0.005, 0.01];
             var finePaOffsets = [-10, -5, 0, 5, 10];
-            offsets.forEach(function(dra) {
-                offsets.forEach(function(ddec) {
-                    finePaOffsets.forEach(function(dpa) {
-                        var testPa = ((bestPa + dpa) % 360 + 360) % 360;
-                        var count = countSourcesInJWSTFootprint(data, bestRa + dra, bestDec + ddec, testPa);
-                        if (count > bestCount) {
-                            bestCount = count; bestRa = bestRa + dra; bestDec = bestDec + ddec; bestPa = testPa;
-                        }
-                    });
-                });
-            });
-
+            offsets.forEach(function(dra) { offsets.forEach(function(ddec) { finePaOffsets.forEach(function(dpa) { var tp = ((bestPa + dpa) % 360 + 360) % 360; var count = countSourcesInJWSTFootprint(data, bestRa + dra, bestDec + ddec, tp); if (count > bestCount) { bestCount = count; bestRa += dra; bestDec += ddec; bestPa = tp; } }); }); });
             return { ra: bestRa, dec: bestDec, pa: Math.round(bestPa), count: bestCount };
         }
 
         function countSourcesInRomanFootprintFast(data, ra0, dec0, pa) {
-            // Build sky polygons for all 18 detectors
-            var skyPolys = ROMAN_WFI_SIAF.map(function(detCorners) {
-                return detCorners.map(function(c) {
-                    return v2v3ToSky(ra0, dec0, pa, c[0], c[1]);
-                });
-            });
-
+            var skyPolys = ROMAN_WFI_SIAF.map(function(dc) { return dc.map(function(c) { return v2v3ToSky(ra0, dec0, pa, c[0], c[1]); }); });
             var count = 0;
             var cosDec0 = Math.cos(dec0 * Math.PI / 180);
-
             for (var i = 0; i < data.length; i++) {
                 var d = data[i];
-                // Quick bounding box reject
-                var dra = (d.ra - ra0) * cosDec0;
-                var ddec = d.dec - dec0;
+                var dra = (d.ra - ra0) * cosDec0, ddec = d.dec - dec0;
                 if (dra < -0.6 || dra > 0.6 || ddec < -0.6 || ddec > 0.6) continue;
-
                 for (var j = 0; j < skyPolys.length; j++) {
-                    if (pointInPolygon(d.ra, d.dec, skyPolys[j])) {
-                        count++;
-                        break;
-                    }
+                    if (pointInPolygon(d.ra, d.dec, skyPolys[j])) { count++; break; }
                 }
             }
             return count;
         }
 
-        // Ray casting point-in-polygon test
         function pointInPolygon(x, y, poly) {
             var inside = false;
             for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-                var xi = poly[i][0], yi = poly[i][1];
-                var xj = poly[j][0], yj = poly[j][1];
-                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
-                    inside = !inside;
-                }
+                var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
             }
             return inside;
         }
@@ -2777,35 +2290,24 @@
 
         function resolveObject(identifier, callback) {
             var url = 'https://cdsweb.u-strasbg.fr/cgi-bin/nph-sesame/-ox/SNV?' + encodeURIComponent(identifier);
-            fetch(url)
-                .then(function(r) { return r.text(); })
-                .then(function(text) {
-                    var parser = new DOMParser();
-                    var xml = parser.parseFromString(text, 'text/xml');
-                    var resolvers = xml.querySelectorAll('Resolver');
-                    for (var i = 0; i < resolvers.length; i++) {
-                        var r = resolvers[i];
-                        var jra = r.querySelector('jradeg');
-                        var jde = r.querySelector('jdedeg');
-                        var oname = r.querySelector('oname');
-                        if (jra && jde) {
-                            var ra = parseFloat(jra.textContent);
-                            var dec = parseFloat(jde.textContent);
-                            if (!isNaN(ra) && !isNaN(dec)) {
-                                callback({ name: oname ? oname.textContent.trim() : identifier, ra: ra, dec: dec });
-                                return;
-                            }
-                        }
+            fetch(url).then(function(r) { return r.text(); }).then(function(text) {
+                var xml = new DOMParser().parseFromString(text, 'text/xml');
+                var resolvers = xml.querySelectorAll('Resolver');
+                for (var i = 0; i < resolvers.length; i++) {
+                    var r = resolvers[i];
+                    var jra = r.querySelector('jradeg'), jde = r.querySelector('jdedeg'), oname = r.querySelector('oname');
+                    if (jra && jde) {
+                        var ra = parseFloat(jra.textContent), dec = parseFloat(jde.textContent);
+                        if (!isNaN(ra) && !isNaN(dec)) { callback({ name: oname ? oname.textContent.trim() : identifier, ra: ra, dec: dec }); return; }
                     }
-                    callback(null);
-                })
-                .catch(function() { callback(null); });
+                }
+                callback(null);
+            }).catch(function() { callback(null); });
         }
 
         function addSimbadSource() {
             var id = document.getElementById('simbad-id').value.trim();
             if (!id) { showToast('Enter an identifier', 'error'); return; }
-
             showLoading(true, 'Resolving ' + id + '...');
             resolveObject(id, function(result) {
                 showLoading(false);
@@ -2815,9 +2317,7 @@
                     addToPastObjects(id);
                     document.getElementById('simbad-id').value = '';
                     showToast('Added ' + result.name, 'success');
-                } else {
-                    showToast('Not found. Try alternate names.', 'error');
-                }
+                } else { showToast('Not found. Try alternate names.', 'error'); }
             });
         }
 
@@ -2827,12 +2327,7 @@
             var ra = parseFloat(document.getElementById('ra-input').value);
             var dec = parseFloat(document.getElementById('dec-input').value);
             var label = document.getElementById('source-label').value.trim() || ('Source ' + (sources.length + 1));
-
-            if (isNaN(ra) || isNaN(dec) || ra < 0 || ra > 360 || dec < -90 || dec > 90) {
-                showToast('Enter valid coordinates', 'error');
-                return;
-            }
-
+            if (isNaN(ra) || isNaN(dec) || ra < 0 || ra > 360 || dec < -90 || dec > 90) { showToast('Enter valid coordinates', 'error'); return; }
             addSourceToMap({ name: label, ra: ra, dec: dec, color: selectedColors.manual, type: 'manual' });
             document.getElementById('ra-input').value = '';
             document.getElementById('dec-input').value = '';
@@ -2844,35 +2339,25 @@
             if (updateUI === undefined) updateUI = true;
             source.id = Date.now() + Math.random();
             sources.push(source);
-
             var cat = A.catalog({ name: source.name, sourceSize: 18, color: source.color, shape: 'circle' });
             cat.addSources([A.source(source.ra, source.dec, { name: source.name })]);
             aladin.addCatalog(cat);
             source.catalog = cat;
-
-            if (updateUI) {
-                updateSourceList();
-                updateSourceCount();
-            }
+            if (updateUI) { updateSourceList(); updateSourceCount(); }
         }
 
-        function updateSourceCount() {
-            document.getElementById('source-count').textContent = sources.length + ' sources plotted';
-        }
+        function updateSourceCount() { document.getElementById('source-count').textContent = sources.length + ' sources plotted'; }
 
         function updateSourceList() {
             var el = document.getElementById('source-list');
-            if (!sources.length) {
-                el.innerHTML = '<p class="info-text">No sources added yet.</p>';
-                return;
-            }
+            if (!sources.length) { el.innerHTML = '<p class="info-text">No sources added yet.</p>'; return; }
             var display = sources.slice(-12);
             var hidden = sources.length - display.length;
             var html = hidden > 0 ? '<p class="info-text">+' + hidden + ' more</p>' : '';
             html += display.map(function(s) {
                 var name = s.name.length > 18 ? s.name.substring(0, 18) + '...' : s.name;
-                return '<div class="source-item"><div><div class="source-name"><span style="color:' + s.color + '">●</span> ' +
-                    name + '</div><div class="source-coords">' + s.ra.toFixed(4) + '°, ' + s.dec.toFixed(4) + '°</div></div>' +
+                return '<div class="source-item"><div><div class="source-name"><span style="color:' + s.color + '">●</span> ' + name + '</div>' +
+                    '<div class="source-coords">' + s.ra.toFixed(4) + '°, ' + s.dec.toFixed(4) + '°</div></div>' +
                     '<button class="remove-btn" onclick="removeSource(' + s.id + ')">✕</button></div>';
             }).join('');
             el.innerHTML = html;
@@ -2882,52 +2367,37 @@
             var s = sources.find(function(x) { return x.id === id; });
             if (s && s.catalog) try { aladin.removeLayer(s.catalog); } catch(e) {}
             sources = sources.filter(function(x) { return x.id !== id; });
-            updateSourceList();
-            updateSourceCount();
+            updateSourceList(); updateSourceCount();
         }
 
         function clearAllSources() {
             sources.forEach(function(s) { if (s.catalog) try { aladin.removeLayer(s.catalog); } catch(e) {} });
-            sources = [];
-            updateSourceList();
-            updateSourceCount();
+            sources = []; updateSourceList(); updateSourceCount();
             showToast('Sources cleared', 'success');
         }
 
         function exportSources() {
             if (!sources.length) { showToast('No sources', 'error'); return; }
-            var csv = 'name,ra,dec,type\n' + sources.map(function(s) {
-                return '"' + s.name + '",' + s.ra + ',' + s.dec + ',' + s.type;
-            }).join('\n');
+            var csv = 'name,ra,dec,type\n' + sources.map(function(s) { return '"' + s.name + '",' + s.ra + ',' + s.dec + ',' + s.type; }).join('\n');
             var a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-            a.download = 'cra_sources.csv';
-            a.click();
+            a.download = 'cra_sources.csv'; a.click();
             showToast('Exported', 'success');
         }
 
         // ==================== CSV Upload ====================
 
         document.getElementById('csv-file').addEventListener('change', function(e) {
-            var file = e.target.files[0];
-            if (!file) return;
-
+            var file = e.target.files[0]; if (!file) return;
             var format = document.getElementById('csv-format').value;
             showLoading(true, 'Processing...');
-
             var reader = new FileReader();
             reader.onload = function(ev) {
                 var lines = ev.target.result.trim().split('\n').map(function(l) { return l.trim(); }).filter(function(l) { return l; });
                 var first = lines[0].toLowerCase();
-                if (first.includes('source') || first.includes('ra') || first.includes('id') || first.includes('name')) {
-                    lines = lines.slice(1);
-                }
-                if (format === 'simbad') {
-                    processSimbadCSV(lines);
-                } else {
-                    processCoordCSV(lines, format);
-                    showLoading(false);
-                }
+                if (first.includes('source') || first.includes('ra') || first.includes('id') || first.includes('name')) lines = lines.slice(1);
+                if (format === 'simbad') { processSimbadCSV(lines); }
+                else { processCoordCSV(lines, format); showLoading(false); }
                 document.getElementById('csv-input-label').textContent = file.name;
             };
             reader.readAsText(file);
@@ -2937,21 +2407,12 @@
             showLoading(true, 'Querying ' + entries.length + ' sources...');
             var success = 0, fail = 0, i = 0;
             function next() {
-                if (i >= entries.length) {
-                    updateSourceList();
-                    updateSourceCount();
-                    showLoading(false);
-                    showToast('Added ' + success + (fail ? ' (' + fail + ' failed)' : ''), 'success');
-                    return;
-                }
-                var id = entries[i].replace(/['"]/g, '').trim();
-                i++;
+                if (i >= entries.length) { updateSourceList(); updateSourceCount(); showLoading(false); showToast('Added ' + success + (fail ? ' (' + fail + ' failed)' : ''), 'success'); return; }
+                var id = entries[i].replace(/['"]/g, '').trim(); i++;
                 if (!id) { next(); return; }
                 resolveObject(id, function(result) {
-                    if (result) {
-                        addSourceToMap({ name: result.name, ra: result.ra, dec: result.dec, color: selectedColors.bulk, type: 'catalog' }, false);
-                        success++;
-                    } else { fail++; }
+                    if (result) { addSourceToMap({ name: result.name, ra: result.ra, dec: result.dec, color: selectedColors.bulk, type: 'catalog' }, false); success++; }
+                    else fail++;
                     setTimeout(next, 120);
                 });
             }
@@ -2969,201 +2430,446 @@
                 addSourceToMap({ name: name, ra: ra, dec: dec, color: selectedColors.bulk, type: 'csv' }, false);
                 count++;
             });
-            updateSourceList();
-            updateSourceCount();
+            updateSourceList(); updateSourceCount();
             showToast('Added ' + count + ' sources', 'success');
         }
 
+
+
         // ==================== Screenshot Download ====================
 
-        function downloadFieldPNG() {
-            showLoading(true, 'Capturing view...');
-
-            // Must capture during a render frame for WebGL
-            requestAnimationFrame(function() {
-                try {
-                    var dataUrl = null;
-
-                    // Method 1: Aladin Lite v3 getViewDataURL
-                    if (typeof aladin.getViewDataURL === 'function') {
-                        try {
-                            dataUrl = aladin.getViewDataURL('image/png');
-                            console.log('getViewDataURL returned:', typeof dataUrl, dataUrl ? dataUrl.substring(0, 60) + '...' : 'null/undefined');
-                        } catch(e) {
-                            console.log('getViewDataURL error:', e.message);
-                        }
-                    }
-
-                    // Validate: must start with data:image
-                    if (dataUrl && typeof dataUrl === 'string' && dataUrl.indexOf('data:image') === 0 && dataUrl.length > 500) {
-                        console.log('Using getViewDataURL, length:', dataUrl.length);
-                        compositeAndDownload(dataUrl);
-                        return;
-                    }
-
-                    // Method 2: Direct WebGL readPixels (works inside rAF)
-                    console.log('getViewDataURL unusable, trying WebGL readPixels...');
-                    var container = document.getElementById('aladin-container');
-                    var canvases = container.querySelectorAll('canvas:not(#jpg-overlay-canvas):not(#jpg-marker-canvas)');
-                    var mainCanvas = null, maxArea = 0;
-                    canvases.forEach(function(c) {
-                        var area = c.width * c.height;
-                        if (area > maxArea) { maxArea = area; mainCanvas = c; }
+        // Compute the sky extent (degrees) of the footprint bounding box for any PA.
+        // Returns the larger of the RA-projected span and Dec span, padded.
+        function getFootprintExtentDeg(ra, dec, pa, instrument) {
+            var allCorners = [];
+            if (instrument === 'roman') {
+                ROMAN_WFI_SIAF.forEach(function(det) {
+                    det.forEach(function(c) {
+                        allCorners.push(v2v3ToSky(ra, dec, pa, c[0], c[1]));
                     });
+                });
+            } else {
+                // JWST NIRCam: two square modules
+                var modSize = 0.037, gap = 0.012, hs = modSize / 2;
+                [-1, 1].forEach(function(side) {
+                    var dx = side * (modSize / 2 + gap);
+                    [[dx-hs,-hs],[dx+hs,-hs],[dx+hs,hs],[dx-hs,hs]].forEach(function(c) {
+                        var rot = rotatePoint(c[0], c[1], pa);
+                        allCorners.push(offsetToRaDec(ra, dec, rot.x, rot.y));
+                    });
+                });
+            }
+            var cosDec = Math.cos(dec * Math.PI / 180);
+            var ras  = allCorners.map(function(c) { return c[0]; });
+            var decs = allCorners.map(function(c) { return c[1]; });
+            var raSpan  = (Math.max.apply(null, ras)  - Math.min.apply(null, ras))  * cosDec;
+            var decSpan =  Math.max.apply(null, decs) - Math.min.apply(null, decs);
+            return Math.max(raSpan, decSpan);
+        }
 
-                    if (mainCanvas) {
-                        // Try toDataURL first (works if preserveDrawingBuffer=true)
-                        try {
-                            dataUrl = mainCanvas.toDataURL('image/png');
-                            if (dataUrl && dataUrl.length > 500) {
-                                console.log('Direct toDataURL worked, length:', dataUrl.length);
-                                compositeAndDownload(dataUrl);
-                                return;
-                            }
-                        } catch(e) {
-                            console.log('Direct toDataURL failed:', e.message);
-                        }
+        // State for export: set in downloadFieldPNG, consumed in executePNGCapture
+        var _exportScale = 1;
+        var _exportRotateDeg = 0;
 
-                        // readPixels from WebGL context
-                        try {
-                            var gl = mainCanvas.getContext('webgl2', {preserveDrawingBuffer: true})
-                                  || mainCanvas.getContext('webgl', {preserveDrawingBuffer: true})
-                                  || mainCanvas.getContext('webgl2')
-                                  || mainCanvas.getContext('webgl');
-                            if (gl) {
-                                var w = gl.drawingBufferWidth;
-                                var h = gl.drawingBufferHeight;
-                                var pixels = new Uint8Array(w * h * 4);
-                                gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        // Returns true if the high-V3 (top of Roman array) end of the footprint
+        // ends up at the top of the canvas (smaller Y) after applying rotateDeg.
+        // For JWST we use the +V3 direction similarly.
+        // This resolves the 180-deg ambiguity in the PCA major axis direction.
+        function footprintTopIsUp(fpRa, fpDec, fpPa, instrument, rotateDeg) {
+            var container = document.getElementById('aladin-container');
+            var W = container.clientWidth, H = container.clientHeight;
+            var rad = rotateDeg * Math.PI / 180;
+            var cosR = Math.cos(rad), sinR = Math.sin(rad);
+            var cx = W / 2, cy = H / 2;
 
-                                // Check if we got actual pixel data (not all zeros)
-                                var hasData = false;
-                                for (var i = 0; i < Math.min(pixels.length, 10000); i += 4) {
-                                    if (pixels[i] || pixels[i+1] || pixels[i+2]) { hasData = true; break; }
-                                }
-                                console.log('readPixels hasData:', hasData, 'dimensions:', w, 'x', h);
+            function rotatedY(skyPt) {
+                var pix = null;
+                try { pix = aladin.world2pix(skyPt[0], skyPt[1]); } catch(e) {}
+                if (!pix) return null;
+                var dx = pix[0] - cx, dy = pix[1] - cy;
+                return cy + dx * sinR + dy * cosR;
+            }
 
-                                if (hasData) {
-                                    var outCanvas = document.createElement('canvas');
-                                    outCanvas.width = w;
-                                    outCanvas.height = h;
-                                    var ctx2d = outCanvas.getContext('2d');
-                                    var imgData = ctx2d.createImageData(w, h);
-                                    // Flip vertically (WebGL is bottom-up)
-                                    for (var row = 0; row < h; row++) {
-                                        var srcOff = (h - 1 - row) * w * 4;
-                                        var dstOff = row * w * 4;
-                                        imgData.data.set(pixels.subarray(srcOff, srcOff + w * 4), dstOff);
-                                    }
-                                    ctx2d.putImageData(imgData, 0, 0);
-                                    dataUrl = outCanvas.toDataURL('image/png');
-                                    console.log('readPixels canvas length:', dataUrl.length);
-                                    compositeAndDownload(dataUrl);
-                                    return;
-                                }
-                            }
-                        } catch(e) {
-                            console.log('readPixels failed:', e.message);
-                        }
+            // For Roman: SIAF detectors 15-17 (indices 15,16,17) are the highest-V3 row.
+            // Detectors 6-8 (indices 6,7,8) are the lowest-V3 row.
+            // Compare their mean rotated Y — high-V3 should have smaller Y (higher on screen).
+            if (instrument === 'roman') {
+                var topIdxs   = [15, 16, 17];
+                var botIdxs   = [6, 7, 8];
+                var topYSum = 0, topN = 0, botYSum = 0, botN = 0;
+                topIdxs.forEach(function(i) {
+                    ROMAN_WFI_SIAF[i].forEach(function(c) {
+                        var sky = v2v3ToSky(fpRa, fpDec, fpPa, c[0], c[1]);
+                        var ry = rotatedY(sky);
+                        if (ry !== null) { topYSum += ry; topN++; }
+                    });
+                });
+                botIdxs.forEach(function(i) {
+                    ROMAN_WFI_SIAF[i].forEach(function(c) {
+                        var sky = v2v3ToSky(fpRa, fpDec, fpPa, c[0], c[1]);
+                        var ry = rotatedY(sky);
+                        if (ry !== null) { botYSum += ry; botN++; }
+                    });
+                });
+                if (topN === 0 || botN === 0) return true;
+                return (topYSum / topN) < (botYSum / botN);
+            }
+
+            // For JWST: compare the two module centres
+            var modSize = 0.037, gap = 0.012;
+            var topSky = offsetToRaDec(fpRa, fpDec, rotatePoint(0, modSize / 2 + gap, fpPa).x, rotatePoint(0, modSize / 2 + gap, fpPa).y);
+            var botSky = offsetToRaDec(fpRa, fpDec, rotatePoint(0, -(modSize / 2 + gap), fpPa).x, rotatePoint(0, -(modSize / 2 + gap), fpPa).y);
+            var topY = rotatedY(topSky), botY = rotatedY(botSky);
+            if (topY === null || botY === null) return true;
+            return topY < botY;
+        }
+
+        // Compute the major axis angle of the footprint in screen-pixel space using PCA.
+        // Returns degrees (CW from horizontal in Y-down screen coords).
+        // Must be called after aladin has settled on the target view.
+        function computeFootprintMajorAxisDeg(fpRa, fpDec, fpPa, instrument) {
+            var skyPoints = [];
+            if (instrument === 'roman') {
+                ROMAN_WFI_SIAF.forEach(function(det) {
+                    det.forEach(function(c) { skyPoints.push(v2v3ToSky(fpRa, fpDec, fpPa, c[0], c[1])); });
+                });
+            } else {
+                var modSize = 0.037, gap = 0.012, hs = modSize / 2;
+                [-1, 1].forEach(function(side) {
+                    var dx = side * (modSize / 2 + gap);
+                    [[dx-hs,-hs],[dx+hs,-hs],[dx+hs,hs],[dx-hs,hs]].forEach(function(c) {
+                        var rot = rotatePoint(c[0], c[1], fpPa);
+                        skyPoints.push(offsetToRaDec(fpRa, fpDec, rot.x, rot.y));
+                    });
+                });
+            }
+            var pixels = [];
+            skyPoints.forEach(function(pt) {
+                try { var p = aladin.world2pix(pt[0], pt[1]); if (p) pixels.push(p); } catch(e) {}
+            });
+            if (pixels.length < 3) return 0;
+            var cx = 0, cy = 0;
+            pixels.forEach(function(p) { cx += p[0]; cy += p[1]; });
+            cx /= pixels.length; cy /= pixels.length;
+            var sxx = 0, syy = 0, sxy = 0;
+            pixels.forEach(function(p) {
+                var dx = p[0] - cx, dy = p[1] - cy;
+                sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+            });
+            return 0.5 * Math.atan2(2 * sxy, sxx - syy) * 180 / Math.PI;
+        }
+
+        function downloadFieldPNG() {
+            _exportScale = parseInt(document.getElementById('png-scale').value) || 1;
+            _exportRotateDeg = 0;
+
+            var frameOnFootprint = document.getElementById('png-frame-footprint').checked;
+
+            if (frameOnFootprint && activeFootprintOverlay) {
+                var fpRa  = parseFloat(document.getElementById('footprint-ra-slider').value);
+                var fpDec = parseFloat(document.getElementById('footprint-dec-slider').value);
+                var fpPa  = parseFloat(document.getElementById('footprint-pa-slider').value);
+                var instrument = document.getElementById('footprint-instrument').value;
+
+                // Generous FoV: 2x the sky bounding box so there is ample context
+                // around the footprint even after the canvas is rotated in-place.
+                var extent = getFootprintExtentDeg(fpRa, fpDec, fpPa, instrument);
+                var frameFov = extent * 3.5;
+
+                showLoading(true, 'Framing footprint...');
+                aladin.gotoRaDec(fpRa, fpDec);
+                aladin.setFoV(frameFov);
+
+                // After Aladin settles, compute major axis from actual pixel positions,
+                // then capture.
+                setTimeout(function() {
+                    var majorAxisDeg = computeFootprintMajorAxisDeg(fpRa, fpDec, fpPa, instrument);
+                    // Bring majorAxisDeg into [-90, +90) so we pick the rotation
+                    // that aligns the major axis to horizontal with minimum travel.
+                    // (Normalising to [-45,+45] would incorrectly map a vertical axis
+                    //  at 90 deg to 0 deg and skip the rotation entirely.)
+                    while (majorAxisDeg >= 90) majorAxisDeg -= 180;
+                    while (majorAxisDeg < -90) majorAxisDeg += 180;
+                    // PCA axis direction is ambiguous by 180 deg.
+                    // Resolve by checking whether the high-V3 end of the Roman array
+                    // ends up at the top of the rotated canvas. If not, flip 180 deg.
+                    _exportRotateDeg = -majorAxisDeg;
+                    if (footprintTopIsUp(fpRa, fpDec, fpPa, instrument, _exportRotateDeg)) {
+                        _exportRotateDeg += 180;
                     }
+                    showLoading(true, 'Rendering at ' + _exportScale + 'x (rot ' + _exportRotateDeg.toFixed(1) + 'deg)...');
+                    // Two rAF hops ensure Aladin's WebGL frame is fully flushed
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() { setTimeout(executePNGCapture, 200); });
+                    });
+                }, 2500);
+            } else {
+                _exportRotateDeg = 0;
+                showLoading(true, 'Rendering at ' + _exportScale + 'x...');
+                setTimeout(function() { requestAnimationFrame(executePNGCapture); }, 80);
+            }
+        }
 
-                    showLoading(false);
-                    // If JPG overlay is active, save it even without Aladin background
-                    if (jpgOverlay && jpgOverlay.canvas && jpgOverlay.markerCanvas) {
-                        var comp = document.createElement('canvas');
-                        comp.width = jpgOverlay.canvas.width;
-                        comp.height = jpgOverlay.canvas.height;
-                        var ctx = comp.getContext('2d');
-                        ctx.fillStyle = '#000';
-                        ctx.fillRect(0, 0, comp.width, comp.height);
-                        ctx.drawImage(jpgOverlay.canvas, 0, 0);
-                        ctx.drawImage(jpgOverlay.markerCanvas, 0, 0);
-                        savePngBlob(comp);
-                        showToast('Saved JPG overlay (Aladin background capture failed)', 'success');
-                    } else {
-                        showToast('PNG capture failed. Open browser console for details.', 'error');
+                // Try to grab the Aladin background as a data URL.
+        // Uses getViewDataURL first, then falls back to WebGL readPixels.
+        function grabAladinDataUrl() {
+            // Method 1: Aladin built-in
+            if (typeof aladin.getViewDataURL === 'function') {
+                try {
+                    var d = aladin.getViewDataURL('image/png');
+                    if (d && typeof d === 'string' && d.indexOf('data:image') === 0 && d.length > 2000) return d;
+                } catch(e) {}
+            }
+            // Method 2: direct toDataURL on main canvas
+            var container = document.getElementById('aladin-container');
+            var canvases = container.querySelectorAll('canvas:not(#jpg-overlay-canvas):not(#jpg-marker-canvas)');
+            var mainCanvas = null, maxArea = 0;
+            canvases.forEach(function(c) { var a = c.width * c.height; if (a > maxArea) { maxArea = a; mainCanvas = c; } });
+            if (!mainCanvas) return null;
+            try {
+                var d2 = mainCanvas.toDataURL('image/png');
+                if (d2 && d2.length > 2000) return d2;
+            } catch(e) {}
+            // Method 3: WebGL readPixels (handles preserveDrawingBuffer=false contexts)
+            try {
+                var gl = mainCanvas.getContext('webgl2') || mainCanvas.getContext('webgl');
+                if (gl) {
+                    var gw = gl.drawingBufferWidth, gh = gl.drawingBufferHeight;
+                    var pixels = new Uint8Array(gw * gh * 4);
+                    gl.readPixels(0, 0, gw, gh, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+                    var sum = 0;
+                    for (var pi = 0; pi < Math.min(pixels.length, 40000); pi += 4) {
+                        sum += pixels[pi] + pixels[pi+1] + pixels[pi+2];
                     }
-
-                } catch(err) {
-                    showLoading(false);
-                    showToast('Capture error: ' + err.message, 'error');
-                    console.error('Screenshot error:', err);
+                    if (sum > 0) {
+                        var tmp = document.createElement('canvas');
+                        tmp.width = gw; tmp.height = gh;
+                        var tctx = tmp.getContext('2d');
+                        var imgData = tctx.createImageData(gw, gh);
+                        for (var row = 0; row < gh; row++) {
+                            var srcOff = (gh - 1 - row) * gw * 4;
+                            imgData.data.set(pixels.subarray(srcOff, srcOff + gw * 4), row * gw * 4);
+                        }
+                        tctx.putImageData(imgData, 0, 0);
+                        return tmp.toDataURL('image/png');
+                    }
                 }
+            } catch(e) { console.log('readPixels failed:', e.message); }
+            return null;
+        }
+
+        // Attempt capture, retrying every 400ms for up to 4s if canvas appears blank.
+        var _captureAttempts = 0;
+        function executePNGCapture() {
+            _captureAttempts = 0;
+            attemptCapture();
+        }
+
+        function attemptCapture() {
+            _captureAttempts++;
+            var aladinDataUrl = null;
+            requestAnimationFrame(function() {
+                aladinDataUrl = grabAladinDataUrl();
+                console.log('Capture attempt', _captureAttempts, 'dataUrl length:', aladinDataUrl ? aladinDataUrl.length : 0);
+
+                var hasBackground = aladinDataUrl && aladinDataUrl.length > 2000;
+
+                if (!hasBackground && _captureAttempts < 12) {
+                    // Tiles still loading — wait 400ms and retry
+                    showLoading(true, 'Waiting for tiles (' + _captureAttempts + '/12)...');
+                    setTimeout(function() { requestAnimationFrame(attemptCapture); }, 400);
+                    return;
+                }
+
+                if (!hasBackground && !jpgOverlay) {
+                    showLoading(false);
+                    showToast('PNG capture failed. Check browser console.', 'error');
+                    return;
+                }
+
+                compositeHighRes(aladinDataUrl, _exportScale, _exportRotateDeg, 0.52);
             });
         }
 
-        function compositeAndDownload(dataUrl) {
-            if (jpgOverlay && jpgOverlay.canvas && jpgOverlay.markerCanvas) {
-                // Composite all 3 layers: Aladin background + JPG + markers
-                var aladinImg = new Image();
-                aladinImg.onload = function() {
-                    var comp = document.createElement('canvas');
-                    comp.width = aladinImg.width;
-                    comp.height = aladinImg.height;
-                    var ctx = comp.getContext('2d');
-                    // Layer 1: Aladin survey background
-                    ctx.drawImage(aladinImg, 0, 0);
-                    // Layer 2: JPG overlay
-                    ctx.drawImage(jpgOverlay.canvas, 0, 0, comp.width, comp.height);
-                    // Layer 3: Catalog markers and footprints
-                    ctx.drawImage(jpgOverlay.markerCanvas, 0, 0, comp.width, comp.height);
-                    savePngBlob(comp);
-                };
-                aladinImg.onerror = function() {
-                    // Fallback: just JPG + markers without Aladin background
-                    var comp = document.createElement('canvas');
-                    comp.width = jpgOverlay.canvas.width;
-                    comp.height = jpgOverlay.canvas.height;
-                    var ctx = comp.getContext('2d');
-                    ctx.drawImage(jpgOverlay.canvas, 0, 0);
-                    ctx.drawImage(jpgOverlay.markerCanvas, 0, 0);
-                    savePngBlob(comp);
-                };
-                aladinImg.src = dataUrl;
+        // Composite all layers into a high-res canvas, optionally rotate, then download.
+        // Project all footprint corners through scale + canvas rotation to find
+        // the bounding box of the footprint in the final rotated output canvas.
+        // outW/outH are the pre-rotation canvas dimensions (at output scale).
+        function computeFootprintBoundsInRotatedCanvas(outW, outH, scale, rotateDeg) {
+            var fpRa  = parseFloat(document.getElementById('footprint-ra-slider').value);
+            var fpDec = parseFloat(document.getElementById('footprint-dec-slider').value);
+            var fpPa  = parseFloat(document.getElementById('footprint-pa-slider').value);
+            var instrument = document.getElementById('footprint-instrument').value;
+
+            // Collect all sky corner points
+            var skyPoints = [];
+            if (instrument === 'roman') {
+                ROMAN_WFI_SIAF.forEach(function(det) {
+                    det.forEach(function(c) {
+                        skyPoints.push(v2v3ToSky(fpRa, fpDec, fpPa, c[0], c[1]));
+                    });
+                });
             } else {
-                savePngFromDataUrl(dataUrl);
+                var modSize = 0.037, gap = 0.012, hs = modSize / 2;
+                [-1, 1].forEach(function(side) {
+                    var dx = side * (modSize / 2 + gap);
+                    [[dx-hs,-hs],[dx+hs,-hs],[dx+hs,hs],[dx-hs,hs]].forEach(function(c) {
+                        var rot = rotatePoint(c[0], c[1], fpPa);
+                        skyPoints.push(offsetToRaDec(fpRa, fpDec, rot.x, rot.y));
+                    });
+                });
             }
+
+            // Convert to screen pixels, scale, then apply the canvas rotation
+            var rad = rotateDeg * Math.PI / 180;
+            var cosR = Math.cos(rad), sinR = Math.sin(rad);
+            // Canvas centre (pre-rotation)
+            var cx = outW / 2, cy = outH / 2;
+
+            var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            skyPoints.forEach(function(pt) {
+                var pix = null;
+                try { pix = aladin.world2pix(pt[0], pt[1]); } catch(e) {}
+                if (!pix) return;
+                // Scale to output canvas
+                var sx = pix[0] * scale, sy = pix[1] * scale;
+                // Rotate around canvas centre (same transform as applyCanvasRotation)
+                var dx = sx - cx, dy = sy - cy;
+                var rx = cx + dx * cosR - dy * sinR;
+                var ry = cy + dx * sinR + dy * cosR;
+                if (rx < minX) minX = rx;
+                if (rx > maxX) maxX = rx;
+                if (ry < minY) minY = ry;
+                if (ry > maxY) maxY = ry;
+            });
+
+            if (!isFinite(minX)) return null;
+            return { minX: Math.floor(minX), minY: Math.floor(minY),
+                     maxX: Math.ceil(maxX),  maxY: Math.ceil(maxY) };
         }
 
-        function savePngBlob(canvas) {
-            canvas.toBlob(function(blob) {
-                if (!blob) {
-                    showLoading(false);
-                    showToast('PNG blob creation failed', 'error');
-                    return;
-                }
-                downloadBlob(blob);
-            }, 'image/png');
-        }
+                // cropFraction: fraction of the composited canvas to keep (centred).
+        // 1.0 = keep all; 0.52 = keep central 52%, discarding the outer 24% on each side.
+        function compositeHighRes(aladinDataUrl, scale, rotateDeg, cropFraction) {
+            cropFraction = cropFraction || 1.0;
+            var container = document.getElementById('aladin-container');
+            var origW = container.clientWidth;
+            var origH = container.clientHeight;
+            var outW = origW * scale;
+            var outH = origH * scale;
 
-        function savePngFromDataUrl(dataUrl) {
-            try {
-                var parts = dataUrl.split(',');
-                var bstr = atob(parts[1]);
-                var n = bstr.length;
-                var u8 = new Uint8Array(n);
-                for (var i = 0; i < n; i++) u8[i] = bstr.charCodeAt(i);
-                downloadBlob(new Blob([u8], { type: 'image/png' }));
-            } catch(err) {
-                showLoading(false);
-                showToast('Download failed: ' + err.message, 'error');
-                console.error('savePngFromDataUrl error:', err);
+            var outCanvas = document.createElement('canvas');
+            outCanvas.width = outW;
+            outCanvas.height = outH;
+            var ctx = outCanvas.getContext('2d');
+
+            // Layer 0: solid black fill so no transparent holes in final PNG
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, outW, outH);
+
+            // Layer 1: Aladin sky background
+            function drawBackground(onDone) {
+                if (!aladinDataUrl) { onDone(); return; }
+                var bgImg = new Image();
+                bgImg.onload = function() { ctx.drawImage(bgImg, 0, 0, outW, outH); onDone(); };
+                bgImg.onerror = function() { onDone(); };
+                bgImg.src = aladinDataUrl;
             }
+
+            // Layer 2: JPG WCS overlay (re-projected affinely at full scale)
+            function drawJpgLayer(onDone) {
+                if (!jpgOverlay || !jpgOverlay.img) { onDone(); return; }
+                var img = jpgOverlay.img;
+                var w = jpgOverlay.imgWidth, h = jpgOverlay.imgHeight;
+                var corners = jpgOverlay.corners;
+                var stl, str, sbl;
+                try {
+                    stl = aladin.world2pix(corners.tl[0], corners.tl[1]);
+                    str = aladin.world2pix(corners.tr[0], corners.tr[1]);
+                    sbl = aladin.world2pix(corners.bl[0], corners.bl[1]);
+                } catch(e) { onDone(); return; }
+                if (!stl || !str || !sbl) { onDone(); return; }
+                ctx.globalAlpha = jpgOverlay.opacity;
+                ctx.setTransform((str[0]-stl[0])/w*scale, (str[1]-stl[1])/w*scale,
+                                 (sbl[0]-stl[0])/h*scale, (sbl[1]-stl[1])/h*scale,
+                                  stl[0]*scale, stl[1]*scale);
+                ctx.drawImage(img, 0, 0);
+                ctx.setTransform(1,0,0,1,0,0);
+                ctx.globalAlpha = 1.0;
+                onDone();
+            }
+
+            // Layer 3: Catalogs, sources, footprints, PM vectors re-rendered at scale
+            function drawMarkerLayer() {
+                drawOverlayMarkers(ctx, origW, origH, scale);
+            }
+
+            drawBackground(function() {
+                drawJpgLayer(function() {
+                    drawMarkerLayer();
+
+                    // Optional: rotate output canvas so footprint V3 axis points up
+                    var finalCanvas = outCanvas;
+                    if (rotateDeg && Math.abs(rotateDeg) > 0.1) {
+                        finalCanvas = applyCanvasRotation(outCanvas, rotateDeg);
+                    }
+
+                    // Crop to footprint bounding box + 1-inch margin
+                    if (cropFraction < 0.999) {
+                        var marginPx = Math.round(96 * scale); // 1 inch at 96 dpi
+                        var fpBounds = computeFootprintBoundsInRotatedCanvas(
+                            outW, outH, scale, rotateDeg);
+                        if (fpBounds) {
+                            var cropX = Math.max(0, fpBounds.minX - marginPx);
+                            var cropY = Math.max(0, fpBounds.minY - marginPx);
+                            var cropX2 = Math.min(finalCanvas.width,  fpBounds.maxX + marginPx);
+                            var cropY2 = Math.min(finalCanvas.height, fpBounds.maxY + marginPx);
+                            var cropW = cropX2 - cropX;
+                            var cropH = cropY2 - cropY;
+                            var cropCanvas = document.createElement('canvas');
+                            cropCanvas.width  = cropW;
+                            cropCanvas.height = cropH;
+                            var cropCtx = cropCanvas.getContext('2d');
+                            cropCtx.drawImage(finalCanvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+                            finalCanvas = cropCanvas;
+                        }
+                    }
+
+                    finalCanvas.toBlob(function(blob) {
+                        if (!blob) { showLoading(false); showToast('PNG blob creation failed', 'error'); return; }
+                        var center = aladin.getRaDec();
+                        var suffix = rotateDeg ? '_rotated' : '';
+                        var fname = 'skyplanner_' + scale + 'x' + suffix + '_' + center[0].toFixed(2) + '_' + center[1].toFixed(2) + '.png';
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = url; a.download = fname;
+                        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                        setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+                        showLoading(false);
+                        showToast('Saved ' + scale + '× PNG (' + finalCanvas.width + '×' + finalCanvas.height + 'px)' + (rotateDeg ? ', rotated ' + (-rotateDeg).toFixed(0) + '°' : ''), 'success');
+                    }, 'image/png');
+                });
+            });
         }
 
-        function downloadBlob(blob) {
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            var center = aladin.getRaDec();
-            a.download = 'skyplanner_' + center[0].toFixed(2) + '_' + center[1].toFixed(2) + '.png';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
-            showLoading(false);
-            showToast('PNG downloaded', 'success');
+        // Rotate srcCanvas by angleDeg around its centre, keeping the same canvas size.
+        // No background fill: areas outside the rotated image are transparent so that
+        // the Aladin sky background (already composited into srcCanvas) shows through.
+        function applyCanvasRotation(srcCanvas, angleDeg) {
+            var w = srcCanvas.width, h = srcCanvas.height;
+            var rad = angleDeg * Math.PI / 180;
+            var dst = document.createElement('canvas');
+            dst.width = w;
+            dst.height = h;
+            var ctx = dst.getContext('2d');
+            // No fill — leave corners transparent (will be black in PNG, matching sky)
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(rad);
+            ctx.drawImage(srcCanvas, -w / 2, -h / 2);
+            return dst;
         }
+
+        
     </script>
 </body>
 </html>
