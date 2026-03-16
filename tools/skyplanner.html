@@ -972,16 +972,16 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>RA (°): <input type="number" id="fp-ra-input" value="83.8186" step="0.001" style="width:90px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
-                        <input type="range" id="footprint-ra-slider" min="78" max="89" step="0.001" value="83.8186" style="width:100%;">
+                        <label>RA (°): <input type="number" id="fp-ra-input" value="83.8186" step="0.005" style="width:90px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
+                        <input type="range" id="footprint-ra-slider" min="78" max="89" step="0.005" value="83.8186" style="width:100%;">
                     </div>
                     <div class="input-group">
                         <label>Dec (°): <input type="number" id="fp-dec-input" value="-5.3897" step="0.001" style="width:90px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
                         <input type="range" id="footprint-dec-slider" min="-11" max="0" step="0.001" value="-5.3897" style="width:100%;">
                     </div>
                     <div class="input-group">
-                        <label>PA (°): <input type="number" id="fp-pa-input" value="0" step="1" min="0" max="360" style="width:60px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
-                        <input type="range" id="footprint-pa-slider" min="0" max="360" step="1" value="0" style="width:100%;">
+                        <label>PA (°): <input type="number" id="fp-pa-input" value="0" step="0.25" min="0" max="360" style="width:60px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
+                        <input type="range" id="footprint-pa-slider" min="0" max="360" step="0.25" value="0" style="width:100%;">
                     </div>
                     <div class="color-picker-row" style="margin-bottom: 0.3rem;">
                         <span class="color-picker-label">Color:</span>
@@ -997,7 +997,7 @@
                     </div>
                     <div class="input-group">
                         <label>Fill Opacity: <span id="fp-opacity-display">0%</span></label>
-                        <input type="range" id="footprint-opacity-slider" min="0" max="100" step="5" value="0" style="width:100%;">
+                        <input type="range" id="footprint-opacity-slider" min="0" max="100" step="3" value="0" style="width:100%;">
                     </div>
                     <div class="coord-row">
                         <button onclick="centerFootprintOnView()">Center on View</button>
@@ -1228,7 +1228,7 @@
         var showPMVectors = false;
         var pmVectorOverlay = null;
 
-        // Roman WFI SIAF detector corners [dV2, dV3] arcsec offset from WFI_CEN
+            // Roman WFI SIAF detector corners [dV2, dV3] arcsec offset from WFI_CEN
         var ROMAN_WFI_SIAF = [
             [[70.67,-62.89],[-155.48,-451.63],[-539.82,-232.74],[-312.8,158.26]],
             [[522.07,-325.07],[297.43,-710.45],[-79.02,-496.97],[146.88,-108.76]],
@@ -1250,24 +1250,106 @@
             [[1362.74,874.82],[1151.84,490.45],[784.24,711.0],[997.91,1097.3]]
         ];
 
-        function v2v3ToSky(ra0, dec0, paDeg, dv2, dv3) {
-            var paRad = paDeg * Math.PI / 180;
-            var cosDec = Math.cos(dec0 * Math.PI / 180);
-            var cosPA = Math.cos(paRad);
-            var sinPA = Math.sin(paRad);
-            var dra  = ( dv2 * cosPA - dv3 * sinPA) / 3600 / cosDec;
-            var ddec = ( dv2 * sinPA + dv3 * cosPA) / 3600;
-            return [ra0 + dra, dec0 + ddec];
+        function v2v3ToSkyExact(ra0, dec0, paDeg, dv2, dv3) {
+            const deg2rad = Math.PI / 180.0;
+            const rad2deg = 180.0 / Math.PI;
+            const arcsec2rad = deg2rad / 3600.0;
+
+            const ra0r = ra0 * deg2rad;
+            const dec0r = dec0 * deg2rad;
+            const pa = paDeg * deg2rad;
+
+            // Rotate V2/V3 into local sky offsets
+            // x = east, y = north, in radians
+            //
+            // Keep this sign convention for now since it looked closest in your last test.
+            // const x = (-dv2 * Math.cos(pa) + dv3 * Math.sin(pa)) * arcsec2rad;
+            // const y = ( dv2 * Math.sin(pa) + dv3 * Math.cos(pa)) * arcsec2rad;
+            const x = (-dv2 * Math.cos(pa) + dv3 * Math.sin(pa)) * arcsec2rad;
+            const y = ( dv2 * Math.sin(pa) + dv3 * Math.cos(pa)) * arcsec2rad;
+
+            // Local orthonormal triad at boresight
+            const ex = -Math.sin(ra0r);
+            const ey =  Math.cos(ra0r);
+            const ez =  0.0;
+
+            const nx = -Math.cos(ra0r) * Math.sin(dec0r);
+            const ny = -Math.sin(ra0r) * Math.sin(dec0r);
+            const nz =  Math.cos(dec0r);
+
+            const rx = Math.cos(dec0r) * Math.cos(ra0r);
+            const ry = Math.cos(dec0r) * Math.sin(ra0r);
+            const rz = Math.sin(dec0r);
+
+            // Angular distance from boresight
+            const rho = Math.sqrt(x * x + y * y);
+
+            let X, Y, Z;
+
+            if (rho < 1e-15) {
+                X = rx;
+                Y = ry;
+                Z = rz;
+            } else {
+                // Unit tangent direction
+                const tx = (x / rho) * ex + (y / rho) * nx;
+                const ty = (x / rho) * ey + (y / rho) * ny;
+                const tz = (x / rho) * ez + (y / rho) * nz;
+
+                // Move rho radians along the sphere from boresight in tangent direction
+                X = Math.cos(rho) * rx + Math.sin(rho) * tx;
+                Y = Math.cos(rho) * ry + Math.sin(rho) * ty;
+                Z = Math.cos(rho) * rz + Math.sin(rho) * tz;
+            }
+
+            let rar = Math.atan2(Y, X);
+            if (rar < 0) rar += 2 * Math.PI;
+
+            const decr = Math.asin(Z);
+
+            return [rar * rad2deg, decr * rad2deg];
         }
 
-        function siafDetToSkyPoly(ra, dec, pa, detCorners) {
-            var poly = detCorners.map(function(c) {
-                return v2v3ToSky(ra, dec, pa, c[0], c[1]);
+
+        function sampleEdge(p0, p1, n) {
+            var pts = [];
+            for (var i = 0; i < n; i++) {
+                var t = i / (n - 1);
+                pts.push([
+                    p0[0] + t * (p1[0] - p0[0]),
+                    p0[1] + t * (p1[1] - p0[1])
+                ]);
+            }
+            return pts;
+        }
+
+        function densifyDetCorners(detCorners, nPerEdge) {
+            var dense = [];
+            for (var i = 0; i < detCorners.length; i++) {
+                var p0 = detCorners[i];
+                var p1 = detCorners[(i + 1) % detCorners.length];
+                var edgePts = sampleEdge(p0, p1, nPerEdge);
+
+                // avoid duplicating shared vertices between edges
+                if (i < detCorners.length - 1) edgePts.pop();
+
+                dense = dense.concat(edgePts);
+            }
+            return dense;
+        }
+
+        function siafDetToSkyPoly(ra, dec, pa, detCorners, nPerEdge) {
+            nPerEdge = nPerEdge || 25;
+
+            var denseCorners = densifyDetCorners(detCorners, nPerEdge);
+
+            var poly = denseCorners.map(function(c) {
+                return v2v3ToSkyExact(ra, dec, pa, c[0], c[1]);
             });
+
             poly.push(poly[0]);
             return poly;
         }
-
         // ==================== Init ====================
 
         A.init.then(function() {
@@ -2019,7 +2101,7 @@
 
             raSlider.addEventListener('input', function() { raInput.value = parseFloat(this.value).toFixed(4); updateFootprintRealtime(); });
             decSlider.addEventListener('input', function() { decInput.value = parseFloat(this.value).toFixed(4); updateFootprintRealtime(); });
-            paSlider.addEventListener('input', function() { paInput.value = parseFloat(this.value).toFixed(0); updateFootprintRealtime(); });
+            paSlider.addEventListener('input', function() { paInput.value = parseFloat(this.value).toFixed(2); updateFootprintRealtime(); });
 
             raInput.addEventListener('change', function() {
                 var v = parseFloat(this.value); if (isNaN(v)) return;
@@ -2061,7 +2143,7 @@
 
             document.getElementById('fp-ra-input').value = ra.toFixed(4);
             document.getElementById('fp-dec-input').value = dec.toFixed(4);
-            document.getElementById('fp-pa-input').value = pa.toFixed(0);
+            document.getElementById('fp-pa-input').value = pa.toFixed(2);
 
             if (activeFootprintOverlay) { try { aladin.removeLayer(activeFootprintOverlay); } catch(e) {} }
             if (activeFootprintFillOverlay) { try { aladin.removeLayer(activeFootprintFillOverlay); } catch(e) {} }
@@ -2081,7 +2163,7 @@
 
             if (instrument === 'roman') {
                 ROMAN_WFI_SIAF.forEach(function(detCorners) {
-                    var poly = siafDetToSkyPoly(ra, dec, pa, detCorners);
+                    var poly = siafDetToSkyPoly(ra, dec, pa, detCorners, 25);
                     jpgOverlayFootprintPolys.push(poly);
                     activeFootprintOverlay.add(A.polyline(poly, { color: color, lineWidth: 1 }));
                     if (fillColor) addFilledPoly(activeFootprintFillOverlay, poly, color, fillColor);
@@ -2135,10 +2217,31 @@
             return { x: x * Math.cos(rad) - y * Math.sin(rad), y: x * Math.sin(rad) + y * Math.cos(rad) };
         }
 
-        function offsetToRaDec(ra, dec, dx, dy) {
-            return [ra + dx / Math.cos(dec * Math.PI / 180), dec + dy];
-        }
+        // Spherical tangent-plane offset.
+        // Inputs dxDeg, dyDeg are local tangent-plane offsets in DEGREES:
+        //   dxDeg = eastward offset
+        //   dyDeg = northward offset
+        function offsetToRaDec(ra0, dec0, dxDeg, dyDeg) {
+            var deg2rad = Math.PI / 180.0;
 
+            var ra0r = ra0 * deg2rad;
+            var dec0r = dec0 * deg2rad;
+            var xi = dxDeg * deg2rad;
+            var eta = dyDeg * deg2rad;
+
+            var denom = Math.cos(dec0r) - eta * Math.sin(dec0r);
+
+            var rar = ra0r + Math.atan2(xi, denom);
+            var decr = Math.atan2(
+                Math.sin(dec0r) + eta * Math.cos(dec0r),
+                Math.sqrt(denom * denom + xi * xi)
+            );
+
+            var raDeg = (rar / deg2rad) % 360.0;
+            if (raDeg < 0) raDeg += 360.0;
+
+            return [raDeg, decr / deg2rad];
+        }
         function createDetectorPoly(ra, dec, centerDx, centerDy, size, pa) {
             var hs = size / 2;
             var corners = [{x:centerDx-hs,y:centerDy-hs},{x:centerDx+hs,y:centerDy-hs},{x:centerDx+hs,y:centerDy+hs},{x:centerDx-hs,y:centerDy+hs}];
@@ -2147,15 +2250,43 @@
             return coords;
         }
 
-        function isPointInRotRect(ra, dec, centerRa, centerDec, widthDeg, heightDeg, paDeg) {
-            var cosDec = Math.cos(centerDec * Math.PI / 180);
-            var dx = (ra - centerRa) * cosDec, dy = dec - centerDec;
-            var rad = paDeg * Math.PI / 180;
-            var x = dx * Math.cos(rad) - dy * Math.sin(rad);
-            var y = dx * Math.sin(rad) + dy * Math.cos(rad);
-            return (Math.abs(x) <= widthDeg / 2) && (Math.abs(y) <= heightDeg / 2);
+        // Convert sky point to local tangent-plane offsets relative to reference center.
+        // Returns [xDeg, yDeg] where x is eastward and y is northward, in degrees.
+        function skyToOffsetDeg(ra, dec, ra0, dec0) {
+            var deg2rad = Math.PI / 180.0;
+
+            var rar = ra * deg2rad;
+            var decr = dec * deg2rad;
+            var ra0r = ra0 * deg2rad;
+            var dec0r = dec0 * deg2rad;
+
+            var dRa = rar - ra0r;
+
+            var sinDec = Math.sin(decr);
+            var cosDec = Math.cos(decr);
+            var sinDec0 = Math.sin(dec0r);
+            var cosDec0 = Math.cos(dec0r);
+            var cosDRa = Math.cos(dRa);
+
+            var denom = sinDec * sinDec0 + cosDec * cosDec0 * cosDRa;
+
+            var xi = (cosDec * Math.sin(dRa)) / denom;
+            var eta = (sinDec * cosDec0 - cosDec * sinDec0 * cosDRa) / denom;
+
+            return [xi / deg2rad, eta / deg2rad];
         }
 
+        function isPointInRotRect(ra, dec, centerRa, centerDec, widthDeg, heightDeg, paDeg) {
+            var off = skyToOffsetDeg(ra, dec, centerRa, centerDec);
+            var dx = off[0];
+            var dy = off[1];
+
+            var rad = paDeg * Math.PI / 180.0;
+            var x = dx * Math.cos(rad) - dy * Math.sin(rad);
+            var y = dx * Math.sin(rad) + dy * Math.cos(rad);
+
+            return (Math.abs(x) <= widthDeg / 2) && (Math.abs(y) <= heightDeg / 2);
+        }
         // ==================== Footprint Source Counting ====================
 
         function computeCatalogCountInActiveFootprint() {
@@ -2263,12 +2394,12 @@
         }
 
         function countSourcesInRomanFootprintFast(data, ra0, dec0, pa) {
-            var skyPolys = ROMAN_WFI_SIAF.map(function(dc) { return dc.map(function(c) { return v2v3ToSky(ra0, dec0, pa, c[0], c[1]); }); });
+            var skyPolys = ROMAN_WFI_SIAF.map(function(dc) { return dc.map(function(c) { return v2v3ToSkyExact(ra0, dec0, pa, c[0], c[1]); }); });
             var count = 0;
-            var cosDec0 = Math.cos(dec0 * Math.PI / 180);
             for (var i = 0; i < data.length; i++) {
                 var d = data[i];
-                var dra = (d.ra - ra0) * cosDec0, ddec = d.dec - dec0;
+                var off = skyToOffsetDeg(d.ra, d.dec, ra0, dec0);
+                var dra = off[0], ddec = off[1];
                 if (dra < -0.6 || dra > 0.6 || ddec < -0.6 || ddec > 0.6) continue;
                 for (var j = 0; j < skyPolys.length; j++) {
                     if (pointInPolygon(d.ra, d.dec, skyPolys[j])) { count++; break; }
@@ -2445,7 +2576,7 @@
             if (instrument === 'roman') {
                 ROMAN_WFI_SIAF.forEach(function(det) {
                     det.forEach(function(c) {
-                        allCorners.push(v2v3ToSky(ra, dec, pa, c[0], c[1]));
+                        allCorners.push(v2v3ToSkyExact(ra, dec, pa, c[0], c[1]));
                     });
                 });
             } else {
@@ -2499,14 +2630,14 @@
                 var topYSum = 0, topN = 0, botYSum = 0, botN = 0;
                 topIdxs.forEach(function(i) {
                     ROMAN_WFI_SIAF[i].forEach(function(c) {
-                        var sky = v2v3ToSky(fpRa, fpDec, fpPa, c[0], c[1]);
+                        var sky = v2v3ToSkyExact(fpRa, fpDec, fpPa, c[0], c[1]);
                         var ry = rotatedY(sky);
                         if (ry !== null) { topYSum += ry; topN++; }
                     });
                 });
                 botIdxs.forEach(function(i) {
                     ROMAN_WFI_SIAF[i].forEach(function(c) {
-                        var sky = v2v3ToSky(fpRa, fpDec, fpPa, c[0], c[1]);
+                        var sky = v2v3ToSkyExact(fpRa, fpDec, fpPa, c[0], c[1]);
                         var ry = rotatedY(sky);
                         if (ry !== null) { botYSum += ry; botN++; }
                     });
@@ -2531,7 +2662,7 @@
             var skyPoints = [];
             if (instrument === 'roman') {
                 ROMAN_WFI_SIAF.forEach(function(det) {
-                    det.forEach(function(c) { skyPoints.push(v2v3ToSky(fpRa, fpDec, fpPa, c[0], c[1])); });
+                    det.forEach(function(c) { skyPoints.push(v2v3ToSkyExact(fpRa, fpDec, fpPa, c[0], c[1])); });
                 });
             } else {
                 var modSize = 0.037, gap = 0.012, hs = modSize / 2;
@@ -2574,7 +2705,7 @@
                 // Generous FoV: 2x the sky bounding box so there is ample context
                 // around the footprint even after the canvas is rotated in-place.
                 var extent = getFootprintExtentDeg(fpRa, fpDec, fpPa, instrument);
-                var frameFov = extent * 3.5;
+                var frameFov = extent * 3.0;
 
                 showLoading(true, 'Framing footprint...');
                 aladin.gotoRaDec(fpRa, fpDec);
@@ -2695,7 +2826,7 @@
         // Project all footprint corners through scale + canvas rotation to find
         // the bounding box of the footprint in the final rotated output canvas.
         // outW/outH are the pre-rotation canvas dimensions (at output scale).
-        function computeFootprintBoundsInRotatedCanvas(outW, outH, scale, rotateDeg) {
+        function computeFootprintBoundsInRotatedCanvas(outW, outH, rotCanvasW, rotCanvasH, scale, rotateDeg) {
             var fpRa  = parseFloat(document.getElementById('footprint-ra-slider').value);
             var fpDec = parseFloat(document.getElementById('footprint-dec-slider').value);
             var fpPa  = parseFloat(document.getElementById('footprint-pa-slider').value);
@@ -2706,7 +2837,7 @@
             if (instrument === 'roman') {
                 ROMAN_WFI_SIAF.forEach(function(det) {
                     det.forEach(function(c) {
-                        skyPoints.push(v2v3ToSky(fpRa, fpDec, fpPa, c[0], c[1]));
+                        skyPoints.push(v2v3ToSkyExact(fpRa, fpDec, fpPa, c[0], c[1]));
                     });
                 });
             } else {
@@ -2720,23 +2851,35 @@
                 });
             }
 
-            // Convert to screen pixels, scale, then apply the canvas rotation
+            // The rotation pivot is the centre of the expanded (diagonal) canvas
+            var pivotX = rotCanvasW / 2;
+            var pivotY = rotCanvasH / 2;
+
+            // The original (pre-rotation) canvas centre in scaled pixels
+            var srcCx = outW / 2;
+            var srcCy = outH / 2;
+
             var rad = rotateDeg * Math.PI / 180;
             var cosR = Math.cos(rad), sinR = Math.sin(rad);
-            // Canvas centre (pre-rotation)
-            var cx = outW / 2, cy = outH / 2;
 
             var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
             skyPoints.forEach(function(pt) {
                 var pix = null;
                 try { pix = aladin.world2pix(pt[0], pt[1]); } catch(e) {}
                 if (!pix) return;
-                // Scale to output canvas
-                var sx = pix[0] * scale, sy = pix[1] * scale;
-                // Rotate around canvas centre (same transform as applyCanvasRotation)
-                var dx = sx - cx, dy = sy - cy;
-                var rx = cx + dx * cosR - dy * sinR;
-                var ry = cy + dx * sinR + dy * cosR;
+
+                // Scale to output canvas coordinates
+                var sx = pix[0] * scale;
+                var sy = pix[1] * scale;
+
+                // Offset from the original canvas centre, then rotate around the
+                // expanded canvas pivot (which is where applyCanvasRotation pivots)
+                var dx = sx - srcCx;
+                var dy = sy - srcCy;
+                var rx = pivotX + dx * cosR - dy * sinR;
+                var ry = pivotY + dx * sinR + dy * cosR;
+
                 if (rx < minX) minX = rx;
                 if (rx > maxX) maxX = rx;
                 if (ry < minY) minY = ry;
@@ -2744,11 +2887,15 @@
             });
 
             if (!isFinite(minX)) return null;
-            return { minX: Math.floor(minX), minY: Math.floor(minY),
-                     maxX: Math.ceil(maxX),  maxY: Math.ceil(maxY) };
+            return {
+                minX: Math.floor(minX),
+                minY: Math.floor(minY),
+                maxX: Math.ceil(maxX),
+                maxY: Math.ceil(maxY)
+            };
         }
 
-                // cropFraction: fraction of the composited canvas to keep (centred).
+        // cropFraction: fraction of the composited canvas to keep (centred).
         // 1.0 = keep all; 0.52 = keep central 52%, discarding the outer 24% on each side.
         function compositeHighRes(aladinDataUrl, scale, rotateDeg, cropFraction) {
             cropFraction = cropFraction || 1.0;
@@ -2818,7 +2965,7 @@
                     if (cropFraction < 0.999) {
                         var marginPx = Math.round(96 * scale); // 1 inch at 96 dpi
                         var fpBounds = computeFootprintBoundsInRotatedCanvas(
-                            outW, outH, scale, rotateDeg);
+                            outW, outH, finalCanvas.width, finalCanvas.height, scale, rotateDeg);
                         if (fpBounds) {
                             var cropX = Math.max(0, fpBounds.minX - marginPx);
                             var cropY = Math.max(0, fpBounds.minY - marginPx);
@@ -2858,18 +3005,19 @@
         function applyCanvasRotation(srcCanvas, angleDeg) {
             var w = srcCanvas.width, h = srcCanvas.height;
             var rad = angleDeg * Math.PI / 180;
+            // Expand to diagonal so rotated content is never clipped
+            var diag = Math.ceil(Math.sqrt(w * w + h * h));
             var dst = document.createElement('canvas');
-            dst.width = w;
-            dst.height = h;
+            dst.width = diag;
+            dst.height = diag;
             var ctx = dst.getContext('2d');
-            // No fill — leave corners transparent (will be black in PNG, matching sky)
-            ctx.translate(w / 2, h / 2);
+            ctx.translate(diag / 2, diag / 2);
             ctx.rotate(rad);
             ctx.drawImage(srcCanvas, -w / 2, -h / 2);
             return dst;
         }
 
-        
+
     </script>
 </body>
 </html>
