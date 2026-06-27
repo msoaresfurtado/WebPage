@@ -1,482 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professor Melinda Soares-Furtado — Stellar & Exoplanet Astrophysics</title>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
-
+    <title>Professor Melinda Soares-Furtado — Stellar &amp; Exoplanet Astrophysics</title>
+    <!-- Shared site theme -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Home-page-specific images only (no theme/colors here) -->
     <style>
-        :root {
-            --accent-color: #20578A;
-            --highlight-color: #9b0000;
-            --text-color: #1a1b1c;
-            --text-muted: #555;
-            --bg-color: #ffffff;
-            --bg-subtle: #f8f9fa;
-            --border-light: #e0e0e0;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Source Sans 3', sans-serif;
-            margin: 0;
-            padding: 0;
-            line-height: 1.65;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-size: 16px;
-            font-weight: 300;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 30px 30px;
-        }
-
-        a {
-            color: var(--accent-color);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        a:hover {
-            color: var(--highlight-color);
-            text-decoration: underline;
-        }
-
-        .highlighted {
-            color: var(--highlight-color);
-            font-weight: 600;
-        }
-
-        /* Navigation */
-        .header {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 0;
-            border-bottom: 2px solid var(--accent-color);
-            border-top: 2px solid var(--accent-color);
-            font-size: 14px;
-            letter-spacing: 0.5px;
-        }
-
-        .header a {
-            padding: 4px 10px;
-            border-radius: 3px;
-            transition: all 0.2s ease;
-        }
-
-        .header a:hover {
-            background-color: var(--bg-subtle);
-            text-decoration: none;
-        }
-
-        .header a.current {
-            font-weight: 600;
-            color: var(--highlight-color);
-            background-color: var(--bg-subtle);
-        }
-
-        .nav-sep {
-            color: var(--border-light);
-        }
-
-        /* Profile Section */
-        .profile-section {
-            display: flex;
-            align-items: flex-start;
-            gap: 30px;
-            margin: 35px 0 30px 0;
-        }
-
-        .profile-picture {
-            flex-shrink: 0;
-            width: 160px;
-            height: 160px;
-            border: 3px solid var(--accent-color);
-            border-radius: 50%;
-            background-image: url('https://msoaresfurtado.github.io/WebPage/photos/profile4.png');
-            background-size: 105%;
-            background-position: 65% 35%;
-            box-shadow: 0 0 0 3px var(--text-color), 0 6px 20px rgba(0,0,0,0.1);
-        }
-
-        .profile-info {
-            flex: 1;
-        }
-
-        .profile-name {
-            font-family: 'Crimson Pro', serif;
-            font-size: 2em;
-            font-weight: 600;
-            margin: 0 0 6px 0;
-            color: var(--text-color);
-        }
-
-        .profile-title {
-            font-size: 1.05em;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-        }
-
-        .profile-links {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .profile-links a {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 13px;
-            padding: 5px 10px;
-            border: 1px solid var(--border-light);
-            border-radius: 20px;
-            transition: all 0.2s ease;
-        }
-
-        .profile-links a:hover {
-            border-color: var(--accent-color);
-            background-color: var(--bg-subtle);
-            text-decoration: none;
-        }
-
-        .orcid-logo {
-            height: 16px;
-            vertical-align: middle;
-        }
-
-        /* Introduction */
-        .intro-text {
-            font-size: 1em;
-            line-height: 1.75;
-        }
-
-        .intro-text p {
-            margin: 0 0 12px 0;
-        }
-
-        /* Section Styling */
-        .section-title {
-            font-family: 'Crimson Pro', serif;
-            font-size: 1.5em;
-            font-weight: 600;
-            color: var(--accent-color);
-            margin: 40px 0 20px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        /* Research Cards */
-        .research-grid {
-            display: grid;
-            gap: 22px;
-        }
-
-        .research-card {
-            display: grid;
-            grid-template-columns: 120px 1fr;
-            gap: 20px;
-            padding: 20px;
-            background: var(--bg-subtle);
-            border-radius: 8px;
-            border-left: 4px solid var(--accent-color);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .research-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-        }
-
-        .research-figure {
-            width: 120px;
-            height: 120px;
-            border: 2px solid var(--accent-color);
-            border-radius: 50%;
-            background-size: cover;
-            background-position: center;
-            box-shadow: 0 0 0 2px var(--text-color);
-        }
-
-        .figure-engulfment {
-            background-image: url('https://video-images.vice.com/articles/612ce922da372d009443fbce/lede/1630333494301-gettyimages-1316904768.jpeg?crop=1xw:0.8435613682092555xh;center,center&resize=500:');
-            background-size: 165%;
-        }
-
-        .figure-young-planets {
-            background-image: url('https://aasnova.org/wp-content/uploads/2019/08/222_corot_ill.jpg');
-            background-position: left;
-            background-size: 120%;
-        }
-
-        .figure-exomoons {
-            background-image: url('https://www.bgr.com/bgr/science/exomoon-discovery-kepler-space/rogueplanet.jpg');
-        }
-
-        .figure-clusters {
-            background-image: url('https://scx1.b-cdn.net/csz/news/800a/2017/2-astronomersr.jpg');
-        }
-
-        .figure-ages {
-            background-image: url('https://storage.noirlab.edu/media/archives/images/screen/ursa-major.jpg');
-            background-size: 150%;
-        }
-
-        .research-content h3 {
-            font-family: 'Crimson Pro', serif;
-            font-size: 1.2em;
-            font-weight: 600;
-            color: var(--accent-color);
-            margin: 0 0 10px 0;
-        }
-
-        .research-content p {
-            margin: 0 0 10px 0;
-            font-size: 0.93em;
-        }
-
-        .research-content p:last-child {
-            margin-bottom: 0;
-        }
-
-        /* Join Section */
-        .join-section {
-            background: linear-gradient(135deg, #f0f4f8 0%, #e8eef3 100%);
-            border-radius: 10px;
-            padding: 28px 32px;
-            margin: 40px 0;
-            border: 2px solid var(--accent-color);
-        }
-
-        .join-section h2 {
-            font-family: 'Crimson Pro', serif;
-            font-size: 1.4em;
-            color: var(--accent-color);
-            margin: 0 0 16px 0;
-        }
-
-        .join-section p {
-            margin: 0 0 12px 0;
-            font-size: 0.95em;
-        }
-
-        .join-section ul {
-            margin: 12px 0;
-            padding-left: 20px;
-        }
-
-        .join-section li {
-            margin-bottom: 6px;
-            font-size: 0.95em;
-        }
-
-        /* ===== Supporters Section ===== */
-        .supporters-section {
-            margin: 48px 0 10px;
-            text-align: center;
-        }
-
-        .supporters-section h2 {
-            font-family: 'Crimson Pro', serif;
-            font-size: 1.7em;
-            font-weight: 600;
-            color: var(--accent-color);
-            margin: 0 0 6px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .supporters-subtitle {
-            font-size: 1.04em;
-            color: var(--text-muted);
-            margin: 0 auto -6px;
-            max-width: 580px;
-            line-height: 1.6;
-        }
-
-        .supporters-logos {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 8px 28px;
-            max-width: 960px;
-            margin: 0 auto;
-        }
-
-        .supporters-logos a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.25s ease;
-        }
-
-        .supporters-logos a:hover {
-            transform: scale(1.05);
-            text-decoration: none;
-        }
-
-        .supporters-logos img {
-            height: 74px;
-            max-width: 170px;
-            width: auto;
-            object-fit: contain;
-        }
-
-        .supporters-logos img.logo-square-lg {
-            height: 96px;
-            max-width: 96px;
-        }
-
-        .supporters-logos img.logo-square-xl {
-            height: 143px;
-            max-width: 143px;
-        }
-
-        .supporters-logos img.logo-nasa {
-            height: 129px;
-            max-width: 129px;
-        }
-
-        .supporters-logos img.logo-nsf {
-            height: 119px;
-            max-width: 119px;
-        }
-
-        .supporters-logos img.logo-square-xl-sm {
-            height: 135px;
-            max-width: 135px;
-        }
-
-        .supporters-logos img.logo-square-xxl {
-            height: 228px;
-            max-width: 228px;
-        }
-
-        .supporters-logos img.logo-wide {
-            height: 62px;
-            max-width: 210px;
-        }
-
-        .supporters-logos img.logo-wide-sm {
-            height: 48px;
-            max-width: 170px;
-        }
-
-        .supporters-logos img.logo-md {
-            height: 78px;
-            max-width: 170px;
-        }
-
-        .supporters-logos img.logo-wide-lg {
-            height: 100px;
-            max-width: 340px;
-        }
-
-        .supporters-logos img.logo-wide-md {
-            height: 85px;
-            max-width: 300px;
-        }
-
-        .supporters-logos img.logo-wide-sloan {
-            height: 75px;
-            max-width: 255px;
-        }
-
-        .supporters-logos img.logo-wide-wicor {
-            height: 103px;
-            max-width: 350px;
-        }
-
-        .supporters-logos img.logo-wide-lamat {
-            height: 83px;
-            max-width: 277px;
-        }
-
-        .supporters-logos img.logo-doe {
-            height: 116px;
-            max-width: 116px;
-        }
-
-        .supporters-logos-row2 {
-            margin-top: -12px;
-        }
-
-        .supporters-logos-row3 {
-            margin-top: 22px;
-        }
-
-        .supporters-note {
-            margin-top: 24px;
-            font-size: 1.05em;
-            color: #555;
-            letter-spacing: 0.01em;
-        }
-
-        @media only screen and (max-width: 768px) {
-            .supporters-logos { gap: 20px 28px; }
-            .supporters-logos img { height: 56px; max-width: 140px; }
-            .supporters-logos img.logo-square-lg { height: 72px; max-width: 72px; }
-            .supporters-logos img.logo-square-xl { height: 90px; max-width: 90px; }
-            .supporters-logos img.logo-nasa { height: 86px; max-width: 86px; }
-            .supporters-logos img.logo-nsf { height: 84px; max-width: 84px; }
-            .supporters-logos img.logo-square-xl-sm { height: 80px; max-width: 80px; }
-            .supporters-logos img.logo-square-xxl { height: 100px; max-width: 100px; }
-            .supporters-logos img.logo-wide { height: 48px; max-width: 170px; }
-            .supporters-logos img.logo-wide-sm { height: 38px; max-width: 140px; }
-            .supporters-logos img.logo-md { height: 60px; max-width: 140px; }
-            .supporters-logos img.logo-wide-lg { height: 62px; max-width: 230px; }
-            .supporters-logos img.logo-wide-md { height: 54px; max-width: 200px; }
-            .supporters-logos img.logo-wide-sloan { height: 49px; max-width: 172px; }
-            .supporters-logos img.logo-wide-wicor { height: 63px; max-width: 232px; }
-            .supporters-logos img.logo-wide-lamat { height: 55px; max-width: 187px; }
-            .supporters-logos img.logo-doe { height: 78px; max-width: 78px; }
-        }
-
-        /* Responsive */
-        @media only screen and (max-width: 768px) {
-            .profile-section {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-
-            .profile-links {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .research-card {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .research-figure {
-                margin: 0 auto;
-            }
-
-            .header {
-                flex-wrap: wrap;
-                gap: 5px;
-            }
-
-            .nav-sep {
-                display: none;
-            }
-        }
+        .profile-picture { background-image: url('https://msoaresfurtado.github.io/WebPage/photos/profile4.png'); }
+        .figure-exomoons { background-image: url('https://www.bgr.com/bgr/science/exomoon-discovery-kepler-space/rogueplanet.jpg'); }
+        .figure-ages { background-image: url('https://storage.noirlab.edu/media/archives/images/screen/ursa-major.jpg'); background-size: 150%; }
     </style>
 </head>
-
 <body>
     <div class="container">
         <!-- Header loaded from external file -->
@@ -511,9 +48,8 @@
 
         <!-- Recruitment Section -->
         <div class="join-section">
-            <h2>Join Our Research Group</h2>
+            <h2>🌟 Join Our Research Group</h2>
             <p>My group is currently at capacity and I am not actively recruiting new undergraduate or graduate students. Please check back in the future for updated opportunities.</p>
-
             <p>Future opportunities will include projects in:</p>
             <ul>
                 <li><strong>Stellar age determination</strong> — developing machine learning approaches for gyrochronology and spectroscopic age indicators</li>
@@ -521,15 +57,12 @@
                 <li><strong>Planetary engulfment</strong> — modeling planetary engulfment and characterizing its impact on host-star properties</li>
                 <li><strong>Stellar cluster science</strong> — variable star investigations and membership analysis</li>
             </ul>
-
             <p><strong>Observational resources:</strong> Group members have institutional access to premier facilities including <a href="https://noirlab.edu/public/programs/kitt-peak-national-observatory/wiyn-35m-telescope/neid/" target="_blank" rel="noopener noreferrer">WIYN/NEID</a>, the <a href="https://www.salt.ac.za/" target="_blank" rel="noopener noreferrer">Southern African Large Telescope (SALT)</a>, the <a href="https://iram-institute.org/science-portal/noema/" target="_blank" rel="noopener noreferrer">Northern Extended Millimeter Array (NOEMA)</a>, and the <a href="https://chtc.cs.wisc.edu/" target="_blank" rel="noopener noreferrer">Center for High Throughput Computing (CHTC)</a>.</p>
-
             <p><strong>Mentorship:</strong> I received the 2023 UW-Madison <em>Postdoctoral Excellence in Mentoring Award</em> and am committed to supporting students at all career stages. Multiple former mentees have received NSF Graduate Research Fellowships and NASA FINESST awards.</p>
         </div>
 
         <h2 class="section-title">Scientific Research</h2>
         <p>Below is a selection of ongoing research projects. Visit our <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team page</a> to learn about the talented researchers contributing to these investigations.</p>
-
         <div class="research-grid">
             <!-- Stellar Ages -->
             <article class="research-card">
@@ -540,7 +73,6 @@
                     <p>The Earth is embedded within the Ursa Major system, making its members ideal laboratories for studying stellar and planetary evolution. Our recent work identified the closest young Earth-sized planet transiting a Sun-like star in this association.</p>
                 </div>
             </article>
-
             <!-- Planetary Engulfment -->
             <article class="research-card">
                 <div class="research-figure figure-engulfment"></div>
@@ -550,7 +82,6 @@
                     <p>Our team also investigates the engulfment process itself, probing the transfer of angular momentum, energy, and mass through hydrodynamical simulations and tidal modeling.</p>
                 </div>
             </article>
-
             <!-- Young Exoplanets -->
             <article class="research-card">
                 <div class="research-figure figure-young-planets"></div>
@@ -560,7 +91,6 @@
                     <p>We also discovered a young mini-Neptune on the upper edge of the radius valley orbiting a bright M dwarf in the Hyades cluster, providing unique constraints on how stellar age shapes planetary atmospheres and the emergence of the M dwarf radius valley.</p>
                 </div>
             </article>
-
             <!-- Exomoons -->
             <article class="research-card">
                 <div class="research-figure figure-exomoons"></div>
@@ -570,7 +100,6 @@
                     <p>Our simulations predict that a 30-day Roman survey of the ONC could discover ~14 exomoons transiting free-floating planets and ~54 exosatellites transiting brown dwarfs. We continue exploring yields in other star-forming regions, including JWST observations of the Rosette Nebula.</p>
                 </div>
             </article>
-
             <!-- Cluster Variables -->
             <article class="research-card">
                 <div class="research-figure figure-clusters"></div>
@@ -588,110 +117,92 @@
             <p class="supporters-subtitle">
                 Our research and outreach programs are made possible through the generous support of the following organizations.
             </p>
-
             <div class="supporters-logos">
                 <a href="https://www.wisc.edu/" target="_blank" rel="noopener noreferrer" aria-label="University of Wisconsin-Madison">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_uw_madison.png"
-                         alt="University of Wisconsin-Madison" class="logo-square-xxl">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_uw_madison.png" alt="University of Wisconsin-Madison" class="logo-square-xxl">
                 </a>
                 <a href="https://www.warf.org/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Alumni Research Foundation">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_warf.png"
-                         alt="Wisconsin Alumni Research Foundation" class="logo-wide-md">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_warf.png" alt="Wisconsin Alumni Research Foundation" class="logo-wide-md">
                 </a>
                 <a href="https://www.nasa.gov/" target="_blank" rel="noopener noreferrer" aria-label="NASA">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nasa.png"
-                         alt="NASA" class="logo-nasa">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nasa.png" alt="NASA" class="logo-nasa">
                 </a>
                 <a href="https://www.nsf.gov/" target="_blank" rel="noopener noreferrer" aria-label="National Science Foundation">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nsf.png"
-                         alt="National Science Foundation" class="logo-nsf">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nsf.png" alt="National Science Foundation" class="logo-nsf">
                 </a>
             </div>
             <div class="supporters-logos supporters-logos-row2">
                 <a href="https://www.astro.wisc.edu/undergraduate-program/department-awards/" target="_blank" rel="noopener noreferrer" aria-label="Peter Livingston Scholars Program">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_livingston.png"
-                         alt="Peter Livingston Scholars Program" class="logo-wide-lg">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_livingston.png" alt="Peter Livingston Scholars Program" class="logo-wide-lg">
                 </a>
                 <a href="https://lamat.science.ucsc.edu/" target="_blank" rel="noopener noreferrer" aria-label="LAMAT">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_lamat.png"
-                         alt="LAMAT" class="logo-wide-lamat">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_lamat.png" alt="LAMAT" class="logo-wide-lamat">
                 </a>
                 <a href="https://sloan.org/" target="_blank" rel="noopener noreferrer" aria-label="Alfred P. Sloan Foundation">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_sloan.png"
-                         alt="Alfred P. Sloan Foundation" class="logo-wide-sloan">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_sloan.png" alt="Alfred P. Sloan Foundation" class="logo-wide-sloan">
                 </a>
             </div>
             <div class="supporters-logos supporters-logos-row3">
                 <a href="https://spacegrant.carthage.edu/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Space Grant Consortium">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_wsgc.png"
-                         alt="Wisconsin Space Grant Consortium" class="logo-square-xl-sm">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_wsgc.png" alt="Wisconsin Space Grant Consortium" class="logo-square-xl-sm">
                 </a>
                 <a href="https://public.nrao.edu/" target="_blank" rel="noopener noreferrer" aria-label="National Radio Astronomy Observatory">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nrao.png"
-                         alt="National Radio Astronomy Observatory" class="logo-wide">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nrao.png" alt="National Radio Astronomy Observatory" class="logo-wide">
                 </a>
                 <a href="https://wicor.wisc.edu/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Center for Origins Research">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_wicor.png"
-                         alt="Wisconsin Center for Origins Research (WiCOR)" class="logo-wide-wicor">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_wicor.png" alt="Wisconsin Center for Origins Research (WiCOR)" class="logo-wide-wicor">
                 </a>
                 <a href="https://www.ed.gov/" target="_blank" rel="noopener noreferrer" aria-label="U.S. Department of Education">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_doe.png"
-                         alt="U.S. Department of Education" class="logo-doe">
+                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_doe.png" alt="U.S. Department of Education" class="logo-doe">
                 </a>
             </div>
-
             <p class="supporters-note">
                 Funding acknowledgments reflect current and past support for research and student programs.
             </p>
         </section>
 
-        <!-- Footer will be loaded here -->
+        <!-- Footer loaded here -->
         <div id="footer-container"></div>
     </div>
 
     <script>
-        // Load the header component
+        // Load the shared site header
         fetch('header.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;
-                // Set current page indicator
                 const currentNav = document.getElementById('nav-home');
                 if (currentNav) currentNav.classList.add('current');
             })
             .catch(error => {
-                // Fallback header if fetch fails
                 document.getElementById('header-container').innerHTML = `
                     <nav class="header">
                         <a href="https://msoaresfurtado.github.io/WebPage" class="current">Home</a>
                         <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About</a>
-                        <span class="nav-sep">|</span>
                         <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About Me</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Courses.html">Courses</a>
                         <span class="nav-sep">|</span>
                         <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
                         <span class="nav-sep">|</span>
                         <a href="https://msoaresfurtado.github.io/WebPage/Tools.html">Tools</a>
-                    </nav>
-                `;
+                    </nav>`;
             });
-
-        // Load the footer component
+        // Load the shared site footer
         fetch('footer.html')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('footer-container').innerHTML = data;
             })
             .catch(error => {
-                // Fallback footer if fetch fails
                 document.getElementById('footer-container').innerHTML = `
-                    <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #20578A; text-align:center; font-size:13px; color:#555;">
-                        <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#20578A;">mmsoares@wisc.edu</a> ⊕ Updated 01/2026</div>
-                        <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy & Physics</div>
-                    </footer>
-                `;
+                    <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #7a0000; text-align:center; font-size:13px; color:#555;">
+                        <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#000099;">mmsoares@wisc.edu</a> ⊕ Updated 06/2026</div>
+                        <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy &amp; Physics</div>
+                    </footer>`;
             });
     </script>
 </body>
-
 </html>
