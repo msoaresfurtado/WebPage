@@ -1,8 +1,5 @@
 /* =====================================================================
    styles.css — Melinda Soares-Furtado
-   Academic serif theme: cream background, Times/Georgia serif,
-   maroon headings & accents, dark-blue links.
-   (No web font needed; the Google Fonts <link> can be removed.)
    ===================================================================== */
 
 :root {
@@ -332,6 +329,41 @@ footer .sub {
 .course-link::after {
     content: " \2192";
 }
+/* ---------- Supporters / logos (home page) ---------- */
+.supporters-section { margin: 48px 0 10px; text-align: center; }
+.supporters-section h2 {
+    font-family: var(--serif);
+    font-size: 1.7em;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin: 0 0 6px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+}
+.supporters-subtitle { font-size: 1.04em; color: var(--text-muted); margin: 0 auto -6px; max-width: 580px; line-height: 1.6; }
+.supporters-logos { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 28px; max-width: 960px; margin: 0 auto; }
+.supporters-logos a { display: flex; align-items: center; justify-content: center; transition: transform 0.25s ease; }
+.supporters-logos a:hover { transform: scale(1.05); text-decoration: none; }
+.supporters-logos img { height: 74px; max-width: 170px; width: auto; object-fit: contain; }
+.supporters-logos img.logo-square-lg { height: 96px; max-width: 96px; }
+.supporters-logos img.logo-square-xl { height: 143px; max-width: 143px; }
+.supporters-logos img.logo-nasa { height: 129px; max-width: 129px; }
+.supporters-logos img.logo-nsf { height: 119px; max-width: 119px; }
+.supporters-logos img.logo-square-xl-sm { height: 135px; max-width: 135px; }
+.supporters-logos img.logo-square-xxl { height: 228px; max-width: 228px; }
+.supporters-logos img.logo-wide { height: 62px; max-width: 210px; }
+.supporters-logos img.logo-wide-sm { height: 48px; max-width: 170px; }
+.supporters-logos img.logo-md { height: 78px; max-width: 170px; }
+.supporters-logos img.logo-wide-lg { height: 100px; max-width: 340px; }
+.supporters-logos img.logo-wide-md { height: 85px; max-width: 300px; }
+.supporters-logos img.logo-wide-sloan { height: 75px; max-width: 255px; }
+.supporters-logos img.logo-wide-wicor { height: 103px; max-width: 350px; }
+.supporters-logos img.logo-wide-lamat { height: 83px; max-width: 277px; }
+.supporters-logos img.logo-doe { height: 116px; max-width: 116px; }
+.supporters-logos-row2 { margin-top: -12px; }
+.supporters-logos-row3 { margin-top: 22px; }
+.supporters-note { margin-top: 24px; font-size: 1.05em; color: var(--text-muted); letter-spacing: 0.01em; }
+
 /* Responsive */
 @media only screen and (max-width: 768px) {
     .profile-section {
@@ -357,4 +389,21 @@ footer .sub {
     .nav-sep {
         display: none;
     }
+    .supporters-logos { gap: 20px 28px; }
+    .supporters-logos img { height: 56px; max-width: 140px; }
+    .supporters-logos img.logo-square-lg { height: 72px; max-width: 72px; }
+    .supporters-logos img.logo-square-xl { height: 90px; max-width: 90px; }
+    .supporters-logos img.logo-nasa { height: 86px; max-width: 86px; }
+    .supporters-logos img.logo-nsf { height: 84px; max-width: 84px; }
+    .supporters-logos img.logo-square-xl-sm { height: 80px; max-width: 80px; }
+    .supporters-logos img.logo-square-xxl { height: 100px; max-width: 100px; }
+    .supporters-logos img.logo-wide { height: 48px; max-width: 170px; }
+    .supporters-logos img.logo-wide-sm { height: 38px; max-width: 140px; }
+    .supporters-logos img.logo-md { height: 60px; max-width: 140px; }
+    .supporters-logos img.logo-wide-lg { height: 62px; max-width: 230px; }
+    .supporters-logos img.logo-wide-md { height: 54px; max-width: 200px; }
+    .supporters-logos img.logo-wide-sloan { height: 49px; max-width: 172px; }
+    .supporters-logos img.logo-wide-wicor { height: 63px; max-width: 232px; }
+    .supporters-logos img.logo-wide-lamat { height: 55px; max-width: 187px; }
+    .supporters-logos img.logo-doe { height: 78px; max-width: 78px; }
 }
