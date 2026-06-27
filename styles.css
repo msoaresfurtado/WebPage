@@ -161,7 +161,7 @@ a:visited {
     margin: 30px 0 15px 0;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border-light);
-    text-align: center;
+    text-align: left;
 }
 /* Research Cards */
 .research-grid {
@@ -354,6 +354,7 @@ footer .sub {
     margin: 0 0 6px 0;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border-light);
+    text-align: left;
 }
 .supporters-subtitle { font-size: 1.04em; color: var(--text-muted); margin: 0 auto -6px; max-width: 580px; line-height: 1.6; }
 .supporters-logos { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 28px; max-width: 960px; margin: 0 auto; }
