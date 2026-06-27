@@ -5,23 +5,18 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Courses &mdash; Professor Melinda Soares-Furtado</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
     <div class="container">
-
         <!-- Header loaded from external file -->
         <div id="header-container"></div>
-
         <h1 class="page-title">Courses</h1>
         <p class="page-subtitle">Professor Melinda Soares-Furtado &middot; Department of Astronomy, University of Wisconsin&ndash;Madison</p>
-
         <p class="intro-text">Courses I have taught at the University of Wisconsin&ndash;Madison are listed below.
         Where a course website is available, follow the link for the syllabus, schedule, readings,
         and lecture materials.</p>
-
         <h2 class="section-title">Courses Taught</h2>
-
         <article class="course-card">
             <h3>Astronomy 310 &mdash; Stellar Astrophysics</h3>
             <p class="course-meta">Intermediate &middot; Breadth: Physical Science</p>
@@ -34,7 +29,6 @@
             stars, and black holes.</p>
             <p><a class="course-link" href="ast310.html"><strong>Course website</strong></a></p>
         </article>
-
         <article class="course-card">
             <h3>Astronomy 104 &mdash; Our Exploration of the Solar System</h3>
             <p class="course-meta">Introductory &middot; For non-science majors</p>
@@ -46,12 +40,9 @@
             placed on the physical principles that shape planetary worlds and on how we come to know them
             through observation and spacecraft missions.</p>
         </article>
-
         <!-- Footer loaded from external file -->
         <div id="footer-container"></div>
-
     </div>
-
     <script>
         // Load the shared site header
         fetch('header.html')
@@ -74,13 +65,11 @@
                     </nav>`;
                 markCurrent();
             });
-
         function markCurrent() {
             document.querySelectorAll('#header-container .header a').forEach(a => {
                 if ((a.getAttribute('href') || '').indexOf('Courses.html') !== -1) a.classList.add('current');
             });
         }
-
         // Load the shared site footer
         fetch('footer.html')
             .then(r => r.text())
