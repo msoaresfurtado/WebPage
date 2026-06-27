@@ -375,6 +375,7 @@ footer .sub {
 .supporters-logos img.logo-wide-sloan { height: 75px; max-width: 255px; }
 .supporters-logos img.logo-wide-wicor { height: 103px; max-width: 350px; }
 .supporters-logos img.logo-wide-lamat { height: 83px; max-width: 277px; }
+.supporters-logos img.logo-wide-hs { height: 60px; max-width: 320px; }
 .supporters-logos img.logo-doe { height: 116px; max-width: 116px; }
 .supporters-logos-row2 { margin-top: -12px; }
 .supporters-logos-row3 { margin-top: 22px; }
@@ -421,5 +422,6 @@ footer .sub {
     .supporters-logos img.logo-wide-sloan { height: 49px; max-width: 172px; }
     .supporters-logos img.logo-wide-wicor { height: 63px; max-width: 232px; }
     .supporters-logos img.logo-wide-lamat { height: 55px; max-width: 187px; }
+    .supporters-logos img.logo-wide-hs { height: 44px; max-width: 230px; }
     .supporters-logos img.logo-doe { height: 78px; max-width: 78px; }
 }
