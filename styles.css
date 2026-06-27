@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
 /* =====================================================================
    styles.css — Melinda Soares-Furtado
    Academic serif theme: cream background, Times/Georgia serif,
@@ -15,7 +17,7 @@
     --page-bg: #fffef9;        /* content column */
     --bg-subtle: #f3eede;      /* cards / subtle fills */
     --border-light: #d8d4c4;   /* tan borders */
-    --serif: Georgia, "Times New Roman", "Times", serif;
+    --serif: 'Source Serif 4', Georgia, "Times New Roman", serif;
 }
 * {
     box-sizing: border-box;
@@ -159,6 +161,7 @@ a:visited {
     margin: 30px 0 15px 0;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border-light);
+    text-align: center;
 }
 /* Research Cards */
 .research-grid {
