@@ -1,27 +1,16 @@
 /* Dark-mode support for the site.
-   Loaded in <head> so the saved theme is applied before the page paints
-   (no flash). The toggle button lives in header.html (injected later), so
-   we also watch for it and keep its icon in sync. */
+   No persistence: every visit starts in light mode and the visitor must
+   click the toggle to switch to dark. Nothing is remembered between visits.
+   The toggle button lives in header.html (injected later), so we watch for
+   it and keep its icon in sync. */
 
-// Apply the saved theme immediately (runs as the script loads).
-(function () {
-    try {
-        if (localStorage.getItem('theme') === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    } catch (e) { /* localStorage unavailable; default to light */ }
-})();
-
-// Toggle between light and dark, remembering the choice.
+// Toggle between light and dark for the current page view only.
 function toggleTheme() {
     var root = document.documentElement;
-    var isDark = root.getAttribute('data-theme') === 'dark';
-    if (isDark) {
+    if (root.getAttribute('data-theme') === 'dark') {
         root.removeAttribute('data-theme');
-        try { localStorage.setItem('theme', 'light'); } catch (e) {}
     } else {
         root.setAttribute('data-theme', 'dark');
-        try { localStorage.setItem('theme', 'dark'); } catch (e) {}
     }
     updateThemeIcon();
 }
