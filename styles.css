@@ -449,6 +449,13 @@ html[data-theme="dark"] .join-cta:visited { color: #15171b; }
 /* Soften the photo/figure rings on dark */
 html[data-theme="dark"] .profile-picture { box-shadow: 0 0 0 3px #3a3e45, 0 6px 18px rgba(0,0,0,0.45); }
 html[data-theme="dark"] .research-figure { box-shadow: 0 0 0 2px #3a3e45; }
+/* Funder logos are dark-ink PNGs made for white backgrounds; without a
+   light tile they vanish into the dark page. Put each on a cream chip. */
+html[data-theme="dark"] .supporters-logos img {
+    background: #f4f0e7;
+    padding: 10px 14px;
+    border-radius: 10px;
+}
 
 /* Theme toggle button (lives in the nav) */
 .theme-toggle {
