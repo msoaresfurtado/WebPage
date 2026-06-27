@@ -1,66 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Courses &mdash; Melinda Soares-Furtado</title>
-<style>
-  body{
-    background:#f6f4ec;
-    color:#000000;
-    font-family:"Times New Roman",Georgia,serif;
-    font-size:17px;
-    line-height:1.45;
-    margin:0;
-  }
-  .page{ max-width:720px; margin:0 auto; padding:24px 28px 40px; background:#fffef9; border-left:1px solid #d8d4c4; border-right:1px solid #d8d4c4; }
-  a{ color:#000099; text-decoration:underline; }
-  a:visited{ color:#7a0000; }
-  h1{ font-size:30px; color:#7a0000; margin:0 0 2px; font-weight:bold; }
-  .subtitle{ font-size:16px; color:#444; margin:0 0 6px; }
-  h2{ font-size:21px; color:#7a0000; margin:24px 0 4px; }
-  .meta{ font-size:14px; color:#555; margin:0 0 8px; font-style:italic; }
-  hr{ border:none; border-top:1px solid #b9b39c; margin:18px 0; }
-  p{ margin:8px 0; }
-  .footer{ font-size:13px; color:#666; margin-top:30px; border-top:1px solid #b9b39c; padding-top:10px; }
-</style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses &mdash; Professor Melinda Soares-Furtado</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="page">
+    <div class="container">
 
-  <h1>Courses</h1>
-  <p class="subtitle">Melinda Soares-Furtado &middot; Department of Astronomy, University of Wisconsin&ndash;Madison</p>
+        <!-- Header loaded from external file -->
+        <div id="header-container"></div>
 
-  <hr>
+        <h1 class="page-title">Courses</h1>
+        <p class="page-subtitle">Professor Melinda Soares-Furtado &middot; Department of Astronomy, University of Wisconsin&ndash;Madison</p>
 
-  <p>Courses I have taught in the Department of Astronomy are listed below. Where a course website is
-  available, follow the link for the syllabus, schedule, readings, and lecture materials.</p>
+        <p class="intro-text">Courses I have taught in the Department of Astronomy are listed below.
+        Where a course website is available, follow the link for the syllabus, schedule, readings,
+        and lecture materials.</p>
 
-  <h2>Astronomy 310 &mdash; Stellar Astrophysics</h2>
-  <p class="meta">Intermediate</p>
-  <p>An intermediate course on the properties, structure, and evolution of stars. The course develops
-  the physics of stars in the order an astronomer encounters them: the observed properties of stars and
-  the Hertzsprung&ndash;Russell diagram; stellar atmospheres and radiative transfer; the equations of
-  stellar structure, including the equation of state, energy transport, and nuclear energy generation;
-  and finally stellar evolution &mdash; the main sequence, post-main-sequence phases, and stellar
-  remnants such as white dwarfs, neutron stars, and black holes.</p>
-  <p>&rarr; <a href="ast310.html"><b>Course website</b></a></p>
+        <h2 class="section-title">Courses Taught</h2>
 
-  <h2>Astronomy 104 &mdash; Our Exploration of the Solar System</h2>
-  <p class="meta">Introductory</p>
-  <p>An introductory survey of the Solar System for non-majors. The course examines the Sun, the
-  terrestrial and giant planets and their moons, and the small bodies &mdash; asteroids, comets, and
-  dwarf planets &mdash; together with the formation and evolution of the planetary system, the
-  comparative geology and atmospheres of the planets, the history of Solar System exploration, and the
-  search for habitable environments and life beyond Earth. Emphasis is placed on the physical
-  principles that shape planetary worlds and on how we come to know them through observation and
-  spacecraft missions.</p>
+        <article class="course-card">
+            <h3>Astronomy 310 &mdash; Stellar Astrophysics</h3>
+            <p class="course-meta">Intermediate &middot; Breadth: Physical Science</p>
+            <p>An intermediate course on the properties, structure, and evolution of stars. The course
+            develops the physics of stars in the order an astronomer encounters them: the observed
+            properties of stars and the Hertzsprung&ndash;Russell diagram; stellar atmospheres and
+            radiative transfer; the equations of stellar structure, including the equation of state,
+            energy transport, and nuclear energy generation; and finally stellar evolution &mdash; the
+            main sequence, post-main-sequence phases, and stellar remnants such as white dwarfs, neutron
+            stars, and black holes.</p>
+            <p><a class="course-link" href="ast310.html"><strong>Course website</strong></a></p>
+        </article>
 
-  <div class="footer">
-    Department of Astronomy, University of Wisconsin&ndash;Madison &middot;
-    Contact: <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a>
-  </div>
+        <article class="course-card">
+            <h3>Astronomy 104 &mdash; Our Exploration of the Solar System</h3>
+            <p class="course-meta">Introductory &middot; For non-science majors</p>
+            <p>An introductory survey of the Solar System for non-majors. The course examines the Sun,
+            the terrestrial and giant planets and their moons, and the small bodies &mdash; asteroids,
+            comets, and dwarf planets &mdash; together with the formation and evolution of the planetary
+            system, the comparative geology and atmospheres of the planets, the history of Solar System
+            exploration, and the search for habitable environments and life beyond Earth. Emphasis is
+            placed on the physical principles that shape planetary worlds and on how we come to know them
+            through observation and spacecraft missions.</p>
+        </article>
 
-</div>
+        <!-- Footer loaded from external file -->
+        <div id="footer-container"></div>
+
+    </div>
+
+    <script>
+        // Load the shared site header
+        fetch('header.html')
+            .then(r => r.text())
+            .then(data => { document.getElementById('header-container').innerHTML = data; markCurrent(); })
+            .catch(() => {
+                document.getElementById('header-container').innerHTML = `
+                    <nav class="header">
+                        <a href="https://msoaresfurtado.github.io/WebPage" id="nav-home">Home</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html" id="nav-team">Team</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/About.html" id="nav-about">About Me</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Courses.html" id="nav-courses">Courses</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html" id="nav-outreach">Outreach</a>
+                        <span class="nav-sep">|</span>
+                        <a href="https://msoaresfurtado.github.io/WebPage/Tools.html" id="nav-tools">Tools</a>
+                    </nav>`;
+                markCurrent();
+            });
+
+        function markCurrent() {
+            document.querySelectorAll('#header-container .header a').forEach(a => {
+                if ((a.getAttribute('href') || '').indexOf('Courses.html') !== -1) a.classList.add('current');
+            });
+        }
+
+        // Load the shared site footer
+        fetch('footer.html')
+            .then(r => r.text())
+            .then(data => { document.getElementById('footer-container').innerHTML = data; })
+            .catch(() => {
+                document.getElementById('footer-container').innerHTML = `
+                    <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #7a0000; text-align:center; font-size:13px; color:#555;">
+                        <div>&#9993; <a href="mailto:mmsoares@wisc.edu" style="color:#000099;">mmsoares@wisc.edu</a> &#8853; Updated 06/2026</div>
+                        <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison &middot; Departments of Astronomy &amp; Physics</div>
+                    </footer>`;
+            });
+    </script>
 </body>
 </html>
