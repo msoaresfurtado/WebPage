@@ -1,5 +1,8 @@
 /* =====================================================================
    styles.css — Melinda Soares-Furtado
+   Academic serif theme: cream background, Times/Georgia serif,
+   maroon headings & accents, dark-blue links.
+   (No web font needed; the Google Fonts <link> can be removed.)
    ===================================================================== */
 
 :root {
@@ -24,7 +27,7 @@ body {
     line-height: 1.6;
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 400;
 }
 .container {
@@ -58,7 +61,7 @@ a:visited {
     padding: 12px 0;
     border-bottom: 2px solid var(--accent-color);
     border-top: 2px solid var(--accent-color);
-    font-size: 15px;
+    font-size: 14px;
     letter-spacing: 0.5px;
 }
 .header a {
@@ -123,7 +126,7 @@ a:visited {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 13px;
+    font-size: 12px;
     padding: 4px 9px;
     border: 1px solid var(--border-light);
     border-radius: 20px;
@@ -269,7 +272,7 @@ footer {
     padding: 14px 0;
     border-top: 2px solid var(--accent-color);
     text-align: center;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 footer a {
@@ -277,7 +280,7 @@ footer a {
 }
 footer .sub {
     margin-top: 5px;
-    font-size: 11px;
+    font-size: 10px;
     opacity: 0.6;
 }
 /* ---------- Courses page (page heading + course cards) ---------- */
