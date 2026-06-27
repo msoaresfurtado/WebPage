@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Astronomy 310: Stellar Astrophysics (Fall 2026)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap');
+  body{
+    background:#f6f4ec;
+    color:#000000;
+    font-family:'Source Serif 4',Georgia,"Times New Roman",serif;
+    font-size:15px;
+    line-height:1.6;
+    font-weight:300;
+    margin:0;
+  }
+  .page{ max-width:720px; margin:0 auto; padding:24px 28px 40px; background:#fffef9; border-left:1px solid #d8d4c4; border-right:1px solid #d8d4c4; }
+  a{ color:#000099; text-decoration:underline; }
+  a:visited{ color:#7a0000; }
+  h1{ font-size:30px; color:#7a0000; margin:0 0 2px; font-weight:bold; }
+  .subtitle{ font-size:17px; color:#333; margin:0 0 2px; }
+  .instr{ font-size:15px; color:#444; margin:0; }
+  h2{ font-size:21px; color:#7a0000; border-bottom:1px solid #b9b39c; padding-bottom:2px; margin:26px 0 10px; }
+  hr{ border:none; border-top:1px solid #b9b39c; margin:18px 0; }
+  .nav{ font-size:15px; margin:14px 0 4px; }
+  .nav a{ margin-right:4px; }
+  table{ border-collapse:collapse; width:100%; font-size:14px; margin-top:8px; }
+  th{ background:#ece7d6; color:#000; border:1px solid #b0a98e; padding:5px 7px; text-align:left; }
+  td{ border:1px solid #cfc8b0; padding:5px 7px; vertical-align:top; }
+  tr.part td{ background:#efe7d2; font-weight:bold; text-align:center; letter-spacing:.5px; color:#5a4a1a; }
+  .due{ color:#7a0000; }
+  .note{ font-size:14px; color:#555; }
+  ul{ margin:8px 0; padding-left:22px; }
+  li{ margin:5px 0; }
+  .footer{ font-size:13px; color:#666; margin-top:30px; border-top:1px solid #b9b39c; padding-top:10px; }
+  tt,code{ font-family:"Courier New",monospace; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Stellar Astrophysics</h1>
+  <p class="subtitle">Astronomy 310 &middot; Fall 2026 &middot; Department of Astronomy, University of Wisconsin&ndash;Madison</p>
+  <p class="instr">Professor Melinda Soares-Furtado &middot; Lectures Mon &amp; Wed 2:30&ndash;3:45 PM &middot; Sterling Hall, Room 1333</p>
+
+  <div class="nav">
+    [ <a href="#overview">Overview</a> |
+    <a href="#submissions">Submissions</a> |
+    <a href="#syllabus">Syllabus</a> |
+    <a href="#schedule">Schedule &amp; Lecture Materials</a> |
+    <a href="#code">Figure Code &amp; Notebooks</a> |
+    <a href="#reading">Further Reading</a> |
+    <a href="#contact">Contact</a> ]
+  </div>
+
+  <hr>
+
+  <h2 id="overview">Course Overview</h2>
+  <p>Stars are the building blocks of the Universe. They drive the energetic and chemical
+  evolution of galaxies, and the elements heavier than helium that make up the world around us
+  were forged inside them. This course develops the physics of stars in the order an astronomer
+  encounters them: first what we observe, then how we model the light that reaches us, and finally
+  what is happening inside.</p>
+  <p>We begin with stellar observations &mdash; distances, magnitudes, colors, spectra, binaries, and the
+  Hertzsprung&ndash;Russell diagram &mdash; and the parameters they yield. We then study stellar
+  atmospheres and radiative transfer, turn to the equations of stellar structure (hydrostatic
+  equilibrium, the equation of state, energy transport, and nuclear energy generation), and close with
+  stellar evolution: the main sequence, post-main-sequence phases, and stellar remnants.</p>
+  <p class="note"><b>Required text:</b> M. H. Pinsonneault &amp; B. S. Ryden,
+  <a href="https://www.cambridge.org/highereducation/books/stellar-structure-and-evolution/C3124CC7EA3818B745B48121E13DCED1"><i>Stellar Structure and Evolution</i></a>
+  (Cambridge University Press, 2023). Course Q&amp;A is on Piazza.</p>
+
+  <h2 id="submissions">Submitting Your Work</h2>
+  <p><b>All coursework is submitted on Canvas.</b></p>
+  <ul>
+    <li>The <b>seven problem sets</b> are uploaded as files on the Canvas site (see due dates in the schedule below).</li>
+    <li>The <b>weekly reflection questions</b> are also completed and submitted on Canvas, due <b>Sundays at 11:59&nbsp;PM</b>.</li>
+  </ul>
+
+  <h2 id="syllabus">Syllabus</h2>
+  <p>The complete syllabus &mdash; grading, course policies, exam options, and the full week-by-week
+  schedule &mdash; is available as a PDF:</p>
+  <p>&rarr; <a href="syllabus.pdf"><b>AST&nbsp;310 Syllabus (PDF)</b></a></p>
+
+  <h2 id="schedule">Schedule &amp; Lecture Materials</h2>
+  <p class="note">Lecture slides and notes are posted here after each class; the
+  <tt>[slides]</tt> links become active as the term progresses.</p>
+  <table>
+    <tr><th>Wk</th><th>Dates</th><th>Topic</th><th>Reading</th><th>Materials</th><th>Due</th></tr>
+
+    <tr class="part"><td colspan="6">Part I &mdash; Observations</td></tr>
+    <tr><td>1</td><td>Sep 2</td><td>Properties of stars: course overview, observing the Sun, observed properties of stars</td><td>Ch&nbsp;1.1&ndash;1.2</td><td><a href="#">[slides]</a></td><td></td></tr>
+    <tr><td>2</td><td>Sep 9</td><td>Correlations among stellar properties; star clusters; the H&ndash;R diagram</td><td>Ch&nbsp;1.3&ndash;1.4</td><td><a href="#">[slides]</a></td><td class="due">HW 1 (Sep 11)</td></tr>
+    <tr><td>3</td><td>Sep 14, 16</td><td>Equations of stellar structure: mass conservation, hydrostatic and thermal equilibrium, energy transport</td><td>Ch&nbsp;2.1&ndash;2.4</td><td><a href="#">[slides]</a></td><td></td></tr>
+
+    <tr class="part"><td colspan="6">Part II &mdash; Stellar Structure</td></tr>
+    <tr><td>4</td><td>Sep 21, 23</td><td>Equations of state: central pressure, quantum statistics, ideal-gas pressure</td><td>Ch&nbsp;3.1&ndash;3.3</td><td><a href="#">[slides]</a></td><td class="due">HW 2 (Sep 25)</td></tr>
+    <tr><td>5</td><td>Sep 28, 30</td><td>Electron degeneracy, radiation pressure, opacity</td><td>Ch&nbsp;3.4&ndash;3.5; 4.1</td><td><a href="#">[slides]</a></td><td></td></tr>
+    <tr><td>6</td><td>Oct 5, 7</td><td>Energy transport: convection, mixing-length theory, convective overshoot</td><td>Ch&nbsp;4.2&ndash;4.4</td><td><a href="#">[slides]</a></td><td class="due">HW 3 (Oct 9)</td></tr>
+    <tr><td>7</td><td>Oct 12, 14</td><td>Stars as fusion reactors: quantum tunneling, energy generation, the pp chain</td><td>Ch&nbsp;5.1&ndash;5.3</td><td><a href="#">[slides]</a></td><td></td></tr>
+    <tr><td>8</td><td>Oct 19, 21</td><td>CNO cycle and triple-alpha process; main-sequence internal structure and polytropes</td><td>Ch&nbsp;5.4&ndash;5.5; 6.1&ndash;6.2</td><td><a href="#">[slides]</a></td><td class="due">HW 4 (Oct 23)</td></tr>
+    <tr><td>9</td><td>Oct 26, 28</td><td>Main-sequence stars: homology, solar models, zero-age main-sequence models</td><td>Ch&nbsp;6.3&ndash;6.5</td><td><a href="#">[slides]</a></td><td></td></tr>
+
+    <tr class="part"><td colspan="6">Part III &mdash; Stellar Evolution</td></tr>
+    <tr><td>10</td><td>Nov 2, 4</td><td>Star formation: molecular clouds and gravitational instability, isothermal collapse and fragmentation, protostars</td><td>Ch&nbsp;7.1&ndash;7.3</td><td><a href="#">[slides]</a></td><td class="due">HW 5 (Nov 6)</td></tr>
+    <tr><td>11</td><td>Nov 9, 11</td><td>Pre-main-sequence stars, the birthline and deuterium burning, the initial mass function</td><td>Ch&nbsp;7.4&ndash;7.6</td><td><a href="#">[slides]</a></td><td></td></tr>
+    <tr><td>12</td><td>Nov 16, 18</td><td>Evolved stars: building a helium core, the Sch&ouml;nberg&ndash;Chandrasekhar limit, shell hydrogen burning and red giants</td><td>Ch&nbsp;8.1&ndash;8.3</td><td><a href="#">[slides]</a></td><td class="due">HW 6 &mdash; MESA Web (Nov 20)</td></tr>
+    <tr><td>13</td><td>Nov 23, 25</td><td>Helium ignition and core helium burning, the asymptotic giant branch, s-process, superwinds, planetary nebulae <span class="note">(Thanksgiving recess Nov 26&ndash;29)</span></td><td>Ch&nbsp;8.4&ndash;8.7</td><td><a href="#">[slides]</a></td><td></td></tr>
+    <tr><td>14</td><td>Nov 30, Dec 2</td><td>Ex-stars: white dwarfs, neutron stars and black holes, core-collapse supernovae, r-process</td><td>Ch&nbsp;9.1&ndash;9.4</td><td><a href="#">[slides]</a></td><td class="due">HW 7 (Dec 4)</td></tr>
+    <tr><td>15</td><td>Dec 7, 9</td><td>Course synthesis and review &mdash; Final Exam (in-class option), Dec 9</td><td>Review</td><td><a href="#">[review]</a></td><td></td></tr>
+  </table>
+
+  <h2 id="code">Textbook Figure Code, Notebooks &amp; Data</h2>
+  <p>The authors have released Jupyter notebooks, Python code, and the data files for every original
+  figure in the required text. They are a fine way to see how a figure was produced, to generate
+  high-resolution versions for your own notes, or to use as a starting point for further exploration:</p>
+  <p>&rarr; <a href="https://github.com/CambridgeUniversityPress/Stellar-Structure-and-Evolution">github.com/CambridgeUniversityPress/Stellar-Structure-and-Evolution</a></p>
+  <p>Many notebooks include pre-computed <b>MESA</b> model output and <b>MIST</b> isochrone tables, so the
+  figures can be reproduced without a heavy local installation (released under a Creative Commons BY 4.0
+  license). Our one computational assignment uses <a href="https://mesastar.org/">MESA Web</a>, the
+  browser-based interface to MESA, which requires no installation.</p>
+
+  <h2 id="reading">Further Reading</h2>
+  <p><b>Looking up terminology and getting oriented.</b> When the jargon accumulates, these are good
+  first stops:</p>
+  <ul>
+    <li><a href="https://astronomy.swin.edu.au/cosmos/">COSMOS &mdash; the Swinburne Encyclopedia of Astronomy</a>: clear, searchable definitions of terms and concepts.</li>
+    <li><a href="https://ui.adsabs.harvard.edu/">NASA ADS</a>: the search system for the astronomical literature &mdash; trace any result back to the original papers.</li>
+  </ul>
+  <p><b>Digging deeper.</b> Complementary texts and references, in roughly increasing depth:</p>
+  <ul>
+    <li>B. Carroll &amp; D. Ostlie, <i>An Introduction to Modern Astrophysics</i> &mdash; an accessible parallel treatment.</li>
+    <li>D. Prialnik, <i>An Introduction to the Theory of Stellar Structure and Evolution</i> &mdash; concise and physically motivated.</li>
+    <li>A. C. Phillips, <i>The Physics of Stars</i> &mdash; short and elegant, with an order-of-magnitude flavor.</li>
+    <li>C. Hansen, S. Kawaler &amp; V. Trimble, <i>Stellar Interiors</i> &mdash; a step up, including pulsations and seismology.</li>
+    <li>R. Kippenhahn, A. Weigert &amp; A. Weiss, <i>Stellar Structure and Evolution</i> &mdash; the classic graduate reference.</li>
+    <li>G. Rybicki &amp; A. Lightman, <i>Radiative Processes in Astrophysics</i> &mdash; the standard reference for radiative transfer.</li>
+    <li><a href="https://www.annualreviews.org/journal/astro"><i>Annual Review of Astronomy &amp; Astrophysics</i></a> &mdash; authoritative review articles at the research frontier.</li>
+  </ul>
+
+  <h2 id="contact">Contact</h2>
+  <p>Professor Melinda Soares-Furtado<br>
+  Email: <a href="mailto:mmsoares@wisc.edu">mmsoares@wisc.edu</a><br>
+  Office: Chamberlin Hall, Room 6275<br>
+  Office Hours: Mon 9:30&ndash;11:00 AM and Wed 4:00&ndash;5:30 PM</p>
+
+  <div class="footer">
+    <a href="Courses.html">&larr; Back to Courses</a><br>
+    Department of Astronomy, University of Wisconsin&ndash;Madison &middot; Last updated Fall 2026
+  </div>
+
+</div>
+</body>
+</html>
