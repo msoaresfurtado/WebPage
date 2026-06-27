@@ -17,17 +17,18 @@
             Updated <span id="footer-date">06/2026</span>
         </div>
     </div>
+    <div class="footer-affiliation">
+        University of Wisconsin-Madison · Departments of Astronomy & Physics
+    </div>
 </footer>
-
 <style>
 #site-footer {
-    margin-top: 60px;
+    margin-top: 28px;
     padding: 20px 0 15px 0;
-    border-top: 2px solid var(--accent-color, #20578A);
-    font-size: 14px;
+    border-top: 2px solid var(--accent-color, #7a0000);
+    font-size: 13px;
     color: var(--text-muted, #555);
 }
-
 .footer-content {
     display: flex;
     justify-content: center;
@@ -35,62 +36,50 @@
     flex-wrap: wrap;
     gap: 12px;
 }
-
 .footer-contact a {
-    color: var(--accent-color, #20578A);
-    text-decoration: none;
+    color: var(--link-color, #000099);
+    text-decoration: underline;
     transition: color 0.2s ease;
 }
-
 .footer-contact a:hover {
     color: var(--highlight-color, #9b0000);
-    text-decoration: underline;
 }
-
 .email-icon {
     margin-right: 6px;
 }
-
 .footer-divider {
-    color: var(--accent-color, #20578A);
+    color: var(--accent-color, #7a0000);
     opacity: 0.6;
 }
-
 .footer-links {
     display: flex;
     gap: 8px;
     align-items: center;
 }
-
 .footer-links a {
-    color: var(--accent-color, #20578A);
-    text-decoration: none;
+    color: var(--link-color, #000099);
+    text-decoration: underline;
     transition: color 0.2s ease;
 }
-
 .footer-links a:hover {
     color: var(--highlight-color, #9b0000);
 }
-
 .link-sep {
     color: var(--text-muted, #555);
     opacity: 0.5;
 }
-
 .footer-update {
     font-style: italic;
     opacity: 0.8;
 }
-
 .footer-affiliation {
     text-align: center;
     margin-top: 12px;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     opacity: 0.6;
 }
-
 @media only screen and (max-width: 600px) {
     .footer-content {
         flex-direction: column;
