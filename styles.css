@@ -15,7 +15,7 @@
     --text-muted: #555;
     --bg-color: #faf8f1;       /* cream page background (lightened) */
     --page-bg: #fffef9;        /* content column */
-    --bg-subtle: #f3eede;      /* cards / subtle fills */
+    --bg-subtle: #f6f2e8;      /* cards / subtle fills (lightened) */
     --border-light: #d8d4c4;   /* tan borders */
     --serif: 'Source Serif 4', Georgia, "Times New Roman", serif;
 }
@@ -215,7 +215,7 @@ a:visited {
 }
 /* Join Section */
 .join-section {
-    background: linear-gradient(135deg, #f3eede 0%, #ece3cf 100%);
+    background: linear-gradient(135deg, #f6f2e8 0%, #efe8d8 100%);
     border-radius: 8px;
     padding: 22px 26px;
     margin: 28px 0;
