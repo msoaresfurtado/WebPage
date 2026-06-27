@@ -378,7 +378,7 @@ footer .sub {
 .supporters-logos img.logo-doe { height: 116px; max-width: 116px; }
 .supporters-logos-row2 { margin-top: -12px; }
 .supporters-logos-row3 { margin-top: 22px; }
-.supporters-note { margin-top: 24px; font-size: 1.05em; color: var(--text-muted); letter-spacing: 0.01em; text-align: right; }
+.supporters-note { margin-top: 24px; font-size: 1.05em; color: var(--text-muted); letter-spacing: 0.01em; text-align: left; }
 
 /* Responsive */
 @media only screen and (max-width: 768px) {
