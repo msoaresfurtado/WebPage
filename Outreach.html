@@ -8,23 +8,9 @@
     <meta name="description" content="Outreach, mentoring, and community partnerships by Melinda Soares-Furtado — RADIAL, the Peter Livingston Scholars Program, the Milwaukee Public Museum, Astronomy on Tap, and more.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><polygon points='12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9' fill='%237a0000'/></svg>">
     <!-- Shared site theme -->
-    <link rel="stylesheet" href="styles.css?v=10">
+    <link rel="stylesheet" href="styles.css?v=11">
     <!-- Outreach-page-specific layout (theme/colors come from styles.css) -->
     <style>
-        .banner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 0 30px 0;
-            width: 100%;
-        }
-        .banner img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-        }
         .content { font-size: 1em; line-height: 1.75; }
         .content p { margin: 0 0 18px 0; }
         .content h3 {
@@ -51,10 +37,6 @@
         <div id="header-container"></div>
 
         <h1 class="page-title">Outreach</h1>
-
-        <div class="banner">
-            <img src="https://msoaresfurtado.github.io/WebPage/photos/banneroutreach.png" alt="Outreach banner">
-        </div>
 
         <div class="content">
             <h3>Mentoring Early Career Scientists</h3>
@@ -98,8 +80,9 @@
             .then(response => response.text())
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;
-                const currentNav = document.getElementById('nav-outreach');
-                if (currentNav) currentNav.classList.add('current');
+                document.querySelectorAll('#header-container .header a').forEach(a => {
+                    if ((a.getAttribute('href') || '').indexOf('Outreach.html') !== -1) a.classList.add('current');
+                });
             })
             .catch(error => {
                 document.getElementById('header-container').innerHTML = `
