@@ -8,13 +8,14 @@
     <meta name="description" content="Melinda Soares-Furtado is an astrophysicist at the University of Wisconsin–Madison studying stellar ages, the discovery and characterization of young exoplanets, and planetary engulfment.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><polygon points='12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9' fill='%237a0000'/></svg>">
     <!-- Shared site theme -->
-    <link rel="stylesheet" href="styles.css?v=15">
+    <link rel="stylesheet" href="styles.css?v=16">
+    <!-- Dark-mode support (must load before paint to avoid a flash) -->
+    <script src="theme.js?v=16"></script>
 </head>
 <body>
     <div class="container">
         <!-- Header loaded from external file -->
         <div id="header-container"></div>
-
         <section class="profile-section">
             <div class="profile-picture" role="img" aria-label="Portrait of Melinda Soares-Furtado"></div>
             <div class="profile-info">
@@ -32,12 +33,10 @@
                 </div>
             </div>
         </section>
-
         <div class="intro-text">
             <p>I am an astrophysicist investigating the formation and evolution of stars and planetary systems. I combine observations from Kepler, TESS, JWST, Gaia, and ground-based spectroscopy with computational modeling to study stellar ages, discover and characterize young exoplanets, and understand how stars and planets evolve together.</p>
             <p>Before joining UW-Madison faculty in 2024, I was a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a> here at UW–Madison and a Science Affiliate at the <a href="https://space.mit.edu/" target="_blank" rel="noopener noreferrer">MIT Kavli Institute for Astrophysics and Space Research</a>. I am affiliated with the <a href="https://wicor.wisc.edu/" target="_blank" rel="noopener noreferrer">Wisconsin Center for Origins Research (WiCOR)</a>.</p>
         </div>
-
         <h2 class="section-title">Scientific Research</h2>
         <p>Below is a selection of ongoing research projects. Visit our <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team page</a> to learn about the talented researchers contributing to these investigations.</p>
         <div class="research-grid">
@@ -92,7 +91,6 @@
                 </div>
             </article>
         </div>
-
         <!-- ===== In the News ===== -->
         <h2 class="section-title">In the News</h2>
         <ul class="news-list">
@@ -102,7 +100,6 @@
             <li><span class="news-outlet">Quanta Magazine (2023)</span> — <a href="https://www.quantamagazine.org/new-clues-for-what-will-happen-when-the-sun-eats-the-earth-20231220/" target="_blank" rel="noopener noreferrer">New Clues for What Will Happen When the Sun Eats the Earth</a></li>
             <li><span class="news-outlet">The New York Times (2022)</span> — <a href="https://www.nytimes.com/2022/08/19/science/stars-planets-engulfment.html" target="_blank" rel="noopener noreferrer">The Juicy Secrets of Stars That Eat Their Planets</a></li>
         </ul>
-
         <!-- ===== Join / Recruitment (moved below research) ===== -->
         <div class="join-section">
             <h2>Join Our Research Group</h2>
@@ -116,7 +113,6 @@
             <p><strong>Observational resources:</strong> Group members have institutional access to premier facilities including <a href="https://noirlab.edu/public/programs/kitt-peak-national-observatory/wiyn-35m-telescope/neid/" target="_blank" rel="noopener noreferrer">WIYN/NEID</a>, the <a href="https://www.salt.ac.za/" target="_blank" rel="noopener noreferrer">Southern African Large Telescope (SALT)</a>, the <a href="https://iram-institute.org/science-portal/noema/" target="_blank" rel="noopener noreferrer">Northern Extended Millimeter Array (NOEMA)</a>, and the <a href="https://chtc.cs.wisc.edu/" target="_blank" rel="noopener noreferrer">Center for High Throughput Computing (CHTC)</a>.</p>
             <p><strong>Mentorship:</strong> I received the 2023 UW-Madison <em>Postdoctoral Excellence in Mentoring Award</em> and am committed to supporting students at all career stages. Multiple former mentees have received NSF Graduate Research Fellowships and NASA FINESST awards.</p>
         </div>
-
         <!-- ===== Supporters Section ===== -->
         <section class="supporters-section">
             <h2>With Gratitude to Our Supporters</h2>
@@ -166,48 +162,61 @@
                 Funding acknowledgments reflect current and past support for research and student programs.
             </p>
         </section>
-
         <!-- Footer loaded here -->
         <div id="footer-container"></div>
     </div>
-
     <script>
-        // Load the shared site header
-        fetch('header.html')
-            .then(response => response.text())
-            .then(data => {
+        // Built-in fallback nav, used only if header.html can't be fetched.
+        var FALLBACK_HEADER = `
+            <nav class="header">
+                <a href="https://msoaresfurtado.github.io/WebPage" class="current">Home</a>
+                <span class="nav-sep">|</span>
+                <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
+                <span class="nav-sep">|</span>
+                <a href="https://msoaresfurtado.github.io/WebPage/About.html">About Me</a>
+                <span class="nav-sep">|</span>
+                <a href="https://msoaresfurtado.github.io/WebPage/Courses.html">Courses</a>
+                <span class="nav-sep">|</span>
+                <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
+                <span class="nav-sep">|</span>
+                <a href="https://msoaresfurtado.github.io/WebPage/Tools.html">Tools</a>
+                <button id="theme-toggle" class="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch to dark mode">☾</button>
+            </nav>`;
+        var FALLBACK_FOOTER = `
+            <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #7a0000; text-align:center; font-size:13px; color:#555;">
+                <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#000099;">mmsoares@wisc.edu</a> ⊕ Updated 06/2026</div>
+                <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy &amp; Physics</div>
+            </footer>`;
+
+        // Load the shared site header (cache-busted; falls back if it fails).
+        fetch('header.html?v=16')
+            .then(function (response) {
+                if (!response.ok) throw new Error('header ' + response.status);
+                return response.text();
+            })
+            .then(function (data) {
                 document.getElementById('header-container').innerHTML = data;
-                const currentNav = document.getElementById('nav-home');
+                var currentNav = document.getElementById('nav-home');
                 if (currentNav) currentNav.classList.add('current');
             })
-            .catch(error => {
-                document.getElementById('header-container').innerHTML = `
-                    <nav class="header">
-                        <a href="https://msoaresfurtado.github.io/WebPage" class="current">Home</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/About.html">About Me</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/Courses.html">Courses</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/Outreach.html">Outreach</a>
-                        <span class="nav-sep">|</span>
-                        <a href="https://msoaresfurtado.github.io/WebPage/Tools.html">Tools</a>
-                    </nav>`;
+            .catch(function () {
+                document.getElementById('header-container').innerHTML = FALLBACK_HEADER;
+            })
+            .finally(function () {
+                if (typeof updateThemeIcon === 'function') updateThemeIcon();
             });
-        // Load the shared site footer
-        fetch('footer.html')
-            .then(response => response.text())
-            .then(data => {
+
+        // Load the shared site footer (cache-busted; falls back if it fails).
+        fetch('footer.html?v=16')
+            .then(function (response) {
+                if (!response.ok) throw new Error('footer ' + response.status);
+                return response.text();
+            })
+            .then(function (data) {
                 document.getElementById('footer-container').innerHTML = data;
             })
-            .catch(error => {
-                document.getElementById('footer-container').innerHTML = `
-                    <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #7a0000; text-align:center; font-size:13px; color:#555;">
-                        <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#000099;">mmsoares@wisc.edu</a> ⊕ Updated 06/2026</div>
-                        <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy &amp; Physics</div>
-                    </footer>`;
+            .catch(function () {
+                document.getElementById('footer-container').innerHTML = FALLBACK_FOOTER;
             });
     </script>
 </body>
