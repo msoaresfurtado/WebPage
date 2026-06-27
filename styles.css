@@ -44,7 +44,7 @@ a:hover {
     color: var(--highlight-color);
 }
 a:visited {
-    color: var(--accent-color);
+    color: var(--link-color);   /* keep all links the same blue */
 }
 .highlighted {
     color: var(--highlight-color);
