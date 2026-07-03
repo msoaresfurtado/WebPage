@@ -825,6 +825,7 @@
         let catalogData = null;
         let currentGaiaId = null;
         let obsSortOrder = 'asc';  // 'asc' = oldest->newest, 'desc' = newest->oldest
+        let nightsSortOrder = 'desc';  // Browse-by-date list order: 'desc' = newest->oldest
         let teamInspectionData = {};
         const stellarDataCache = {};
         
@@ -4204,6 +4205,12 @@
         // ============================================
         // Browse by date (list of observing nights)
         // ============================================
+        // Toggle the Browse-by-date list direction and re-render
+        function toggleNightsSort() {
+            nightsSortOrder = nightsSortOrder === 'desc' ? 'asc' : 'desc';
+            showNightsList();
+        }
+
         function showNightsList() {
             if (!catalogData) return;
             hideExternalLinks();
@@ -4220,14 +4227,21 @@
                 });
             });
 
-            // Sort nights descending (newest first)
-            const sortedNights = Object.keys(nights).sort((a, b) => b.localeCompare(a));
+            // Sort nights by chosen direction
+            const sortedNights = Object.keys(nights).sort((a, b) =>
+                nightsSortOrder === 'desc' ? b.localeCompare(a) : a.localeCompare(b)
+            );
 
             const resultsSection = document.getElementById('results');
             resultsSection.innerHTML = `
                 <div class="all-targets">
-                    <h2>Browse by Date (${sortedNights.length} nights)</h2>
-                    <p style="color: #64748b; margin-bottom: 1rem;">Newest first · click a night to see its observations</p>
+                    <h2>
+                        Browse by Date (${sortedNights.length} nights)
+                        <button class="sort-toggle-btn" onclick="toggleNightsSort()">
+                            ${nightsSortOrder === 'desc' ? '↓ Newest first' : '↑ Oldest first'}
+                        </button>
+                    </h2>
+                    <p style="color: #64748b; margin-bottom: 1rem;">${nightsSortOrder === 'desc' ? 'Newest first' : 'Oldest first'} · click a night to see its observations</p>
                     <div class="target-list">
                         ${sortedNights.map(dateKey => {
                             const entries = nights[dateKey];
