@@ -33,9 +33,9 @@
             <div class="search-links">
                 <a href="#" onclick="showAllTargets(); return false;">Browse all targets</a>
                 <span> · </span>
-                <a href="#" onclick="showSemesterTargets(); return false;">2025B semester targets</a>
-                <span> · </span>
                 <a href="#" onclick="showNightsList(); return false;">Browse by date</a>
+                <span> · </span>
+                <a href="#" onclick="showSemesterTargets(); return false;">2025B semester targets</a>
                 <span class="simbad-link" id="simbad-link">
                     · <a href="#" id="simbad-url" target="_blank">SIMBAD ↗</a>
                 </span>
@@ -92,7 +92,7 @@
                 border: none;
             }
             .search-section {
-                max-width: 600px;
+                max-width: 720px;
                 margin: 0 auto;
                 border: none;
             }
@@ -4301,7 +4301,7 @@
                         <div class="obs-header">
                             <div class="obs-info">
                                 <div class="obs-date">
-                                    <a href="#" onclick="selectTarget('${target.gaia_dr3_id}'); return false;">Gaia DR3 ${target.gaia_dr3_id}</a>
+                                    <a href="#" style="color: #e891a8; text-decoration: none;" onclick="selectTarget('${target.gaia_dr3_id}'); return false;">Gaia DR3 ${target.gaia_dr3_id}</a>
                                     ${qualityHtml}
                                 </div>
                                 <div class="obs-details">
@@ -4324,7 +4324,7 @@
                         <div class="target-name">Observations on ${dateKey}</div>
                         <div class="coords">
                             ${entries.length} observation${entries.length === 1 ? '' : 's'} ·
-                            <a href="#" onclick="showNightsList(); return false;">← Back to all nights</a>
+                            <a href="#" style="color: #e891a8; text-decoration: none;" onclick="showNightsList(); return false;">← Back to all nights</a>
                         </div>
                     </div>
                     <div class="result-body">
