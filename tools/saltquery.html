@@ -21,7 +21,6 @@
             <h1>Soares-Furtado Team Observation Query</h1>
             <p class="subtitle">Search for SALT observations from the Ursa Major Spectral Survey</p>
         </header>
-
         <section class="search-section">
             <label class="search-label" for="gaia-id">Gaia DR3 Source ID</label>
             <div class="search-wrapper">
@@ -33,6 +32,8 @@
             </div>
             <div class="search-links">
                 <a href="#" onclick="showAllTargets(); return false;">Browse all targets</a>
+                <span> · </span>
+                <a href="#" onclick="showNightsList(); return false;">Browse by date</a>
                 <span> · </span>
                 <a href="#" onclick="showSemesterTargets(); return false;">2025B semester targets</a>
                 <span class="simbad-link" id="simbad-link">
@@ -91,7 +92,7 @@
                 border: none;
             }
             .search-section {
-                max-width: 600px;
+                max-width: 720px;
                 margin: 0 auto;
                 border: none;
             }
@@ -162,6 +163,26 @@
                 margin-top: 10px;
                 text-align: center;
                 border: none;
+            }
+            
+            /* Sort toggle button */
+            .sort-toggle-btn {
+                margin-left: 0.75rem;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                color: #64748b;
+                padding: 0.2rem 0.6rem;
+                border-radius: 4px;
+                font-family: 'DM Sans', sans-serif;
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: all 0.15s;
+                vertical-align: middle;
+            }
+            .sort-toggle-btn:hover {
+                background: #f1f5f9;
+                border-color: #cbd5e1;
+                color: #475569;
             }
             
             /* Team Rejected badge styling */
@@ -659,7 +680,6 @@
                 font-size: 0.85rem;
             }
         </style>
-
         <section id="results" class="results-section"></section>
         
         <!-- Spectrum Viewer Section -->
@@ -759,7 +779,6 @@
             </div>
             <div id="spectrum-plot"></div>
         </section>
-
         <div class="info-box">
             <strong>Data Access:</strong> A subset of SALT data is publicly visible on GitHub for transparency and inspection. These files do not need to be downloaded or handled locally to use this tool. The complete archive is stored in a shared Dropbox folder.
             <div class="help-toggle" onclick="toggleHelp()">
@@ -797,7 +816,6 @@
             </div>
         </div>
     </div>
-
     <script>
         const DROPBOX_FOLDER = '2023-2-SCI-018';
         const SALTDATA_FOLDER = 'saltdata';  // Folder containing FITS files for web viewing
@@ -806,6 +824,8 @@
         
         let catalogData = null;
         let currentGaiaId = null;
+        let obsSortOrder = 'asc';  // 'asc' = oldest->newest, 'desc' = newest->oldest
+        let nightsSortOrder = 'desc';  // Browse-by-date list order: 'desc' = newest->oldest
         let teamInspectionData = {};
         const stellarDataCache = {};
         
@@ -831,7 +851,6 @@
             }
             return max;
         }
-
         function getCurrentPlotRanges() {
             const plotDiv = document.getElementById('spectrum-plot');
             if (!plotDiv || !plotDiv.layout) return null;
@@ -871,7 +890,6 @@
                 Plotly.relayout(plotDiv, updateObj);
             }
         }
-
         
         // Spectral line markers
         const SPECTRAL_LINES = {
@@ -1094,10 +1112,8 @@
                 
                 applyRVCorr = !applyRVCorr;
                 document.getElementById('rv-corr-btn').classList.toggle('active', applyRVCorr);
-
             // Save current zoom state
             const ranges = getCurrentPlotRanges();
-
             // Re-render the current spectrum
             if (currentSpectrum) {
                 if (currentSpectrum.isMultiArm) {
@@ -2553,7 +2569,6 @@
             
             return shapes;
         }
-
         // ============================================
         // FITS Parsing Functions
         // ============================================
@@ -3067,7 +3082,6 @@
                 currentSpectrum.flattenedBlueFlux = null;
                 currentSpectrum.flattenedRedFlux = null;
             }
-
             // Save current zoom state
             const ranges = getCurrentPlotRanges();
             // Handle multi-arm case
@@ -3101,7 +3115,6 @@
             
             return flattened;
         }
-
         // ============================================
         // Team Inspection Data
         // ============================================
@@ -3177,7 +3190,6 @@
             const key = `${gaiaId}_${dateKey}`;
             return teamInspectionData[key] || null;
         }
-
         function getSpectralType(teff) {
             if (!teff) return null;
             if (teff >= 30000) return 'O';
@@ -3189,7 +3201,6 @@
             if (teff >= 2400) return 'M';
             return 'L';
         }
-
         function drawCMD(canvas, data) {
             const ctx = canvas.getContext('2d');
             const w = canvas.width;
@@ -3282,12 +3293,12 @@
             const sunX = toX(0.82);
             const sunY = toY(4.83);
             ctx.beginPath();
-            ctx.arc(sunX, sunY, 5, 0, Math.PI * 2);
+            ctx.arc(sunX, sunY, 7, 0, Math.PI * 2);
             ctx.strokeStyle = '#f59e0b';
             ctx.lineWidth = 1.5;
             ctx.stroke();
             ctx.beginPath();
-            ctx.arc(sunX, sunY, 1.5, 0, Math.PI * 2);
+            ctx.arc(sunX, sunY, 2.5, 0, Math.PI * 2);
             ctx.fillStyle = '#f59e0b';
             ctx.fill();
             
@@ -3297,7 +3308,7 @@
                 
                 ctx.fillStyle = '#3b82f6';
                 ctx.beginPath();
-                const r = 7;
+                const r = 9;
                 for (let i = 0; i < 5; i++) {
                     const angle = (i * 4 * Math.PI / 5) - Math.PI / 2;
                     const x = starX + r * Math.cos(angle);
@@ -3317,7 +3328,6 @@
                 ctx.fillText('No Gaia data', w / 2, h / 2);
             }
         }
-
         // ============================================
         // Recent searches
         // ============================================
@@ -3330,7 +3340,6 @@
                 return [];
             }
         }
-
         function saveRecentSearch(gaiaId) {
             try {
                 let recent = getRecentSearches();
@@ -3341,7 +3350,6 @@
                 renderRecentSearches();
             } catch {}
         }
-
         function renderRecentSearches() {
             const recent = getRecentSearches();
             const dropdown = document.getElementById('search-dropdown');
@@ -3371,7 +3379,6 @@
             const dropdown = document.getElementById('search-dropdown');
             dropdown.classList.remove('visible');
         }
-
         // ============================================
         // External links
         // ============================================
@@ -3387,7 +3394,6 @@
             vizierUrl.href = `https://vizier.cds.unistra.fr/viz-bin/VizieR-4?-source=&-out.all&-c=Gaia+DR3+${gaiaId}&-c.rs=2`;
             vizierContainer.classList.add('visible');
         }
-
         function hideExternalLinks() {
             document.getElementById('simbad-link').classList.remove('visible');
             document.getElementById('vizier-link').classList.remove('visible');
@@ -3454,7 +3460,6 @@
           stellarDataCache[gaiaId] = null;
           return null;
         }
-
         function toggleHelp() {
             document.getElementById('help-content').classList.toggle('visible');
         }
@@ -3572,7 +3577,6 @@
                 showStatus('Unable to load observation catalog.', true);
             }
         }
-
         // ============================================
         // Search
         // ============================================
@@ -3588,21 +3592,18 @@
                 showStatus('Catalog not loaded. Please refresh.', true); 
                 return; 
             }
-
             const target = catalogData.targets.find(t => t.gaia_dr3_id === gaiaId);
             if (!target) { 
                 showStatus(`No observations found for Gaia DR3 ${gaiaId}`, true); 
                 hideExternalLinks();
                 return; 
             }
-
             currentGaiaId = gaiaId;
             saveRecentSearch(gaiaId);
             showExternalLinks(gaiaId);
             closeSpectrumViewer();
             displayResults(target);
         }
-
         function getDQMPassCount(target) {
             let passCount = 0;
             
@@ -3618,7 +3619,6 @@
             
             return passCount;
         }
-
         async function loadStellarData(gaiaId) {
             const btn = document.getElementById('load-cmd-btn');
             const container = document.getElementById('stellar-section-container');
@@ -3636,7 +3636,7 @@
                         <button class="collapse-cmd-btn" onclick="collapseStellarSection('${gaiaId}')">Hide</button>
                     </div>
                     <div class="cmd-container">
-                        <canvas id="cmd-canvas" width="280" height="260"></canvas>
+                        <canvas id="cmd-canvas" width="240" height="260"></canvas>
                     </div>
                     <div class="stellar-params" id="stellar-params">
                         <div class="param-row">
@@ -3687,7 +3687,6 @@
                 </div>
             `;
         }
-
         function findPlottableFile(allFiles) {
             const uwmFile = allFiles.find(f => f.includes('_uwm'));
             if (uwmFile) return uwmFile;
@@ -3971,10 +3970,18 @@
                 setupCCFSelectionHandlers(document.getElementById('spectrum-plot'));
             });
         }
-
         // ============================================
         // Display results
         // ============================================
+        
+        // Toggle observation sort order and re-render current target
+        function toggleObsSort() {
+            obsSortOrder = obsSortOrder === 'desc' ? 'asc' : 'desc';
+            if (currentGaiaId && catalogData) {
+                const target = catalogData.targets.find(t => t.gaia_dr3_id === currentGaiaId);
+                if (target) displayResults(target);
+            }
+        }
         
         async function displayResults(target) {
             const resultsSection = document.getElementById('results');
@@ -3983,7 +3990,7 @@
             const sortedObs = [...target.observations].sort((a, b) => {
                 const dateA = a.date.includes('-') ? a.date : `20${a.date.slice(0,2)}-${a.date.slice(2,4)}-${a.date.slice(4,6)}`;
                 const dateB = b.date.includes('-') ? b.date : `20${b.date.slice(0,2)}-${b.date.slice(2,4)}-${b.date.slice(4,6)}`;
-                return dateA.localeCompare(dateB);
+                return obsSortOrder === 'desc' ? dateB.localeCompare(dateA) : dateA.localeCompare(dateB);
             });
             
             const obsHtml = sortedObs.map((obs, idx) => {
@@ -4053,7 +4060,6 @@
                     </div>
                 `;
             }).join('');
-
             resultsSection.innerHTML = `
                 <div class="result-card">
                     <div class="result-header">
@@ -4082,7 +4088,12 @@
                                 <div class="meta-value">${target.notes || 'None'}</div>
                             </div>
                         </div>
-                        <div class="observations-header">Observations</div>
+                        <div class="observations-header">
+                            Observations
+                            <button class="sort-toggle-btn" onclick="toggleObsSort()">
+                                ${obsSortOrder === 'desc' ? '↓ Newest first' : '↑ Oldest first'}
+                            </button>
+                        </div>
                         ${obsHtml}
                         
                         <div id="stellar-section-container">
@@ -4097,7 +4108,6 @@
             `;
             resultsSection.classList.add('visible');
         }
-
         function parseObsDate(dateStr) {
             if (dateStr.includes('-')) {
                 return dateStr;
@@ -4108,7 +4118,6 @@
                 return `${year}-${month}-${day}`;
             }
         }
-
         function showSemesterTargets() {
             if (!catalogData) return;
             hideExternalLinks();
@@ -4167,7 +4176,6 @@
             `;
             resultsSection.classList.add('visible');
         }
-
         function showAllTargets() {
             if (!catalogData) return;
             hideExternalLinks();
@@ -4194,20 +4202,150 @@
             `;
             resultsSection.classList.add('visible');
         }
+        // ============================================
+        // Browse by date (list of observing nights)
+        // ============================================
+        // Toggle the Browse-by-date list direction and re-render
+        function toggleNightsSort() {
+            nightsSortOrder = nightsSortOrder === 'desc' ? 'asc' : 'desc';
+            showNightsList();
+        }
 
+        function showNightsList() {
+            if (!catalogData) return;
+            hideExternalLinks();
+            closeSpectrumViewer();
+            currentGaiaId = null;
+
+            // Aggregate every observation by night (normalized YYYY-MM-DD)
+            const nights = {};
+            catalogData.targets.forEach(t => {
+                t.observations.forEach(obs => {
+                    const key = parseObsDate(obs.date);
+                    if (!nights[key]) nights[key] = [];
+                    nights[key].push({ target: t, obs });
+                });
+            });
+
+            // Sort nights by chosen direction
+            const sortedNights = Object.keys(nights).sort((a, b) =>
+                nightsSortOrder === 'desc' ? b.localeCompare(a) : a.localeCompare(b)
+            );
+
+            const resultsSection = document.getElementById('results');
+            resultsSection.innerHTML = `
+                <div class="all-targets">
+                    <h2>
+                        Browse by Date (${sortedNights.length} nights)
+                        <button class="sort-toggle-btn" onclick="toggleNightsSort()">
+                            ${nightsSortOrder === 'desc' ? '↓ Newest first' : '↑ Oldest first'}
+                        </button>
+                    </h2>
+                    <p style="color: #64748b; margin-bottom: 1rem;">${nightsSortOrder === 'desc' ? 'Newest first' : 'Oldest first'} · click a night to see its observations</p>
+                    <div class="target-list">
+                        ${sortedNights.map(dateKey => {
+                            const entries = nights[dateKey];
+                            const nTargets = new Set(entries.map(e => e.target.gaia_dr3_id)).size;
+                            return `
+                                <div class="target-item" onclick="showNight('${dateKey}')">
+                                    <div class="gaia-id">${dateKey}</div>
+                                    <div class="obs-count">${entries.length} obs · ${nTargets} target${nTargets === 1 ? '' : 's'}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            resultsSection.classList.add('visible');
+        }
+
+        function showNight(dateKey) {
+            if (!catalogData) return;
+            closeSpectrumViewer();
+
+            // Collect all observations taken on this night
+            const entries = [];
+            catalogData.targets.forEach(t => {
+                t.observations.forEach(obs => {
+                    if (parseObsDate(obs.date) === dateKey) {
+                        entries.push({ target: t, obs });
+                    }
+                });
+            });
+
+            // Stable ordering by target id
+            entries.sort((a, b) => a.target.gaia_dr3_id.localeCompare(b.target.gaia_dr3_id));
+
+            const obsHtml = entries.map(({ target, obs }) => {
+                const allFiles = obs.all_files || [obs.filename];
+                const plottableFile = findPlottableFile(allFiles);
+
+                const catalogStatus = obs.quality_status || 'Accepted';
+                const teamStatus = getTeamInspectionStatus(target.gaia_dr3_id, obs.date);
+                let qualityHtml;
+                if (catalogStatus === 'Rejected') {
+                    qualityHtml = `<span class="quality-badge rejected">Rejected</span>`;
+                } else if (teamStatus && !teamStatus.usable) {
+                    qualityHtml = `<span class="quality-badge team-rejected">Team Rejected</span>`;
+                } else {
+                    qualityHtml = `<span class="quality-badge accepted">Accepted</span>`;
+                }
+
+                const plotBtn = plottableFile ? `
+                            <button class="plot-spectrum-btn" onclick="viewSpectrum('${plottableFile}', '${target.gaia_dr3_id}', '${obs.date}'); event.stopPropagation();">
+                                📈 Plot Spectrum
+                            </button>` : '';
+
+                return `
+                    <div class="obs-item">
+                        <div class="obs-header">
+                            <div class="obs-info">
+                                <div class="obs-date">
+                                    <a href="#" style="color: #e891a8; text-decoration: none;" onclick="selectTarget('${target.gaia_dr3_id}'); return false;">Gaia DR3 ${target.gaia_dr3_id}</a>
+                                    ${qualityHtml}
+                                </div>
+                                <div class="obs-details">
+                                    ${obs.instrument} · ${obs.mode || 'Standard'} · ${obs.exposure_time}s · ${allFiles.length} files
+                                </div>
+                            </div>
+                        </div>
+                        <div class="file-actions" style="padding: 0 0.75rem 0.5rem;">
+                            ${plotBtn}
+                            <span style="color: #64748b; font-size: 0.75rem;">Click the ID to open the full target</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const resultsSection = document.getElementById('results');
+            resultsSection.innerHTML = `
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="target-name">Observations on ${dateKey}</div>
+                        <div class="coords">
+                            ${entries.length} observation${entries.length === 1 ? '' : 's'} ·
+                            <a href="#" style="color: #e891a8; text-decoration: none;" onclick="showNightsList(); return false;">← Back to all nights</a>
+                        </div>
+                    </div>
+                    <div class="result-body">
+                        <div class="observations-header">Observations</div>
+                        ${obsHtml}
+                    </div>
+                </div>
+            `;
+            resultsSection.classList.add('visible');
+        }
         function selectTarget(gaiaId) {
             document.getElementById('gaia-id').value = gaiaId;
             searchTarget();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
         function toggleFiles(idx) {
             const filesDiv = document.getElementById(`files-${idx}`);
             const header = filesDiv.previousElementSibling;
             filesDiv.classList.toggle('expanded');
             header.classList.toggle('expanded');
         }
-
         function getFileBadge(filename) {
             if (filename.includes('_uwm')) return 'merged';
             if (filename.includes('_1wm') || filename.includes('_2wm')) return 'merged';
@@ -4216,13 +4354,11 @@
             if (filename.includes('SNR')) return 'SNR';
             return null;
         }
-
         function showStatus(message, isError = false) {
             const resultsSection = document.getElementById('results');
             resultsSection.innerHTML = `<div class="status ${isError ? 'error' : ''}"><p>${message}</p></div>`;
             resultsSection.classList.add('visible');
         }
-
         // ============================================
         // Init
         // ============================================
