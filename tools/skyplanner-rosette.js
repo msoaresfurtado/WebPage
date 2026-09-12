@@ -4,7 +4,7 @@
 const G=SkyGeometry;
 const state={geometry:null,data:{},layers:[],maskedLayers:[],hiddenOriginals:new Set(),selected:[],pending:null,ready:false};
 const el=id=>document.getElementById(id);
-const presets={onc:[83.8186,-5.3897,0,.16],rosette:[97.940875,4.866111,270,.22],deep:[97.98442905121564,4.947611111111112,245,.15]};
+const presets={onc:[83.8186,-5.3897,0,.16],rosette:[97.940875,4.866111,270,.22],deep:[97.9824773423206,4.945944444444446,251,.15]};
 const initialCountUI=window.updateFootprintCatalogCountUI;
 const oldFootprint=window.updateFootprintRealtime;
 const oldClear=window.clearActiveFootprint;
@@ -15,7 +15,7 @@ function options(){return {membership:el('rp-membership').value,screen:el('rp-sc
 function rows(){return G.merge(el('rp-deep').checked?(state.data.deep||[]):[],el('rp-wide').checked?(state.data.wide||[]):[]);}
 function coordinate(){return ['footprint-ra-slider','footprint-dec-slider','footprint-pa-slider'].map(id=>Number(el(id).value));}
 function setPosition(ra,dec,pa){if(!Number.isFinite(ra)||!Number.isFinite(dec)||dec>90||dec< -90)return;ra=(ra%360+360)%360;for(const [id,v] of [['ra',ra],['dec',dec]]){const s=el('footprint-'+id+'-slider');s.min=v-.15;s.max=v+.15;s.step=.0001;s.value=v;el('fp-'+id+'-input').value=v.toFixed(6);}if(pa!==undefined){el('footprint-pa-slider').value=pa;el('fp-pa-input').value=pa;}window.updateFootprintRealtime();}
-window.plannerPreset=async function(key){const p=presets[key];el('rp-follow').checked=false;el('footprint-instrument').value='jwst';clearImageOverlay();aladin.gotoRaDec(p[0],p[1]);aladin.setFoV(p[3]);setPosition(...p);el('rp-region').textContent=key==='onc'?'ONC':key==='deep'?'Rosette — deep-field optimum':'Rosette — Roman study center';if(key!=='onc'){el('rp-deep').checked=true;if(key==='rosette')el('rp-wide').checked=true;await loadEnabled();}};
+window.plannerPreset=async function(key){const p=presets[key];el('rp-follow').checked=false;el('footprint-instrument').value='jwst';clearImageOverlay();aladin.gotoRaDec(p[0],p[1]);aladin.setFoV(p[3]);setPosition(...p);el('rp-region').textContent=key==='onc'?'ONC':key==='deep'?'Rosette — deep-field optimum':'Rosette — Roman study center';renderCatalogs();};
 window.centerFootprintOnView=function(){setPosition(...aladin.getRaDec());};
 window.updateFootprintRealtime=function(){if(!state.geometry||el('footprint-instrument').value!=='jwst'){oldFootprint();return;}
  const [ra,dec,pa]=coordinate();el('fp-ra-input').value=ra.toFixed(6);el('fp-dec-input').value=dec.toFixed(6);el('fp-pa-input').value=pa.toFixed(2);
@@ -78,7 +78,7 @@ A.init.then(async function(){
  const panel=document.createElement('section');panel.className='panel rp-panel';panel.innerHTML=`<div class="panel-header">Field planning</div><div class="panel-content">
  <div class="coord-row"><button id="rp-onc">ONC</button><button id="rp-rosette">Rosette</button></div><button id="rp-optimum" class="btn-secondary">Rosette deep-field optimum</button><p id="rp-region" class="rp-note">ONC</p>
  <label class="rp-check"><input type="checkbox" id="rp-follow"> Move footprint when I pan the sky</label><label class="rp-check"><input type="checkbox" id="rp-click"> Click sky to place footprint</label>
- <label class="rp-check"><input type="checkbox" id="rp-hide-outside"> Hide sources outside footprint (map + PNG)</label><hr><label class="rp-check"><input type="checkbox" id="rp-deep"> Deep NIR + published membership/masses</label><label class="rp-check"><input type="checkbox" id="rp-wide"> Wider Gaia membership probabilities</label><p id="rp-load-status" class="rp-note" role="status">No Rosette catalog enabled.</p>
+ <label class="rp-check"><input type="checkbox" id="rp-hide-outside"> Hide sources outside footprint (map + PNG)</label><hr><button id="rp-load-all" class="btn-secondary">Load all Rosette catalogs</button><label class="rp-check"><input type="checkbox" id="rp-deep"> Deep NIR + published membership/masses</label><label class="rp-check"><input type="checkbox" id="rp-wide"> Wider Gaia membership probabilities</label><p id="rp-load-status" class="rp-note" role="status">No Rosette catalog enabled.</p>
  <label for="rp-membership">Count and display</label><select id="rp-membership"><option value="members">Published members (Y)</option><option value="possible">Members + possible members</option><option value="probable">Members + high-probability candidates</option><option value="all" selected>All catalog sources</option></select>
  <label for="rp-probability">Minimum membership probability</label><input id="rp-probability" type="number" min="0" max="1" step="0.05" value="0.8">
  <label class="rp-check"><input type="checkbox" id="rp-screen" checked> Apply bright-limit proxy</label><label for="rp-kmin">Minimum K magnitude (Vega)</label><input type="number" id="rp-kmin" min="0" max="35" step="0.1" value="15.8964139349"><p class="rp-note">Fainter sources have larger magnitudes. This adjustable K proxy is not a source-specific ETC saturation limit. Missing K is excluded when enabled.</p>
@@ -88,9 +88,10 @@ A.init.then(async function(){
  document.querySelector('.sidebar').prepend(panel);el('panel-footprints').classList.remove('collapsed');panel.querySelector('hr').before(el('panel-footprints'));initCatalogPresets();
  const apply=document.createElement('button');apply.textContent='Apply entered coordinates';apply.id='rp-apply';el('panel-footprints').querySelector('.panel-content').append(apply);apply.onclick=()=>setPosition(Number(el('fp-ra-input').value),Number(el('fp-dec-input').value),Number(el('fp-pa-input').value));el('footprint-instrument').addEventListener('change',()=>window.updateFootprintRealtime());
  el('rp-onc').onclick=()=>plannerPreset('onc');el('rp-rosette').onclick=()=>plannerPreset('rosette');el('rp-optimum').onclick=()=>plannerPreset('deep');
+ el('rp-load-all').onclick=async()=>{el('rp-deep').checked=true;el('rp-wide').checked=true;await loadEnabled();};
  for(const k of ['deep','wide'])el('rp-'+k).onchange=loadEnabled;
  for(const k of ['membership','screen','kmin','probability'])el('rp-'+k).onchange=()=>{const o=options();if(!Number.isFinite(o.kmin)||!Number.isFinite(o.probability)||o.probability<0||o.probability>1){el('rp-load-status').textContent='Enter a valid K limit and probability between 0 and 1.';return;}renderCatalogs();};el('rp-hide-outside').onchange=()=>renderCatalogs();el('rp-coverage').onchange=()=>renderCatalogs();el('rp-export').onclick=exportRows;
  aladin.on('positionChanged',p=>{if(el('rp-follow').checked){cancelAnimationFrame(state.pending);state.pending=requestAnimationFrame(()=>setPosition(p.ra,p.dec));}});aladin.on('click',p=>{if(el('rp-click').checked&&p&&Number.isFinite(p.ra)&&Number.isFinite(p.dec))setPosition(p.ra,p.dec);});
- try{const r=await fetch('skyplanner-nircam-siaf.json');if(!r.ok)throw Error('HTTP '+r.status);state.geometry=await r.json();state.ready=true;aladin.setFoV(.16);el('footprint-instrument').value='jwst';selectedColors.footprint='#c5aa73';setPosition(ONC_RA,ONC_DEC,0);el('rp-results').textContent='Choose Rosette to load its catalogs.';}catch(e){el('rp-results').textContent='Detector geometry unavailable: '+e.message;}
+ try{const r=await fetch('skyplanner-nircam-siaf.json');if(!r.ok)throw Error('HTTP '+r.status);state.geometry=await r.json();state.ready=true;aladin.setFoV(.16);el('footprint-instrument').value='jwst';selectedColors.footprint='#c5aa73';setPosition(ONC_RA,ONC_DEC,0);el('rp-results').textContent='Select a catalog when needed.';}catch(e){el('rp-results').textContent='Detector geometry unavailable: '+e.message;}
 });
 })();
