@@ -785,6 +785,11 @@
 .rp-panel a{color:#9fc0d7;}
 #rp-coverage-note{font-size:.65rem;line-height:1.4;color:#e0ba80;margin-top:.5rem;}
 @media(max-width:700px){.app-container{grid-template-columns:270px 1fr}.header-info{display:none}.sidebar{padding:.3rem}#aladin-container{min-height:350px}}
+
+/* Readable sky-coordinate entry on dark survey imagery. */
+#aladin-container input.aladin-input-text.search { color: #f5f7fa !important; -webkit-text-fill-color: #f5f7fa !important; background: #101820 !important; font-family: Arial, sans-serif !important; font-size: 16px !important; font-weight: 700 !important; letter-spacing: .3px; min-width: 265px; border: 1px solid #9aabbc !important; padding: 7px 10px !important; opacity: 1 !important; }
+#aladin-container input.aladin-input-text.search::placeholder { color: #c5d0dc !important; opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -1933,6 +1938,7 @@
                 ctx.strokeStyle = cat.color || '#4afff4';
                 ctx.lineWidth = 1.5 * scale;
                 cat.data.forEach(function(src) {
+                    if(window.plannerSourceVisible && !window.plannerSourceVisible(src)) return;
                     var pix = null;
                     try { pix = aladin.world2pix(src.ra, src.dec); } catch(e) {}
                     if (pix && pix[0] > -10 && pix[0] < origCw + 10 && pix[1] > -10 && pix[1] < origCh + 10) {
@@ -1943,6 +1949,7 @@
 
             // Individual sources
             sources.forEach(function(s) {
+                if(window.plannerSourceVisible && !window.plannerSourceVisible(s)) return;
                 ctx.fillStyle = s.color || '#ff6b4a';
                 ctx.strokeStyle = s.color || '#ff6b4a';
                 var pix = null;
