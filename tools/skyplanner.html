@@ -769,7 +769,23 @@
         }
 
         .total-sources-value.empty { color: var(--text-secondary); }
-    </style>
+    
+.rp-panel {border-color:#607d87;}
+.rp-panel .panel-header{font-size:.7rem;}
+.rp-panel label,.rp-panel select,.rp-panel input,.rp-panel button{font-size:.7rem;}
+.rp-panel .rp-check{display:flex;gap:.4rem;align-items:center;text-transform:none;margin:.55rem 0;letter-spacing:0;}
+.rp-panel input[type=checkbox]{width:auto;}
+.rp-note{font-size:.65rem;line-height:1.45;color:#a9afbb;margin:.4rem 0;}
+.rp-panel hr{border:0;border-top:1px solid #3b4552;margin:.7rem 0;}
+#rp-results{font-size:.7rem;background:#101820;border-radius:4px;padding:.6rem;margin-top:.5rem;}
+#rp-results strong{font-size:.95rem;color:#bdcfc7;}
+#rp-results dl{display:grid;grid-template-columns:1fr auto;gap:.3rem;margin:.5rem 0;}
+.rp-panel details{font-size:.65rem;line-height:1.5;margin-top:.5rem;}
+.rp-panel table{width:100%;text-align:left;}
+.rp-panel a{color:#9fc0d7;}
+#rp-coverage-note{font-size:.65rem;line-height:1.4;color:#e0ba80;margin-top:.5rem;}
+@media(max-width:700px){.app-container{grid-template-columns:270px 1fr}.header-info{display:none}.sidebar{padding:.3rem}#aladin-container{min-height:350px}}
+</style>
 </head>
 <body>
     <div class="app-container">
@@ -972,15 +988,15 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>RA (°): <input type="number" id="fp-ra-input" value="83.8186" step="0.005" style="width:90px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
-                        <input type="range" id="footprint-ra-slider" min="78" max="89" step="0.005" value="83.8186" style="width:100%;">
+                        <label>RA (°): <input type="number" id="fp-ra-input" value="83.8186" step="0.0001" style="width:90px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
+                        <input type="range" id="footprint-ra-slider" min="78" max="89" step="0.0001" value="83.8186" style="width:100%;">
                     </div>
                     <div class="input-group">
-                        <label>Dec (°): <input type="number" id="fp-dec-input" value="-5.3897" step="0.001" style="width:90px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
-                        <input type="range" id="footprint-dec-slider" min="-11" max="0" step="0.001" value="-5.3897" style="width:100%;">
+                        <label>Dec (°): <input type="number" id="fp-dec-input" value="-5.3897" step="0.0001" style="width:90px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
+                        <input type="range" id="footprint-dec-slider" min="-11" max="0" step="0.0001" value="-5.3897" style="width:100%;">
                     </div>
                     <div class="input-group">
-                        <label>PA (°): <input type="number" id="fp-pa-input" value="0" step="0.25" min="0" max="360" style="width:60px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
+                        <label>V3 PA (°): <input type="number" id="fp-pa-input" value="0" step="0.25" min="0" max="360" style="width:60px;font-size:0.65rem;padding:2px 4px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:3px;"></label>
                         <input type="range" id="footprint-pa-slider" min="0" max="360" step="0.25" value="0" style="width:100%;">
                     </div>
                     <div class="color-picker-row" style="margin-bottom: 0.3rem;">
@@ -3019,5 +3035,8 @@
 
 
     </script>
+<script src="skyplanner-geometry.js"></script>
+<script src="skyplanner-rosette.js"></script>
+<script src="skyplanner-imf.js"></script>
 </body>
 </html>
