@@ -997,6 +997,7 @@ DATA SOURCES:
                 </span>
               </div>
               <div class="panel-body">
+                <p id="gaia-service-note" role="status" style="font-size: 0.85rem; line-height: 1.5;"></p>
                 <div class="target-info" id="target-info"></div>
                 <div class="external-links" id="external-links"></div>
 
@@ -1386,6 +1387,7 @@ DATA SOURCES:
       </footer>
     </div>
 
+  <script src="chronostar-gaia.js"></script>
   <script>
     // =========================
     // Global state
@@ -1887,64 +1889,19 @@ DATA SOURCES:
   // Gaia TAP (VizieR) helper
   // =========================
   async function queryGaia(query) {
-    const url = 'https://tapvizier.cds.unistra.fr/TAPVizieR/tap/sync';
+    return ChronostarGaia.query(query);
+  }
 
-    const colMapping = {
-      'source_id': 'Source',
-      'ra': 'RA_ICRS',
-      'dec': 'DE_ICRS',
-      'parallax': 'Plx',
-      'parallax_error': 'e_Plx',
-      'pmra': 'pmRA',
-      'pmdec': 'pmDE',
-      'radial_velocity': 'RV',
-      'radial_velocity_error': 'e_RV',
-      'phot_g_mean_mag': 'Gmag',
-      'phot_bp_mean_mag': 'BPmag',
-      'phot_rp_mean_mag': 'RPmag',
-      'bp_rp': '"BP-RP"',
-      'ruwe': 'RUWE',
-      'teff_gspphot': 'Teff',
-      'logg_gspphot': 'logg'
-    };
-
-    let vizierQuery = query
-      .replace(/gaiadr3\.gaia_source/gi, '"I/355/gaiadr3"')
-      .replace(/gaiadr3\.astrophysical_parameters/gi, '"I/355/paramp"');
-
-    for (const [esa, viz] of Object.entries(colMapping)) {
-      vizierQuery = vizierQuery.replace(new RegExp(`\\b${esa}\\b`, 'gi'), viz);
+  function displayGaiaProvenance() {
+    const element = document.getElementById('gaia-service-note');
+    const target = targetData?._gaiaProvider;
+    const neighbors = targetData?._neighborProvider;
+    const label = provider => provider === 'gavo' ? 'GAVO Gaia DR3 lite' : 'VizieR Gaia DR3';
+    element.textContent = target ? `Target data: ${label(target)}.` : '';
+    if (neighbors) element.textContent += ` Comoving search: ${label(neighbors)}.`;
+    if (target === 'gavo' || neighbors === 'gavo') {
+      element.textContent += ' Backup archive in use. Temperature and surface gravity are unavailable for backup results; RUWE is independently calculated and may differ slightly. VizieR youth catalogs may still be unavailable.';
     }
-
-    vizierQuery = vizierQuery.replace(/Source\s*=\s*(\d+)/gi, "Source = '$1'");
-
-    const params = new URLSearchParams({
-      REQUEST: 'doQuery',
-      LANG: 'ADQL',
-      FORMAT: 'json',
-      QUERY: vizierQuery
-    });
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params
-    });
-
-    if (!response.ok) throw new Error('Gaia query failed');
-
-    // Preserve 19-digit source_id precision
-    let text = await response.text();
-    text = text.replace(/([:\[,]\s*)(\d{16,})(\s*[,\}\]])/g, '$1"$2"$3');
-    const data = JSON.parse(text);
-
-    if (data.metadata) {
-      const reverseMapping = {};
-      for (const [esa, viz] of Object.entries(colMapping)) reverseMapping[viz.replace(/"/g, '')] = esa;
-      data.metadata = data.metadata.map(m => ({ ...m, name: reverseMapping[m.name] || m.name.toLowerCase() }));
-    }
-
-    return data;
   }
 
   // =========================
@@ -2158,6 +2115,7 @@ DATA SOURCES:
     const row = res.data[0];
     const obj = {};
     cols.forEach((c, i) => obj[c] = (c === 'source_id' ? String(row[i]) : row[i]));
+    obj._gaiaProvider = res.provider;
     return obj;
   }
 
@@ -2377,6 +2335,8 @@ DATA SOURCES:
           AND parallax_error < 0.5
       `;
       const neighborResult = await queryGaia(neighborQuery);
+      targetData._neighborProvider = neighborResult.provider;
+      displayGaiaProvenance();
 
       if (!neighborResult.data || neighborResult.data.length === 0) throw new Error('No neighbors found');
 
@@ -2388,7 +2348,7 @@ DATA SOURCES:
       const candidates = [];
 
       for (const nrow of neighborResult.data) {
-        const star = {};
+        const star = { gaia_provider: neighborResult.provider };
         neighborCols.forEach((col, i) => {
           const colName = col.toLowerCase();
           star[colName] = (colName === 'source_id') ? String(nrow[i]) : nrow[i];
@@ -2497,7 +2457,7 @@ DATA SOURCES:
 
     const header = [
       'index','source_id','ra','dec','phot_g_mean_mag','bp_rp','voff_kms','sep_deg','sep3d_pc',
-      'rv_pred_kms','rv_obs_kms','ruwe','spt','parallax','pmra','pmdec'
+      'rv_pred_kms','rv_obs_kms','ruwe','spt','parallax','pmra','pmdec','gaia_provider'
     ];
 
     const lines = [header.join(',')];
@@ -2519,7 +2479,8 @@ DATA SOURCES:
         (r.spt || ''),
         r.parallax,
         r.pmra,
-        r.pmdec
+        r.pmdec,
+        r.gaia_provider
       ].map(v => (v == null ? '' : String(v)));
       lines.push(line.join(','));
     }
@@ -3970,6 +3931,7 @@ function displayCMD(candidates, target) {
       // show results section
       document.getElementById('results-section').classList.add('visible');
 
+      displayGaiaProvenance();
       displayTargetInfo(targetData);
       displayExternalLinks(targetData, targetData._resolvedName);
 
