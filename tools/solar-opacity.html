@@ -70,7 +70,7 @@ svg{max-width:100%}
 <div class="card"><div id="la0" class="sec"></div><div id="T"></div></div>
 <div class="card"><div id="la1" class="sec"></div><div id="D"></div></div>
 <div class="card"><div id="la2" class="sec"></div><div id="K"></div></div></div>
-</div><div class="right"><svg id="sv" width="100%" viewBox="0 0 960 480" role="img"><title>Opacity and dominant source versus radius</title><desc>Total opacity of the Sun rises from about 1 at the centre to 100,000 near the surface, with the dominant source colored along the axis and the convective zone shaded peach.</desc></svg>
+</div><div class="right"><svg id="sv" width="100%" viewBox="0 0 960 418" role="img"><title>Opacity and dominant source versus radius</title><desc>Total opacity of the Sun rises from about 1 at the centre to 100,000 near the surface, with the dominant source colored along the axis and the convective zone shaded peach.</desc></svg>
 <div style="display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center;margin-top:6px"><div class="btns" id="zbtns" style="margin:0"></div><div class="lg" id="lg" style="margin:0"></div></div>
 <div id="dhint" class="sec" style="margin-top:6px"></div>
 <div id="def" hidden style="margin-top:8px;padding:12px;border-radius:8px;background:var(--surface-1)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span id="ddot" style="display:inline-block;width:12px;height:12px;border-radius:3px"></span><span id="dh"></span></div><div id="db"></div><div id="de" style="margin-top:6px"></div></div></div></div>
@@ -97,7 +97,7 @@ function col(j){return MS.map(function(p){return [p[0],Math.max(p[j],1e-12)]})}
 var fT=mkP(col(1)),fRho=mkP(col(2)),fTot=mkP(col(3)),fEs=mkP(col(4)),fFf=mkP(col(5)),fHm=mkP(col(6));
 function src(r){var tot=fTot(r),es=fEs(r),ff=fFf(r),hm=fHm(r),bf=Math.max(tot-es-ff-hm,tot*.02);return{tot:tot,v:[es,ff,bf,hm]}}
 function dom(v){var m=0;for(var i=1;i<4;i++)if(v[i]>v[m])m=i;return m}
-var X0=74,W=870,Y0=4,H=405;
+var X0=74,W=870,Y0=4,H=344;
 var ZA=0,ZB=1;
 function X(r){return X0+(r-ZA)/(ZB-ZA)*W}
 var YLO=-1,YHI=5.3;
@@ -119,8 +119,8 @@ h+=pth(paths[4],tp,2.5)+'</g>';
 for(var j=0;j<4;j++){var fl=Math.pow(10,YLO);for(var i=1;i<=N;i++){if((paths[j][i-1]>=fl)!=(paths[j][i]>=fl))h+=xmark(X(ZA+(ZB-ZA)*i/N),Y0+H-9,S[j].c)}}
 var dec=Math.max(1,Math.ceil(-Math.log10((ZB-ZA)/5)));for(var q=0;q<=5;q++){var rt=ZA+(ZB-ZA)*q/5;h+=ST(rt.toFixed(dec),X(rt),Y0+H+26,15,'middle',ts)}
 h+=ST('Fraction of stellar radius, r/R',X0+W/2,Y0+H+60,18,'middle',tp);
-var xc=X(.25);if(ZA<.25){h+='<line x1="'+xc+'" x2="'+xc+'" y1="'+Y0+'" y2="'+(Y0+H)+'" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3"/><line x1="'+(X0+6)+'" x2="'+(xc-6)+'" y1="'+(Y0+48)+'" y2="'+(Y0+48)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(X0+6)+'" x2="'+(X0+6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(xc-6)+'" x2="'+(xc-6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/>'+ST('Core',(X0+xc)/2,Y0+74,17,'middle','#6B4F00',1)}
-if(ZA<.6)h+=ST(ZA<.25?'Radiative zone (includes the core)':'Radiative zone',X0+10,Y0+28,18,'start',tp);h+=ST('Convective zone',cx0+10,(ZA<.6?Y0+28:Y0+H-14),18,'start','#8A3A18',1);
+var xc=X(.25);if(ZA<.25){h+='<line x1="'+xc+'" x2="'+xc+'" y1="'+(Y0+38)+'" y2="'+(Y0+H)+'" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3"/><line x1="'+(X0+6)+'" x2="'+(xc-6)+'" y1="'+(Y0+48)+'" y2="'+(Y0+48)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(X0+6)+'" x2="'+(X0+6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(xc-6)+'" x2="'+(xc-6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/>'+ST('Core',(X0+xc)/2,Y0+74,17,'middle','#6B4F00',1)}
+if(ZA<.6)h+=ST(ZA<.25?'Radiative zone (includes the core)':'Radiative zone',(X(Math.max(ZA,0))+cx0)/2,Y0+28,18,'middle',tp);h+=ST('Convective zone',cx0+10,(ZA<.6?Y0+28:Y0+H-14),18,'start','#8A3A18',1);
 h+=ST('κ (cm^2/g)',20,Y0+H/2,18,'middle',tp,0,1);
 h+='<line id="mk" x1="0" x2="0" y1="'+Y0+'" y2="'+(Y0+H)+'" stroke="'+tp+'" stroke-width="1" stroke-dasharray="3 3"/>';
 h+='<circle id="dtt" r="6" fill="'+tp+'" stroke="var(--surface-2)" stroke-width="1"/>';
@@ -162,7 +162,7 @@ sh+='<circle id="rr" cx="'+CX+'" cy="'+CY+'" r="10" fill="none" stroke="#5A3A22"
 sh+='<g id="pc"><rect x="-11" y="-11" width="22" height="22" rx="5" fill="#3B6FD4" stroke="#2B2622" stroke-width="1.6"/></g>';
 sh+='<text id="pl" x="0" y="0" font-size="13" font-weight="600" fill="#2B2622" style="paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round">κ</text>';
 document.getElementById('sun').innerHTML=sh;
-hs('sunnote','The square is a small volume of gas at the radius you chose. Its color is the dominant opacity source. The core is the inner part of the radiative zone, where about 99 percent of the Sun\'s fusion energy is made, inside roughly 0.25 R.',13);
+hs('sunnote','The square is a small volume of gas at the radius you chose.',13);
 var reduce=false;try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
 function place(){var y=CY-curR*SR+bob;document.getElementById('pc').setAttribute('transform','translate('+CX+','+y.toFixed(1)+')');var pl=document.getElementById('pl');pl.setAttribute('x',CX+18);pl.setAttribute('y',(y+4).toFixed(1))}
 function sunUpd(r,o,d){curR=r;document.getElementById('rr').setAttribute('r',Math.max(r*SR,1));document.getElementById('pc').firstChild.setAttribute('fill',S[d].c);document.getElementById('pl').textContent='κ = '+fmt(o.tot);place()}
