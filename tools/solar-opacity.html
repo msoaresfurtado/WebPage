@@ -21,7 +21,7 @@
   --bg:#1D1A17; --surface-1:#292521; --surface-2:#1D1A17;
   --text-primary:#EFE9E0; --text-secondary:#A89E92;
   --border:#38322C; --border-strong:#554C42; --accent:#E08A5E; color-scheme:dark}
-body{background:var(--bg);color:var(--text-primary);padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-family:'Avenir Next',Avenir,'Nunito Sans',system-ui,sans-serif}
+body{background:var(--bg);color:var(--text-primary);padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-family:'Avenir Next',Avenir,'Nunito Sans',system-ui,sans-serif}
 svg text{font-family:inherit}
 main{max-width:1480px;margin:0 auto}
 .grid2{display:grid;grid-template-columns:400px minmax(0,1fr);gap:28px;align-items:start}
@@ -29,7 +29,7 @@ main{max-width:1480px;margin:0 auto}
 .grid2>div{min-width:0}
 @media (max-width:900px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
 .below{max-width:720px}
-header{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+header{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
 .lg{display:flex;flex-wrap:wrap;gap:8px 16px;margin:8px 0 0;align-items:center}
 .lg span{display:inline-flex;align-items:center;gap:6px}
 .lg b{display:inline-block;width:16px;height:3px}
@@ -70,7 +70,7 @@ svg{max-width:100%}
 <div class="card"><div id="la0" class="sec"></div><div id="T"></div></div>
 <div class="card"><div id="la1" class="sec"></div><div id="D"></div></div>
 <div class="card"><div id="la2" class="sec"></div><div id="K"></div></div></div>
-</div><div class="right"><svg id="sv" width="100%" viewBox="0 0 960 590" role="img"><title>Opacity and dominant source versus radius</title><desc>Total opacity of the Sun rises from about 1 at the centre to 100,000 near the surface, with the dominant source colored along the axis and the convective zone shaded peach.</desc></svg>
+</div><div class="right"><svg id="sv" width="100%" viewBox="0 0 960 530" role="img"><title>Opacity and dominant source versus radius</title><desc>Total opacity of the Sun rises from about 1 at the centre to 100,000 near the surface, with the dominant source colored along the axis and the convective zone shaded peach.</desc></svg>
 <div style="display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center;margin-top:6px"><div class="btns" id="zbtns" style="margin:0"></div><div class="lg" id="lg" style="margin:0"></div></div>
 <div id="dhint" class="sec" style="margin-top:6px"></div>
 <div id="def" hidden style="margin-top:8px;padding:12px;border-radius:8px;background:var(--surface-1)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span id="ddot" style="display:inline-block;width:12px;height:12px;border-radius:3px"></span><span id="dh"></span></div><div id="db"></div><div id="de" style="margin-top:6px"></div></div></div></div>
@@ -97,14 +97,15 @@ function col(j){return MS.map(function(p){return [p[0],Math.max(p[j],1e-12)]})}
 var fT=mkP(col(1)),fRho=mkP(col(2)),fTot=mkP(col(3)),fEs=mkP(col(4)),fFf=mkP(col(5)),fHm=mkP(col(6));
 function src(r){var tot=fTot(r),es=fEs(r),ff=fFf(r),hm=fHm(r),bf=Math.max(tot-es-ff-hm,tot*.02);return{tot:tot,v:[es,ff,bf,hm]}}
 function dom(v){var m=0;for(var i=1;i<4;i++)if(v[i]>v[m])m=i;return m}
-var X0=74,W=870,Y0=20,H=500;
+var X0=74,W=870,Y0=10,H=450;
 var ZA=0,ZB=1;
 function X(r){return X0+(r-ZA)/(ZB-ZA)*W}
-var YLO=-2,YHI=5.5;
+var YLO=-1,YHI=5.3;
 function Y(k){return Y0+(1-(Math.log10(k)-YLO)/(YHI-YLO))*H}
 var tp='var(--text-primary)',ts='var(--text-secondary)';
+function xmark(x,y,c){return '<g transform="translate('+x+','+y+')" stroke-linecap="round" fill="none"><g stroke="#fff" stroke-width="5"><line x1="-5" y1="-5" x2="5" y2="5"/><line x1="-5" y1="5" x2="5" y2="-5"/></g><g stroke="'+c+'" stroke-width="2.5"><line x1="-5" y1="-5" x2="5" y2="5"/><line x1="-5" y1="5" x2="5" y2="-5"/></g></g>'}
 function drawChart(){
-if(ZA==0&&ZB==1){YLO=-2;YHI=5.5}else{var lo=9,hi=-9;for(var q=0;q<=200;q++){var oo=src(ZA+(ZB-ZA)*q/200);lo=Math.min(lo,Math.log10(oo.tot));hi=Math.max(hi,Math.log10(oo.tot))}YLO=Math.floor(lo)-1;YHI=Math.ceil(hi);if(YHI-YLO<3)YHI=YLO+3}
+if(ZA==0&&ZB==1){YLO=-1;YHI=5.3}else{var lo=9,hi=-9;for(var q=0;q<=200;q++){var oo=src(ZA+(ZB-ZA)*q/200);lo=Math.min(lo,Math.log10(oo.tot));hi=Math.max(hi,Math.log10(oo.tot))}YLO=Math.floor(lo);YHI=Math.ceil(hi*2)/2;if(YHI-YLO<3)YHI=YLO+3}
 var h='<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
 var cx0=X(Math.max(.713,ZA));h+='<rect x="'+cx0+'" y="'+Y0+'" width="'+(X0+W-cx0)+'" height="'+H+'" fill="#F8CDB0" opacity="0.25"/>';
 for(var e=Math.ceil(YLO);e<=Math.floor(YHI);e+=1){var yy=Y(Math.pow(10,e));h+='<line x1="'+X0+'" x2="'+(X0+W)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--border)" stroke-width="0.5"/>'+ST('10^{'+e+'}',X0-8,yy+5,15,'end',ts)}
@@ -115,6 +116,7 @@ function pth(a,col,w,dash){var d='';a.forEach(function(k,i){var r=ZA+(ZB-ZA)*i/N
 h+='<clipPath id="cp"><rect x="'+X0+'" y="'+Y0+'" width="'+W+'" height="'+H+'"/></clipPath><g clip-path="url(#cp)">';
 for(var j=0;j<4;j++)h+=pth(paths[j],S[j].c,1.5,'5 3');
 h+=pth(paths[4],tp,2.5)+'</g>';
+for(var j=0;j<4;j++){var fl=Math.pow(10,YLO);for(var i=1;i<=N;i++){if((paths[j][i-1]>=fl)!=(paths[j][i]>=fl))h+=xmark(X(ZA+(ZB-ZA)*i/N),Y0+H-9,S[j].c)}}
 var dec=Math.max(1,Math.ceil(-Math.log10((ZB-ZA)/5)));for(var q=0;q<=5;q++){var rt=ZA+(ZB-ZA)*q/5;h+=ST(rt.toFixed(dec),X(rt),Y0+H+26,15,'middle',ts)}
 h+=ST('Fraction of stellar radius, r/R',X0+W/2,Y0+H+60,18,'middle',tp);
 if(ZA<.6)h+=ST('Radiative zone',X0+10,Y0+26,18,'start',tp);h+=ST('Convective zone',cx0+10,(ZA<.6?Y0+26:Y0+H-14),18,'start','#8A3A18',1);
@@ -124,12 +126,13 @@ h+='<circle id="dtt" r="6" fill="'+tp+'" stroke="var(--surface-2)" stroke-width=
 for(var j=0;j<4;j++)h+='<circle id="dt'+j+'" r="5" fill="'+S[j].c+'" stroke="var(--surface-2)" stroke-width="1"/>';
 
 h+='<rect x="'+X0+'" y="'+Y0+'" width="'+W+'" height="'+H+'" fill="transparent" style="cursor:crosshair" onclick="cpick(event)"/>';
+for(var j=0;j<4;j++)h+='<g id="xm'+j+'" visibility="hidden">'+xmark(0,0,S[j].c)+'</g>';
 document.getElementById('sv').innerHTML=h;
 }
 drawChart();
 function dl(i){return ' class="dl" tabindex="0" role="button" onclick="showDef('+i+')" onkeydown="if(event.key===\'Enter\')showDef('+i+')"'}
 document.getElementById('lg').innerHTML=S.map(function(s,i){return '<span'+dl(i)+'><b style="background:'+s.c+'"></b><i id="lgt'+i+'" class="sec"></i></span>'}).join('')+'<span'+dl(4)+'><b style="background:'+tp+';height:4px"></b><i id="lgt4" class="sec"></i></span>';
-hs('dhint','Click a source name for its definition.',14);
+hs('dhint','Click a source name for its definition. An X on the bottom edge means that source is too small to appear on the plot.',14);
 S.forEach(function(s,i){hs('lgt'+i,s.n,15)});hs('lgt4','Total κ',15);
 hs('h1','Solar Opacity Layers',26,1);
 hs('rl','r/R',15);hs('la0','Temperature',13);hs('la1','Density',13);hs('la2','Total opacity',13);hs('bt','Opacity by source, cm^2/g (log scale)',13);
@@ -144,8 +147,8 @@ var WH=['Core: dense and fully ionized. Free-free absorption and bound-free plus
 function upd(){var r=+document.getElementById('s').value,o=src(r),d=dom(o.v),t=fT(r),p=fRho(r),w;
 w=r<.25?0:r<.65?1:r<.8?2:r<.985?3:r<.996?4:6;if(d==3)w=5;
 hs('ro',r.toFixed(Math.max(3,Math.ceil(-Math.log10(ZB-ZA))+3)),15,1);
-hs('T',fmtSci(t)+' K',22);hs('D',fmtSci(p)+' g/cm^3',22);hs('K',fmt(o.tot),22);
-for(var i=0;i<4;i++){var v=o.v[i],pc=Math.max(0,Math.min(100,(Math.log10(Math.max(v,1e-9))+2)/7.5*100));document.getElementById('br'+i).style.width=pc+'%';hs('bv'+i,fmt(v),13,i==d);var c=document.getElementById('dt'+i);c.setAttribute('cx',X(r));c.setAttribute('cy',Y(Math.max(v,Math.pow(10,YLO))))}
+hs('T',fmtSci(t)+' K',17.6);hs('D',fmtSci(p)+' g/cm^3',17.6);hs('K',fmt(o.tot),17.6);
+for(var i=0;i<4;i++){var v=o.v[i],pc=Math.max(0,Math.min(100,(Math.log10(Math.max(v,1e-9))+2)/7.5*100));document.getElementById('br'+i).style.width=pc+'%';hs('bv'+i,fmt(v),13,i==d);var c=document.getElementById('dt'+i),xm=document.getElementById('xm'+i),low=v<Math.pow(10,YLO);c.setAttribute('cx',X(r));c.setAttribute('cy',Y(Math.max(v,Math.pow(10,YLO))));c.setAttribute('visibility',low?'hidden':'visible');xm.setAttribute('visibility',low?'visible':'hidden');xm.setAttribute('transform','translate('+X(r)+','+(Y0+H-9)+')')}
 var tt=document.getElementById('dtt');tt.setAttribute('cx',X(r));tt.setAttribute('cy',Y(Math.max(o.tot,Math.pow(10,YLO))));
 var m=document.getElementById('mk');m.setAttribute('x1',X(r));m.setAttribute('x2',X(r));
 var el=document.getElementById('why');el.innerHTML='<div id="w1" style="margin-bottom:4px"></div><div id="w2"></div>';var srt=[0,1,2,3].sort(function(a,b){return o.v[b]-o.v[a]}),nm=function(i){return S[i].n.toLowerCase().replace('h^-','H^-')};hs('w1','Dominant: '+nm(d)+(o.v[srt[1]]>.8*o.v[srt[0]]?', about tied with '+nm(srt[1]):''),15,1);hs('w2',WH[w],14);sunUpd(r,o,d);photon(r,o)}
