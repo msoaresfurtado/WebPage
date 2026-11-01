@@ -21,7 +21,7 @@
   --bg:#1D1A17; --surface-1:#292521; --surface-2:#1D1A17;
   --text-primary:#EFE9E0; --text-secondary:#A89E92;
   --border:#38322C; --border-strong:#554C42; --accent:#E08A5E; color-scheme:dark}
-body{background:var(--bg);color:var(--text-primary);padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-family:'Avenir Next',Avenir,'Nunito Sans',system-ui,sans-serif}
+body{background:var(--bg);color:var(--text-primary);padding-block:8px 16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-family:'Avenir Next',Avenir,'Nunito Sans',system-ui,sans-serif}
 svg text{font-family:inherit}
 main{max-width:1480px;margin:0 auto}
 .grid2{display:grid;grid-template-columns:400px minmax(0,1fr);gap:28px;align-items:start}
@@ -29,7 +29,7 @@ main{max-width:1480px;margin:0 auto}
 .grid2>div{min-width:0}
 @media (max-width:900px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
 .below{max-width:720px}
-header{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+header{display:flex;flex-direction:column;gap:4px;margin-bottom:6px}
 .lg{display:flex;flex-wrap:wrap;gap:8px 16px;margin:8px 0 0;align-items:center}
 .lg span{display:inline-flex;align-items:center;gap:6px}
 .lg b{display:inline-block;width:16px;height:3px}
@@ -70,7 +70,7 @@ svg{max-width:100%}
 <div class="card"><div id="la0" class="sec"></div><div id="T"></div></div>
 <div class="card"><div id="la1" class="sec"></div><div id="D"></div></div>
 <div class="card"><div id="la2" class="sec"></div><div id="K"></div></div></div>
-</div><div class="right"><svg id="sv" width="100%" viewBox="0 0 960 530" role="img"><title>Opacity and dominant source versus radius</title><desc>Total opacity of the Sun rises from about 1 at the centre to 100,000 near the surface, with the dominant source colored along the axis and the convective zone shaded peach.</desc></svg>
+</div><div class="right"><svg id="sv" width="100%" viewBox="0 0 960 480" role="img"><title>Opacity and dominant source versus radius</title><desc>Total opacity of the Sun rises from about 1 at the centre to 100,000 near the surface, with the dominant source colored along the axis and the convective zone shaded peach.</desc></svg>
 <div style="display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center;margin-top:6px"><div class="btns" id="zbtns" style="margin:0"></div><div class="lg" id="lg" style="margin:0"></div></div>
 <div id="dhint" class="sec" style="margin-top:6px"></div>
 <div id="def" hidden style="margin-top:8px;padding:12px;border-radius:8px;background:var(--surface-1)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span id="ddot" style="display:inline-block;width:12px;height:12px;border-radius:3px"></span><span id="dh"></span></div><div id="db"></div><div id="de" style="margin-top:6px"></div></div></div></div>
@@ -97,7 +97,7 @@ function col(j){return MS.map(function(p){return [p[0],Math.max(p[j],1e-12)]})}
 var fT=mkP(col(1)),fRho=mkP(col(2)),fTot=mkP(col(3)),fEs=mkP(col(4)),fFf=mkP(col(5)),fHm=mkP(col(6));
 function src(r){var tot=fTot(r),es=fEs(r),ff=fFf(r),hm=fHm(r),bf=Math.max(tot-es-ff-hm,tot*.02);return{tot:tot,v:[es,ff,bf,hm]}}
 function dom(v){var m=0;for(var i=1;i<4;i++)if(v[i]>v[m])m=i;return m}
-var X0=74,W=870,Y0=10,H=450;
+var X0=74,W=870,Y0=4,H=405;
 var ZA=0,ZB=1;
 function X(r){return X0+(r-ZA)/(ZB-ZA)*W}
 var YLO=-1,YHI=5.3;
@@ -107,7 +107,7 @@ function xmark(x,y,c){return '<g transform="translate('+x+','+y+')" stroke-linec
 function drawChart(){
 if(ZA==0&&ZB==1){YLO=-1;YHI=5.3}else{var lo=9,hi=-9;for(var q=0;q<=200;q++){var oo=src(ZA+(ZB-ZA)*q/200);lo=Math.min(lo,Math.log10(oo.tot));hi=Math.max(hi,Math.log10(oo.tot))}YLO=Math.floor(lo);YHI=Math.ceil(hi*2)/2;if(YHI-YLO<3)YHI=YLO+3}
 var h='<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
-var cx0=X(Math.max(.713,ZA));h+='<rect x="'+cx0+'" y="'+Y0+'" width="'+(X0+W-cx0)+'" height="'+H+'" fill="#F8CDB0" opacity="0.25"/>';
+var cx0=X(Math.max(.713,ZA));h+='<rect x="'+cx0+'" y="'+Y0+'" width="'+(X0+W-cx0)+'" height="'+H+'" fill="#F8CDB0" opacity="0.25"/>';if(ZA<.25)h+='<rect x="'+X0+'" y="'+Y0+'" width="'+(X(.25)-X0)+'" height="'+H+'" fill="#F2D16A" opacity="0.16"/>';
 for(var e=Math.ceil(YLO);e<=Math.floor(YHI);e+=1){var yy=Y(Math.pow(10,e));h+='<line x1="'+X0+'" x2="'+(X0+W)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--border)" stroke-width="0.5"/>'+ST('10^{'+e+'}',X0-8,yy+5,15,'end',ts)}
 h+='<rect x="'+X0+'" y="'+Y0+'" width="'+W+'" height="'+H+'" fill="none" stroke="var(--border-strong)" stroke-width="0.5"/>';
 var N=700,paths=[[],[],[],[],[]];
@@ -119,7 +119,8 @@ h+=pth(paths[4],tp,2.5)+'</g>';
 for(var j=0;j<4;j++){var fl=Math.pow(10,YLO);for(var i=1;i<=N;i++){if((paths[j][i-1]>=fl)!=(paths[j][i]>=fl))h+=xmark(X(ZA+(ZB-ZA)*i/N),Y0+H-9,S[j].c)}}
 var dec=Math.max(1,Math.ceil(-Math.log10((ZB-ZA)/5)));for(var q=0;q<=5;q++){var rt=ZA+(ZB-ZA)*q/5;h+=ST(rt.toFixed(dec),X(rt),Y0+H+26,15,'middle',ts)}
 h+=ST('Fraction of stellar radius, r/R',X0+W/2,Y0+H+60,18,'middle',tp);
-if(ZA<.6)h+=ST('Radiative zone',X0+10,Y0+26,18,'start',tp);h+=ST('Convective zone',cx0+10,(ZA<.6?Y0+26:Y0+H-14),18,'start','#8A3A18',1);
+var xc=X(.25);if(ZA<.25){h+='<line x1="'+xc+'" x2="'+xc+'" y1="'+Y0+'" y2="'+(Y0+H)+'" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3"/><line x1="'+(X0+6)+'" x2="'+(xc-6)+'" y1="'+(Y0+48)+'" y2="'+(Y0+48)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(X0+6)+'" x2="'+(X0+6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(xc-6)+'" x2="'+(xc-6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/>'+ST('Core',(X0+xc)/2,Y0+74,17,'middle','#6B4F00',1)}
+if(ZA<.6)h+=ST(ZA<.25?'Radiative zone (includes the core)':'Radiative zone',X0+10,Y0+28,18,'start',tp);h+=ST('Convective zone',cx0+10,(ZA<.6?Y0+28:Y0+H-14),18,'start','#8A3A18',1);
 h+=ST('κ (cm^2/g)',20,Y0+H/2,18,'middle',tp,0,1);
 h+='<line id="mk" x1="0" x2="0" y1="'+Y0+'" y2="'+(Y0+H)+'" stroke="'+tp+'" stroke-width="1" stroke-dasharray="3 3"/>';
 h+='<circle id="dtt" r="6" fill="'+tp+'" stroke="var(--surface-2)" stroke-width="1"/>';
@@ -134,7 +135,7 @@ function dl(i){return ' class="dl" tabindex="0" role="button" onclick="showDef('
 document.getElementById('lg').innerHTML=S.map(function(s,i){return '<span'+dl(i)+'><b style="background:'+s.c+'"></b><i id="lgt'+i+'" class="sec"></i></span>'}).join('')+'<span'+dl(4)+'><b style="background:'+tp+';height:4px"></b><i id="lgt4" class="sec"></i></span>';
 hs('dhint','Click a source name for its definition. An X on the bottom edge means that source is too small to appear on the plot.',14);
 S.forEach(function(s,i){hs('lgt'+i,s.n,15)});hs('lgt4','Total κ',15);
-hs('h1','Solar Opacity Layers',26,1);
+hs('h1','Solar Opacity Layers',23.4,1);document.getElementById('h1').style.lineHeight='1.15';
 hs('rl','r/R',15);hs('la0','Temperature',13);hs('la1','Density',13);hs('la2','Total opacity',13);hs('bt','Opacity by source, cm^2/g (log scale)',13);
 var J=[['Core',0],['Radiative zone',.4],['Base of convection zone',.7118],['Opacity peak',.9912],['Photosphere',1]];
 document.getElementById('btns').innerHTML=J.map(function(j,i){return '<button id="jb'+i+'" onclick="go('+j[1]+')"></button>'}).join('');
@@ -147,7 +148,7 @@ var WH=['Core: dense and fully ionized. Free-free absorption and bound-free plus
 function upd(){var r=+document.getElementById('s').value,o=src(r),d=dom(o.v),t=fT(r),p=fRho(r),w;
 w=r<.25?0:r<.65?1:r<.8?2:r<.985?3:r<.996?4:6;if(d==3)w=5;
 hs('ro',r.toFixed(Math.max(3,Math.ceil(-Math.log10(ZB-ZA))+3)),15,1);
-hs('T',fmtSci(t)+' K',17.6);hs('D',fmtSci(p)+' g/cm^3',17.6);hs('K',fmt(o.tot),17.6);
+hs('T',fmtSci(t)+' K',15.8);hs('D',fmtSci(p)+' g/cm^3',15.8);hs('K',fmt(o.tot),15.8);
 for(var i=0;i<4;i++){var v=o.v[i],pc=Math.max(0,Math.min(100,(Math.log10(Math.max(v,1e-9))+2)/7.5*100));document.getElementById('br'+i).style.width=pc+'%';hs('bv'+i,fmt(v),13,i==d);var c=document.getElementById('dt'+i),xm=document.getElementById('xm'+i),low=v<Math.pow(10,YLO);c.setAttribute('cx',X(r));c.setAttribute('cy',Y(Math.max(v,Math.pow(10,YLO))));c.setAttribute('visibility',low?'hidden':'visible');xm.setAttribute('visibility',low?'visible':'hidden');xm.setAttribute('transform','translate('+X(r)+','+(Y0+H-9)+')')}
 var tt=document.getElementById('dtt');tt.setAttribute('cx',X(r));tt.setAttribute('cy',Y(Math.max(o.tot,Math.pow(10,YLO))));
 var m=document.getElementById('mk');m.setAttribute('x1',X(r));m.setAttribute('x2',X(r));
@@ -157,28 +158,28 @@ var CX=125,CY=122,SR=110,bob=0,curR=.3,curC='#3B6FD4';
 var sh='<circle cx="'+CX+'" cy="'+CY+'" r="'+SR+'" fill="#F8CDB0" stroke="#F2B33D" stroke-width="3"/><circle cx="'+CX+'" cy="'+CY+'" r="'+(SR*.713)+'" fill="#F0A44B"/><circle cx="'+CX+'" cy="'+CY+'" r="'+(SR*.25)+'" fill="#F7D154"/>';
 sh+='<line x1="'+CX+'" y1="'+CY+'" x2="'+CX+'" y2="'+(CY-SR)+'" stroke="#5A3A22" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>';
 sh+='<circle id="rr" cx="'+CX+'" cy="'+CY+'" r="10" fill="none" stroke="#5A3A22" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>';
-[['Convective zone',-35,.86,-62],['Radiative zone',0,.5,0],['Core (r < 0.25 R)',35,.12,62]].forEach(function(l){var a=l[1]*Math.PI/180,px=CX+SR*l[2]*Math.cos(a),py=CY+SR*l[2]*Math.sin(a),ly=CY+l[3];sh+='<polyline points="'+px.toFixed(1)+','+py.toFixed(1)+' '+(CX+SR+14)+','+ly+' '+(CX+SR+24)+','+ly+'" fill="none" stroke="var(--text-secondary)" stroke-width="0.8"/><circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="2" fill="#2B2622"/>'+ST(l[0],CX+SR+30,ly+4,14,'start',tp)});
+[['Convective zone',-35,.86,-62,'0.71 R to the surface'],['Radiative zone',0,.5,0,'includes the core'],['Core (r < 0.25 R)',35,.12,62,'inside the radiative zone']].forEach(function(l){var a=l[1]*Math.PI/180,px=CX+SR*l[2]*Math.cos(a),py=CY+SR*l[2]*Math.sin(a),ly=CY+l[3];sh+='<polyline points="'+px.toFixed(1)+','+py.toFixed(1)+' '+(CX+SR+14)+','+ly+' '+(CX+SR+24)+','+ly+'" fill="none" stroke="var(--text-secondary)" stroke-width="0.8"/><circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="2" fill="#2B2622"/>'+ST(l[0],CX+SR+30,ly+2,14,'start',tp)+ST(l[4],CX+SR+30,ly+19,12,'start',ts)});
 sh+='<g id="pc"><rect x="-11" y="-11" width="22" height="22" rx="5" fill="#3B6FD4" stroke="#2B2622" stroke-width="1.6"/></g>';
 sh+='<text id="pl" x="0" y="0" font-size="13" font-weight="600" fill="#2B2622" style="paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round">κ</text>';
 document.getElementById('sun').innerHTML=sh;
-hs('sunnote','The square is a small volume of gas at the radius you chose. Its color is the dominant opacity source. The core is where about 99 percent of the Sun\'s fusion energy is made, inside roughly 0.25 R.',13);
+hs('sunnote','The square is a small volume of gas at the radius you chose. Its color is the dominant opacity source. The core is the inner part of the radiative zone, where about 99 percent of the Sun\'s fusion energy is made, inside roughly 0.25 R.',13);
 var reduce=false;try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
 function place(){var y=CY-curR*SR+bob;document.getElementById('pc').setAttribute('transform','translate('+CX+','+y.toFixed(1)+')');var pl=document.getElementById('pl');pl.setAttribute('x',CX+18);pl.setAttribute('y',(y+4).toFixed(1))}
 function sunUpd(r,o,d){curR=r;document.getElementById('rr').setAttribute('r',Math.max(r*SR,1));document.getElementById('pc').firstChild.setAttribute('fill',S[d].c);document.getElementById('pl').textContent='κ = '+fmt(o.tot);place()}
 
 hs('srcnote','Sources: temperature, density, and total opacity come from the standard solar Model S (Christensen-Dalsgaard et al. 1996, OPAL opacities). Scattering is computed from the Thomson cross section with Saha ionization. The split among the absorption types is an estimate.',12);
-hs('pt','When a photon hits the gas here, what happens to it?',13);
+hs('pt','What happens when a photon interacts with the Sun\'s material at this radius?',13);
 hs('pnote','These shares are estimates. They split the average (Rosseland) opacity using a simplified model, and the true split changes with photon energy.',12);
 function pct(p){return (p<1?'under 1':String(Math.round(p)))+'%'}
 function lab(id,c,t){var el=document.getElementById(id);el.style.fontSize='14px';el.style.lineHeight='1.5';el.innerHTML='<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+c+';margin-right:8px"></span>'+t}
 function photon(r,o){var sum=o.v[0]+o.v[1]+o.v[2]+o.v[3],sf=o.v[0]/sum,af=1-sf,m;
 document.getElementById('pb1').style.width=(sf*100)+'%';document.getElementById('pb2').style.width=(af*100)+'%';
 lab('pl1','#1D9E75','<b style="font-weight:600">Scattered, '+pct(sf*100)+'.</b> The photon bounces off a free electron. Its direction changes and its energy barely changes.');
-lab('pl2','#B5532A','<b style="font-weight:600">Absorbed, '+pct(af*100)+'.</b> The gas takes the photon\'s energy and later gives off a new photon, in a random direction.');
+lab('pl2','#B5532A','<b style="font-weight:600">Absorbed, '+pct(af*100)+'.</b> The surrounding material takes the photon\'s energy and later gives off a new photon, in a random direction.');
 if(sf>.5)m='Mostly scattering here. Photons bounce around and lose almost no energy, so they wander outward slowly in a random walk.';
-else if(sf>.1)m='A mix of both. Scattering only turns a photon around. Absorption moves its energy into the gas, which later gives off new photons at the local temperature.';
-else m='Almost entirely absorption here. A photon that hits the gas is swallowed, its energy joins the gas, and the gas then gives off new photons at the local temperature.';
-if(r>=.713)m+=' In this layer, moving gas also carries energy outward directly.';
+else if(sf>.1)m='A mix of both. Scattering only turns a photon around. Absorption moves its energy into the surrounding material, which later gives off new photons at the local temperature.';
+else m='Almost entirely absorption here. A photon that is absorbed hands its energy to the surrounding material, which then gives off new photons at the local temperature.';
+if(r>=.713)m+=' In this layer, moving material also carries energy outward directly.';
 hs('pmsg',m,14)}
 
 var Z=[['Whole Sun',0,1],['Outer 1 percent',.99,1]],zi=0;
