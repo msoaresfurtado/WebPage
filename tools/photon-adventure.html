@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A Photon's Adventure</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap">
+<meta name="description" content="A predict, check, reveal, explain activity on how photons interact with matter in the Sun today.">
+<style>
+:root{
+  --bg:#FBF8F3; --surface-1:#F1ECE3; --surface-2:#FBF8F3;
+  --text-primary:#2B2622; --text-secondary:#6B6259;
+  --border:#E3DCD0; --border-strong:#C9BFB0; --accent:#B5532A; --accent-2:#1F7A8C; --good:#2E7D4F; --warn:#B07A12;
+  --core:#F2D16A; --rad:#E0764A; --conv:#F7C08A; --rim:#FFF3C4; --ink:#2B2622; --photon:#C98A00; --electron:#2D6FD6; --ion:#B5532A;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1D1A17; --surface-1:#292521; --surface-2:#1D1A17;
+  --text-primary:#EFE9E0; --text-secondary:#A89E92;
+  --border:#38322C; --border-strong:#554C42; --accent:#E08A5E; --accent-2:#5CC0D3; --good:#6CCB90; --warn:#E5B34D;
+  --core:#F2D16A; --rad:#D9663A; --conv:#F7B267; --rim:#FFF3C4; --ink:#EFE9E0; --photon:#F2C94C; --electron:#6FA3FF; --ion:#F0906A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1D1A17; --surface-1:#292521; --surface-2:#1D1A17;
+  --text-primary:#EFE9E0; --text-secondary:#A89E92;
+  --border:#38322C; --border-strong:#554C42; --accent:#E08A5E; --accent-2:#5CC0D3; --good:#6CCB90; --warn:#E5B34D;
+  --core:#F2D16A; --rad:#D9663A; --conv:#F7B267; --rim:#FFF3C4; --ink:#EFE9E0; --photon:#F2C94C; --electron:#6FA3FF; --ion:#F0906A; color-scheme:dark}
+body{background:var(--bg);color:var(--text-primary);padding-block:12px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-family:Avenir,'Avenir Next',system-ui,sans-serif;font-size:17px;line-height:1.5}
+main{max-width:1200px;margin:0 auto}
+h1{font-size:27px;line-height:1.15;margin:0;font-weight:700}
+h2{font-size:20px;line-height:1.3;margin:0 0 6px;font-weight:600}
+h3{font-size:17px;margin:0 0 4px;font-weight:700}
+p{margin:0 0 10px}
+.sec{color:var(--text-secondary)}
+.sm{font-size:15px}
+button{background:transparent;color:var(--text-primary);border:0.5px solid var(--border-strong);border-radius:8px;padding:9px 15px;cursor:pointer;font:inherit}
+button:hover{background:var(--surface-1)}
+button:disabled{opacity:.45;cursor:default}
+button.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.pri:hover{filter:brightness(1.08);background:var(--accent)}
+button.pri:disabled{filter:none}
+button:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px;align-items:center}
+.tabs button[aria-pressed="true"]{border-color:var(--accent);background:var(--surface-1);font-weight:600}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px;align-items:start;margin-top:12px}
+.layout>div{min-width:0}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}.side{position:static!important}}
+.side{position:sticky;top:10px}
+.panel{background:var(--surface-1);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.facts{display:flex;flex-direction:column;margin-top:8px}
+.fact{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:15.5px}
+.fact:last-child{border-bottom:0}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.pill{font-size:14px;padding:3px 11px;border-radius:999px;border:1px solid var(--border-strong);color:var(--text-secondary)}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.pill.done{border-color:var(--good);color:var(--good)}
+.choices{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.choice{text-align:left;display:flex;gap:10px;align-items:flex-start;padding:11px 14px;background:var(--bg);border:1px solid var(--border-strong);border-radius:10px;width:100%}
+.choice .k{flex:0 0 auto;font-weight:700;color:var(--text-secondary)}
+.choice[aria-pressed="true"]{border:2px solid var(--accent);padding:10px 13px}
+.choice.locked{cursor:default}
+.choice.locked:hover{background:var(--bg)}
+.fb{border-left:4px solid var(--accent-2);padding:8px 14px;margin:12px 0;background:var(--bg);border-radius:0 8px 8px 0}
+.rv{border:1px solid var(--border-strong);border-radius:10px;padding:12px 14px;margin:12px 0;background:var(--bg)}
+.rv svg{width:100%;height:auto;display:block;margin:4px 0 8px}
+.ex{margin:12px 0}
+textarea{width:100%;box-sizing:border-box;min-height:84px;background:var(--bg);color:var(--text-primary);border:1px solid var(--border-strong);border-radius:8px;padding:9px 11px;font:inherit;resize:vertical}
+.nav{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+details{background:var(--surface-1);border-radius:10px;padding:10px 14px;margin-top:12px}
+summary{cursor:pointer;font-weight:600}
+details>*:not(summary){margin-top:10px}
+.cmp{width:100%;border-collapse:collapse;font-size:15.5px}
+.cmp th,.cmp td{text-align:left;vertical-align:top;padding:8px 10px;border-top:1px solid var(--border)}
+.cmp th{font-weight:700}
+.cmp td:first-child,.cmp th:first-child{color:var(--text-secondary);width:22%}
+.cmpwrap{overflow-x:auto}
+code{font-family:ui-monospace,Menlo,monospace;font-size:14.5px;background:var(--bg);padding:1px 5px;border-radius:4px}
+[hidden]{display:none!important}
+svg text{font-family:inherit}
+.start .jc{display:flex;flex-direction:column;gap:6px;text-align:left;padding:14px 16px;border-radius:12px;background:var(--surface-1);border:1px solid var(--border);width:100%}
+.start .jc:hover{border-color:var(--accent)}
+.jgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
+</style>
+<style>html{color-scheme:light dark}body{margin:0}</style></head><body>
+<main>
+<header>
+<h1>A Photon's Adventure</h1>
+<div class="sec">Follow what can happen to light inside the Sun today. Predict first, check your reasoning, reveal what happens, then explain it in your own words.</div>
+</header>
+<section class="panel" aria-label="Group registration">
+<form id="group-form" onsubmit="beginGroup(event)">
+<h2>Who is in your group?</h2>
+<label for="group-members">Enter each group member’s full name on a separate line.</label>
+<textarea id="group-members" required maxlength="720" rows="3" autocomplete="off"></textarea>
+<p class="sm">Your instructor will receive your group names, checked answers, correctness, explanations, and submission times for this assignment. Keep this page open until it confirms your responses are saved.</p>
+<button class="pri" type="submit">Register group and begin</button>
+</form><p id="tracking-status" role="status" aria-live="polite">Group registration is required before starting.</p><button type="button" onclick="flushResponses()">Retry saving</button>
+</section><div id="assignment-content" hidden>
+<div class="tabs" id="tabs" role="group" aria-label="Journeys"></div>
+<div id="app"></div>
+<details id="more">
+<summary>Explore further: photon energies, the spectrum, and physics notes</summary>
+<div id="morebody"></div>
+</details>
+<p class="sec sm" style="margin-top:16px;max-width:760px">The three journeys are selected possible histories at three places in the Sun today. They are not a simulation of the most probable path of any particular photon, and moving between regions does not mean the Sun is changing over time. Temperature and density come from the standard solar Model S (Christensen-Dalsgaard et al. 1996). The wavelengths are illustrative choices, not random draws.</p>
+</div></main>
+<script>
+var MS=[[0,15700000.0,154.0,1.24,0.267,0.488,1e-12],[0.05,14900000.0,128.0,1.33,0.282,0.516,1e-12],[0.1,13100000.0,87.3,1.54,0.308,0.6,1e-12],[0.15,11100000.0,56.3,1.83,0.327,0.722,1e-12],[0.2,9390000.0,35.1,2.21,0.337,0.839,1e-12],[0.25,7950000.0,20.9,2.69,0.34,0.907,1e-12],[0.3,6800000.0,12.1,3.31,0.342,0.911,1e-12],[0.35,5870000.0,6.87,4.1,0.342,0.867,1e-12],[0.4,5120000.0,3.93,5.1,0.343,0.801,1e-12],[0.45,4510000.0,2.29,6.28,0.343,0.732,1e-12],[0.5,3980000.0,1.36,7.7,0.343,0.668,1e-12],[0.55,3530000.0,0.823,9.4,0.343,0.616,1e-12],[0.6,3130000.0,0.506,11.6,0.344,0.582,1e-12],[0.65,2750000.0,0.322,14.5,0.344,0.581,1e-12],[0.7,2320000.0,0.208,19.3,0.346,0.681,1e-12],[0.7118,2210000.0,0.19,21.1,0.347,0.745,1e-12],[0.73,2020000.0,0.166,25.6,0.347,0.887,1e-12],[0.75,1820000.0,0.141,31.7,0.347,1.1,1e-12],[0.8,1360000.0,0.0915,51.0,0.347,1.94,1e-12],[0.85,962000.0,0.0538,83.6,0.347,3.87,1e-12],[0.9,600000.0,0.0263,174.0,0.347,9.88,1e-12],[0.93,399000.0,0.0141,378.0,0.347,22.2,1e-12],[0.95,274000.0,0.00794,1060.0,0.347,46.1,1e-12],[0.97,154000.0,0.00315,8060.0,0.324,120.0,2.32e-11],[0.98,99700.0,0.00144,24800.0,0.309,228.0,1.34e-08],[0.985,72500.0,0.000805,45500.0,0.297,361.0,1.12e-06],[0.988,55800.0,0.000496,84800.0,0.283,502.0,4.82e-05],[0.99,45800.0,0.000326,127000.0,0.265,577.0,0.000778],[0.9912,40100.0,0.000235,141000.0,0.249,582.0,0.00422],[0.992,36800.0,0.000184,133000.0,0.236,561.0,0.0113],[0.994,28800.0,8.27e-05,74200.0,0.198,415.0,0.116],[0.996,22000.0,2.58e-05,23900.0,0.15,191.0,0.961],[0.997,19000.0,1.17e-05,11200.0,0.123,97.2,2.64],[0.998,16100.0,4.26e-06,4120.0,0.0917,35.4,7.23],[0.9985,14600.0,2.32e-06,2190.0,0.0737,17.4,12.1],[0.999,13000.0,1.15e-06,965.0,0.0524,6.5,20.6],[0.9992,12300.0,8.41e-07,613.0,0.0423,3.77,25.1],[0.9994,11500.0,6.04e-07,334.0,0.0311,1.85,29.0],[0.9996,10500.0,4.24e-07,140.0,0.0184,0.626,31.2],[0.9997,9800.0,3.52e-07,71.7,0.0113,0.251,28.2],[0.9998,8770.0,2.95e-07,22.5,0.00448,0.0486,15.7],[0.99985,8030.0,2.76e-07,8.85,0.00189,0.011,7.57],[0.9999,6920.0,2.65e-07,1.93,0.000356,0.000633,1.84],[0.99995,6190.0,2.39e-07,0.64,9.02e-05,5.41e-05,0.617],[1.0,5780.0,2e-07,0.337,3.78e-05,1.01e-05,0.326]];
+function mkP(pts){var n=pts.length,x=pts.map(function(p){return p[0]}),y=pts.map(function(p){return Math.log10(p[1])}),h=[],d=[],m=[];for(var i=0;i<n-1;i++){h[i]=x[i+1]-x[i];d[i]=(y[i+1]-y[i])/h[i]}m[0]=d[0];m[n-1]=d[n-2];for(i=1;i<n-1;i++){if(d[i-1]*d[i]<=0)m[i]=0;else{var w1=2*h[i]+h[i-1],w2=h[i]+2*h[i-1];m[i]=(w1+w2)/(w1/d[i-1]+w2/d[i])}}
+return function(r){var i=0;while(i<n-2&&r>x[i+1])i++;var t=Math.min(1,Math.max(0,(r-x[i])/h[i])),t2=t*t,t3=t2*t;return Math.pow(10,(2*t3-3*t2+1)*y[i]+(t3-2*t2+t)*h[i]*m[i]+(-2*t3+3*t2)*y[i+1]+(t3-t2)*h[i]*m[i+1])}}
+function col(j){return MS.map(function(p){return [p[0],Math.max(p[j],1e-12)]})}
+var fT=mkP(col(1)),fRho=mkP(col(2)),fTot=mkP(col(3)),fEs=mkP(col(4)),fFf=mkP(col(5)),fHm=mkP(col(6));
+var KB=8.617e-5,HC=1239.84;
+function sciN(x){if(x==0)return '0';var e=Math.floor(Math.log10(x)),m=x/Math.pow(10,e);return m.toFixed(1)+' × 10<sup>'+e+'</sup>'}
+function fE(e){return e>=1e3?(e/1e3).toPrecision(2)+' keV':e>=10?Math.round(e)+' eV':e.toPrecision(2)+' eV'}
+function fL(l){return l>=1000?(l/1000).toPrecision(2)+' μm':l>=10?Math.round(l)+' nm':l.toPrecision(2)+' nm'}
+var REG=[
+{name:'Fusion core',short:'Fusion core',r:.05,lam:.3,band:'X-ray',desc:'Hot, dense, highly ionized plasma where fusion makes the energy.'},
+{name:'Near the convection boundary',short:'Convection boundary',r:.7118,lam:2,band:'X-ray',desc:'The base of the convective zone, where heavier elements keep some electrons.'},
+{name:'Photosphere',short:'Photosphere',r:1,lam:550,band:'visible light',desc:'The visible surface, where photons can finally escape.'}];
+REG.forEach(function(g){g.T=fT(g.r);g.rho=fRho(g.r);g.E=HC/g.lam;g.kT=KB*g.T});
+/* ---------- diagram helpers ---------- */
+function wave(x1,y1,x2,y2,amp,cyc,col){var n=60,dx=x2-x1,dy=y2-y1,L=Math.sqrt(dx*dx+dy*dy),nx=-dy/L,ny=dx/L,p='';for(var i=0;i<=n;i++){var t=i/n,s=Math.sin(t*cyc*2*Math.PI)*amp,x=x1+dx*t+nx*s,y=y1+dy*t+ny*s;p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)}return '<path d="'+p+'" fill="none" stroke="'+(col||'var(--photon)')+'" stroke-width="2.6" stroke-linecap="round"/>'}
+function arrow(x1,y1,x2,y2,col,w){var a=Math.atan2(y2-y1,x2-x1),h=8;return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="'+(w||2.4)+'" stroke-linecap="round"/><path d="M'+x2+' '+y2+' L'+(x2-h*Math.cos(a-.45)).toFixed(1)+' '+(y2-h*Math.sin(a-.45)).toFixed(1)+' L'+(x2-h*Math.cos(a+.45)).toFixed(1)+' '+(y2-h*Math.sin(a+.45)).toFixed(1)+' Z" fill="'+col+'"/>'}
+function dot(x,y,r,col,lab,dy,txt){return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+col+'"/>'+(txt?'<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">'+txt+'</text>':'')+(lab?'<text x="'+x+'" y="'+(y+(dy||r+16))+'" text-anchor="middle" font-size="13" fill="var(--text-secondary)">'+lab+'</text>':'')}
+function T_(x,y,t,sz,anc,col,wt){return '<text x="'+x+'" y="'+y+'" font-size="'+(sz||13)+'" text-anchor="'+(anc||'start')+'" fill="'+(col||'var(--text-secondary)')+'"'+(wt?' font-weight="'+wt+'"':'')+'>'+t+'</text>'}
+var DIAG={
+scatter:function(){return '<svg viewBox="0 0 380 150" role="img" aria-label="A photon scatters off a free electron and changes direction">'+wave(14,80,170,80,6,5)+dot(190,80,9,'var(--electron)','free electron',26)+wave(190,80,350,24,6,5)+T_(40,56,'photon in',13)+T_(372,18,'same photon, new direction',13,'end')+'</svg>'},
+walk:function(){var P=[[110,84],[165,52],[142,100],[212,78],[262,42],[300,70]],s='';for(var i=0;i<P.length-1;i++){s+='<line x1="'+P[i][0]+'" y1="'+P[i][1]+'" x2="'+P[i+1][0]+'" y2="'+P[i+1][1]+'" stroke="'+(i==1?'var(--accent)':'var(--photon)')+'" stroke-width="'+(i==1?4:3)+'" stroke-linecap="round"/>'}P.forEach(function(p,i){s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(i?5:7)+'" fill="'+(i?'var(--ink)':'var(--photon)')+'"/>'});return '<svg viewBox="0 0 380 150" role="img" aria-label="A random walk with one step toward the center">'+s+T_(128,106,'inward step',13,'end','var(--accent)','700')+arrow(60,124,24,124,'var(--text-secondary)',2)+T_(30,142,'toward the center',12)+arrow(320,124,356,124,'var(--text-secondary)',2)+T_(350,142,'outward',12,'end')+'</svg>'},
+ff:function(){return '<svg viewBox="0 0 380 170" role="img" aria-label="Before and after free-free absorption">'+T_(95,18,'Before',14,'middle','var(--text-primary)','700')+T_(285,18,'After',14,'middle','var(--text-primary)','700')+'<line x1="190" y1="28" x2="190" y2="160" stroke="var(--border-strong)" stroke-dasharray="4 4"/>'+dot(70,110,13,'var(--ion)','ion',30,'+')+dot(130,86,7,'var(--electron)','',0)+arrow(130,86,146,86,'var(--electron)',2)+wave(10,52,126,82,5,4)+T_(20,44,'photon in',12)+T_(150,150,'slow electron',12,'middle')+dot(260,110,13,'var(--ion)','ion',30,'+')+dot(318,86,7,'var(--electron)','',0)+arrow(318,86,364,86,'var(--electron)',3)+T_(330,150,'faster electron',12,'middle')+T_(285,48,'no photon',14,'middle','var(--accent)','700')+'</svg>'},
+bf:function(){return '<svg viewBox="0 0 380 170" role="img" aria-label="A photon ionizes a bound electron">'+'<circle cx="170" cy="92" r="26" fill="none" stroke="var(--border-strong)" stroke-width="1.6"/><circle cx="170" cy="92" r="52" fill="none" stroke="var(--border-strong)" stroke-width="1.6" stroke-dasharray="3 4"/>'+dot(170,92,10,'var(--ion)','',0,'+')+dot(144,92,6,'var(--electron)','',0)+wave(14,92,134,92,6,5)+T_(40,74,'photon in',13)+arrow(150,88,330,30,'var(--electron)',3)+dot(336,28,7,'var(--electron)','',0)+T_(290,104,'electron leaves',13,'middle')+T_(290,120,'with extra energy',13,'middle')+T_(170,166,'ion, one electron lighter',13,'middle')+'</svg>'},
+coll:function(){var s=dot(40,84,7,'var(--electron)','',0)+arrow(40,84,120,84,'var(--electron)',3.4)+T_(40,110,'fast electron',13,'middle');var q=[[170,50,-1,.4],[205,110,1,-.5],[250,64,1,.7],[290,118,.6,-1],[330,56,1,.2]];q.forEach(function(p){s+=dot(p[0],p[1],7,'var(--text-secondary)','',0)+arrow(p[0],p[1],p[0]+p[2]*18,p[1]+p[3]*18,'var(--text-secondary)',1.8)});return '<svg viewBox="0 0 380 150" role="img" aria-label="Collisions share energy among particles">'+s+T_(250,142,'collisions share the energy',13,'middle')+'</svg>'},
+conv:function(){function loop(cx,cy){return '<path d="M'+(cx-26)+' '+(cy+44)+' L'+(cx-26)+' '+(cy-30)+' Q'+(cx-26)+' '+(cy-48)+' '+cx+' '+(cy-48)+' Q'+(cx+26)+' '+(cy-48)+' '+(cx+26)+' '+(cy-30)+' L'+(cx+26)+' '+(cy+44)+'" fill="none" stroke="var(--accent)" stroke-width="3"/>'+arrow(cx-26,cy-10,cx-26,cy-26,'var(--accent)',3)+arrow(cx+26,cy-10,cx+26,cy+8,'var(--accent-2)',3)}return '<svg viewBox="0 0 380 164" role="img" aria-label="Convection cells carrying energy upward">'+loop(90,80)+loop(190,80)+loop(290,80)+wave(44,142,126,142,3,5)+wave(150,142,232,142,3,5)+wave(256,142,338,142,3,5)+T_(190,16,'hot gas rises, cooler gas sinks',14,'middle','var(--text-primary)','700')+T_(190,160,'radiation is still present everywhere',12,'middle')+'</svg>'},
+hm:function(){return '<svg viewBox="0 0 380 170" role="img" aria-label="A photon detaches the extra electron from an H minus ion">'+T_(95,18,'Before',14,'middle','var(--text-primary)','700')+T_(285,18,'After',14,'middle','var(--text-primary)','700')+'<line x1="190" y1="28" x2="190" y2="160" stroke="var(--border-strong)" stroke-dasharray="4 4"/>'+'<circle cx="110" cy="100" r="22" fill="none" stroke="var(--border-strong)" stroke-width="1.6"/><circle cx="110" cy="100" r="44" fill="none" stroke="var(--electron)" stroke-width="1.4" stroke-dasharray="3 4"/>'+dot(110,100,9,'var(--ion)','',0,'+')+dot(88,100,6,'var(--electron)','',0)+dot(154,100,6,'var(--electron)','',0)+wave(8,50,146,96,5,5)+T_(14,42,'photon in',12)+T_(100,160,'H⁻, with a loose electron',12,'middle')+dot(260,100,9,'var(--ion)','',0,'+')+dot(238,100,6,'var(--electron)','',0)+'<circle cx="260" cy="100" r="22" fill="none" stroke="var(--border-strong)" stroke-width="1.6"/>'+dot(330,60,6,'var(--electron)','',0)+arrow(300,80,330,60,'var(--electron)',3)+T_(285,160,'neutral H plus a free electron',12,'middle')+T_(285,44,'no photon',14,'middle','var(--accent)','700')+'</svg>'},
+tau:function(){var s='',x0=40,y0=120,W=300,H=90,p='';for(var i=0;i<=60;i++){var t=i/60*4,x=x0+t/4*W,y=y0-Math.exp(-t)*H;p+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)}s+='<line x1="'+x0+'" y1="'+y0+'" x2="'+(x0+W)+'" y2="'+y0+'" stroke="var(--border-strong)"/><line x1="'+x0+'" y1="'+(y0-H-6)+'" x2="'+x0+'" y2="'+y0+'" stroke="var(--border-strong)"/><path d="'+p+'" fill="none" stroke="var(--accent)" stroke-width="3"/>';[1,2,3].forEach(function(t){var x=x0+t/4*W,y=y0-Math.exp(-t)*H;s+='<circle cx="'+x+'" cy="'+y+'" r="5" fill="var(--ink)"/>'+T_(x,y0+16,'τ = '+t,12,'middle')+T_(x+8,y-8,Math.round(Math.exp(-t)*100)+'%',12)});return '<svg viewBox="0 0 380 160" role="img" aria-label="Chance of passing through a given optical depth without interacting">'+s+T_(190,156,'optical depth τ left along the path',13,'middle')+T_(40,16,'chance of no further interaction',12)+'</svg>'},
+hmcurve:function(){var pts=[[.4,.55],[.6,.8],[.85,.95],[1.1,.75],[1.4,.42],[1.64,.15],[1.9,.22],[2.5,.4],[3.2,.62]],x0=36,y0=124,W=316,H=90,mx=function(l){return x0+(l-.3)/(3.4-.3)*W},my=function(v){return y0-v*H},p='';pts.forEach(function(q,i){p+=(i?'L':'M')+mx(q[0]).toFixed(1)+' '+my(q[1]).toFixed(1)});return '<svg viewBox="0 0 380 170" role="img" aria-label="Schematic H minus continuum opacity versus wavelength with a minimum near 1.6 micrometers">'+'<line x1="'+x0+'" y1="'+y0+'" x2="'+(x0+W)+'" y2="'+y0+'" stroke="var(--border-strong)"/><path d="'+p+'" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>'+[[.55,'0.55'],[1,'1.0'],[1.64,'1.6'],[2.5,'2.5'],[3.2,'3.2']].map(function(a){return T_(mx(a[0]),y0+16,a[1],12,'middle')}).join('')+'<circle cx="'+mx(1.64)+'" cy="'+my(.15)+'" r="5" fill="var(--ink)"/>'+'<line x1="'+mx(1.64)+'" y1="'+(my(.15)-7)+'" x2="'+mx(1.64)+'" y2="44" stroke="var(--border-strong)" stroke-dasharray="3 3"/>'+T_(mx(1.64),38,'minimum near 1.6 μm',13,'middle','var(--text-primary)','700')+T_(190,160,'wavelength (μm). Schematic and relative, not to scale',12,'middle')+T_(14,34,'opacity',12)+'</svg>'}
+};
+/* ---------- content ---------- */
+var J=[
+{reg:0,steps:[
+{q:'A photon with a wavelength of 0.3 nm (an X-ray) is moving through the core. Use the temperature and density shown at left. Which is the most plausible partner for its next interaction?',
+ ch:[{t:'A free electron',fb:'Plausible. At about 1.5 × 10⁷ K, hydrogen and helium have lost their electrons, so free electrons are everywhere. A photon can scatter off a free electron. This is Thomson scattering.'},
+     {t:'A neutral hydrogen atom',fb:'Hard to find here. Ionizing hydrogen takes 13.6 eV, and a typical particle in the core carries about 1.3 keV, almost a hundred times more. Intact atoms almost never survive.'},
+     {t:'An H⁻ ion',fb:'Essentially absent. H⁻ holds its extra electron by only 0.75 eV, so collisions in the core strip it off at once.'},
+     {t:'A bound electron in a heavy element such as iron',fb:'Possible in principle, since some inner electrons can stay bound even at this temperature. But heavy elements are a small fraction of the gas, and free electrons far outnumber them. This partner matters more in cooler layers.'}],
+ rv:{d:'scatter',h:'The photon scatters off a free electron.',t:'In this history the photon changes direction at the electron. It is still the same photon, and in the Thomson limit its energy changes very little.'},
+ ex:'Did the photon lose its identity in this interaction? What would a partner have to do for the photon to be destroyed instead?',mk:[1,1],abs:0},
+{q:'After the scattering, the photon heads off in a new direction. Which statement about its next step is most plausible?',
+ ch:[{t:'It moves outward, toward the surface',fb:'Outward steps are somewhat more common overall because the gas thins outward. But any single step can go either way.'},
+     {t:'It moves inward, toward the center',fb:'Inward steps happen often. Still, nothing forces a photon inward.'},
+     {t:'Either direction is possible, and the direction is random each time',fb:'Right. Each scattering sends the photon off in a new direction. The outward flow of energy comes from many photons together, not from one photon moving steadily outward.'}],
+ rv:{d:'walk',h:'This time the next step goes inward.',t:'The photon wanders in a random walk. Here one step takes it toward the center. That is a possible history, not the most probable path.'},
+ ex:'The net energy flux is outward. How can an individual photon step inward and still be part of that flux?',mk:[1,1],abs:0},
+{q:'Later the photon is absorbed by the gas. Which description of the absorption is most plausible?',
+ ch:[{t:'An isolated free electron absorbs the photon completely',fb:'An isolated free electron cannot do this. Energy and momentum cannot both be conserved if the electron absorbs the whole photon on its own.'},
+     {t:'A free electron absorbs the photon while interacting with an ion (free-free absorption)',fb:'Right. The ion takes up momentum so that both energy and momentum can be conserved. The electron stays unbound and ends up with more kinetic energy.'},
+     {t:'The photon excites an electron bound in a hydrogen atom',fb:'Very little neutral hydrogen survives at this temperature, so there is almost nothing for the photon to excite.'},
+     {t:'The photon turns into a substance called energy that is stored in the electron',fb:'The photon is not turned into a substance. It already carried energy and momentum. When it is absorbed, both pass to the matter.'}],
+ rv:{d:'ff',h:'Free-free absorption destroys the photon.',t:'An unbound electron near an ion absorbs the photon and leaves with more kinetic energy. No photon survives. From here we follow the energy, not the photon.'},
+ ex:'Collisions will share this energy with other particles, and new photons will be emitted later. Can you say which later photon carries the original energy?',mk:[1,0],abs:1}
+]},
+{reg:1,steps:[
+{q:'A photon of about 2 nm (a soft X-ray) is moving here. Use the temperature and density shown at left. Which partners are plausible for absorbing the photon? Pick the one you think is most important.',
+ ch:[{t:'A free electron on its own',fb:'Free electrons are abundant and will scatter this photon, but scattering does not destroy it, and a lone free electron cannot absorb it.'},
+     {t:'A free electron near an ion (free-free absorption)',fb:'Plausible. This happens throughout the Sun. This question compares options. It does not rank every interaction probability.'},
+     {t:'A bound electron in a partly ionized heavier element',fb:'Plausible. Inner electrons in partly ionized heavier elements have binding energies in the range of these photon energies, so photons can ionize them. This is bound-free absorption.'},
+     {t:'An H⁻ ion',fb:'Not here. H⁻ needs cool, mostly neutral gas, and the gas at this depth is about 2 × 10⁶ K.'}],
+ rv:{d:'bf',h:'A photon ionizes a heavier atom.',t:'In this history the photon is absorbed by a bound electron in a partly ionized heavier element. The electron is removed from the ion and leaves with the photon energy minus its binding energy. The photon is gone.'},
+ ex:'Where did the photon energy go? Name two places.',mk:[1,0],abs:1},
+{q:'The freed electron is moving fast through the gas. What happens to its extra energy?',
+ ch:[{t:'It stays with that one electron indefinitely',fb:'Not in dense gas. The electron collides with other particles within a tiny distance.'},
+     {t:'Collisions share it with many other particles',fb:'Right. Collisions redistribute the energy through the gas and the gas stays close to a single local temperature.'},
+     {t:'It immediately becomes the original photon again',fb:'No. The photon was destroyed. A later emission creates new photons, which are different photons.'}],
+ rv:{d:'coll',h:'Collisions spread the energy through the gas.',t:'The extra energy is shared among many particles. Later emission by the gas creates new photons. After this sharing, no later photon can be uniquely identified as carrying the original photon\'s energy.'},
+ ex:'Are we still following the same photon? What are we following instead?',mk:[0,0],abs:0},
+{q:'Now consider how energy is transported through the convective zone above this boundary. Which statement is most accurate?',
+ ch:[{t:'The same photon travels straight out through the convective zone',fb:'No. Photons are still absorbed and emitted, and they do not travel straight out.'},
+     {t:'Hot gas rises and cooler gas sinks, and this bulk motion carries most of the thermal energy outward',fb:'Right. Moving gas carries thermal energy upward.'},
+     {t:'Radiation stops existing in the convective zone',fb:'No. Radiation is still present and still interacts with the gas. Convection adds a more efficient way to move energy.'}],
+ rv:{d:'conv',h:'Convection carries the energy through bulk motion.',t:'Rising hot gas carries thermal energy outward and sinking cooler gas returns. Radiation does not switch off, and photons are not turned into gas parcels.'},
+ ex:'In the core, energy moved mainly by radiation. What changed here so that convection takes over most of the transport?',mk:[0,0],abs:0}
+]},
+{reg:2,steps:[
+{q:'A visible photon of 550 nm (green light, about 2.25 eV) is near the surface, away from strong spectral lines. Use the temperature and density shown at left. Which partner is most plausible for absorbing it?',
+ ch:[{t:'An H⁻ ion',fb:'Plausible. H⁻ holds its extra electron by only 0.75 eV, so a visible photon has plenty of energy to detach it. H⁻ is common because the gas has free electrons from easily ionized metals and plenty of hydrogen atoms.'},
+     {t:'A neutral hydrogen atom in its ground state',fb:'Not for this photon. Ionizing hydrogen from the ground state takes 13.6 eV, and a green photon carries only about 2.25 eV.'},
+     {t:'A free electron on its own',fb:'It can scatter the photon, but a lone electron cannot absorb it. There are also few free electrons here.'},
+     {t:'A free electron near an ion (free-free absorption)',fb:'This also occurs, but at visible wavelengths H⁻ bound-free absorption is the main continuum source. The question compares options. It does not rank every probability.'}],
+ rv:{d:'hm',h:'H⁻ photodetachment destroys the photon.',t:'The photon removes the loosely held extra electron from an H⁻ ion. The leftover energy, about 1.5 eV here, goes into the electron\'s motion. The photon is gone and the energy joins the gas.'},
+ ex:'Why does a visible photon have enough energy to detach an H⁻ electron, but not enough to ionize hydrogen from the ground state?',mk:[1,0],abs:1},
+{q:'H⁻ absorbs photons over a range of wavelengths, but the absorption depends on wavelength. Photons from deeper layers escape most easily at which wavelength?',
+ ch:[{t:'0.4 μm (violet)',fb:'H⁻ absorbs strongly here, so light from deep layers is easily absorbed on the way out.'},
+     {t:'0.55 μm (green)',fb:'H⁻ absorption is substantial here too.'},
+     {t:'1.6 μm (near infrared)',fb:'Right. Near 1.6 μm a photon no longer has the 0.75 eV needed to detach an H⁻ electron, and other absorption has not taken over yet. Opacity has a minimum here, so we see deepest into the Sun at this wavelength.'}],
+ rv:{d:'hmcurve',h:'Interactions depend on wavelength.',t:'Opacity changes strongly with wavelength, so the surface we see depends on the color. The curve is a schematic of the continuum, and ignores spectral lines.'},
+ ex:'If opacity changes with wavelength, what does it mean to say the Sun has one "surface"?',mk:[1,1],abs:0},
+{q:'Absorbing gas is present all the way to the surface, yet photons escape. Which statement best explains why?',
+ ch:[{t:'Absorption stops completely above the photosphere',fb:'No. Some gas remains, but it is thin.'},
+     {t:'Along the remaining path, the optical depth is small, so another interaction is unlikely',fb:'Right. Escape depends on the optical depth along the remaining path at that frequency. A photon that starts near an optical depth of about one has a good chance to leave without another interaction.'},
+     {t:'The largest opacity anywhere in the Sun is smaller at the surface than in the interior',fb:'Escape does not depend on the largest opacity anywhere inside the Sun. It depends on the optical depth remaining along the path.'}],
+ rv:{d:'tau',h:'Escape depends on the optical depth that remains.',t:'The chance of crossing an optical depth τ with no interaction is about e<sup>−τ</sup>. When τ is well below 1, a photon is very likely to get out.'},
+ ex:'Why does a photon emitted deeper than τ = 3 almost never reach us?',mk:[0,0],abs:0}
+]}
+];
+/* ---------- guess-your-photon step ---------- */
+var BANDS=[{n:'Gamma ray',lo:1e5,hi:1e13,c:'#7A4FD0'},{n:'X-ray',lo:124,hi:1e5,c:'#3B6FD4'},{n:'Ultraviolet',lo:3.1,hi:124,c:'#8A5CD6'},{n:'Visible light',lo:1.65,hi:3.1,c:'#2EAE6B'},{n:'Infrared',lo:1.24e-3,hi:1.65,c:'#C2185B'},{n:'Radio',lo:0,hi:1.24e-3,c:'#8A6A00'}];
+function dens(x){return Math.pow(x,3)/(Math.exp(x)-1)}
+function bandShares(g){var kT=g.kT,n=4000,a=Math.log(1e-9),b=Math.log(80),tot=0,sh=BANDS.map(function(){return 0}),d=(b-a)/n;for(var i=0;i<n;i++){var x=Math.exp(a+(i+.5)*d),w=dens(x)*d,E=x*kT;tot+=w;for(var k=0;k<BANDS.length;k++){if(E>=BANDS[k].lo&&E<BANDS[k].hi){sh[k]+=w;break}}}return sh.map(function(v){return v/tot})}
+function pcb(p){return p<.001?'under 0.1%':p<.01?'under 1%':p>.99?'over 99%':Math.round(p*100)+'%'}
+var FOLLOW=['We will follow a photon of about 0.3 nm, close to the most common energies here.','We will follow a photon of about 2 nm, close to the most common energies here.','We will follow a visible photon of 550 nm, because visible light is what we see leaving the Sun.'];
+function guessFB(g,i){if(g.T>1e7&&i===0){return 'A gamma ray is a sensible prediction for a photon freshly emitted by a nuclear reaction. Here, however, we asked about the thermal radiation field after energy redistribution. At about 15 million K its characteristic photon energies are a few keV, in the X-ray band. Fresh fusion photons and the thermal population are different starting points.';}if(g.T<10000){return (i===3||i===4?'Good prediction. ':'Look for photon energies of order a few electron-volts. ')+'At about 5,800 K, the photosphere emits a broad thermal spectrum with substantial visible and infrared radiation. We call it the visible surface because this is the layer from which most of the visible sunlight we observe escapes, not because every photon is visible. Both visible light and near-infrared are reasonable representative choices here. Counting photons across broad bands can favor infrared; that is a different question from locating the visible surface. We will follow a 550 nm visible photon.';}var sh=bandShares(g),mx=0;sh.forEach(function(v,k){if(v>sh[mx])mx=k});var s=BANDS[i].n+' photons make up '+pcb(sh[i])+' of the photons here. ';if(i==mx)s+='This is the most common type. Photon energies follow the temperature, and a typical photon carries a few times kT, which is about '+fE(2.82*g.kT)+' here.';else s+='The most common type here is '+BANDS[mx].n.toLowerCase()+'. Photon energies follow the temperature, and a typical photon carries a few times kT, which is about '+fE(2.82*g.kT)+' here.';return s}
+function curveBands(g,pk){var w=380,h=190,x0=34,y0=150,W=324,H=112,lo=Math.log(.02),hi=Math.log(40),pkv=dens(2.82),s='',X=function(x){return x0+(Math.log(x)-lo)/(hi-lo)*W},kT=g.kT;BANDS.forEach(function(b,k){var xa=Math.max(b.lo/kT,.02),xb=Math.min(b.hi/kT,40);if(xb<=xa)return;var xl=X(xa),xr=X(xb);s+='<rect x="'+xl.toFixed(1)+'" y="'+(y0-H-6)+'" width="'+(xr-xl).toFixed(1)+'" height="'+(H+6)+'" fill="'+b.c+'" opacity="'+(k==pk?.34:.1)+'"/>'+(k==pk?'<rect x="'+xl.toFixed(1)+'" y="'+(y0-H-6)+'" width="'+(xr-xl).toFixed(1)+'" height="'+(H+6)+'" fill="none" stroke="'+b.c+'" stroke-width="2.4"/>':'');if(xr-xl>34)s+=T_((xl+xr)/2,y0-H-12,b.n,11.5,'middle',b.c,k==pk?'700':'400')});
+var p='';for(var i=0;i<=140;i++){var x=Math.exp(lo+(hi-lo)*i/140),y=dens(x)/pkv;p+=(i?'L':'M')+X(x).toFixed(1)+' '+(y0-Math.min(y,1.05)*H*.95).toFixed(1)}
+s+='<line x1="'+x0+'" y1="'+y0+'" x2="'+(x0+W)+'" y2="'+y0+'" stroke="var(--border-strong)"/><path d="'+p+'" fill="none" stroke="var(--ink)" stroke-width="3"/>';
+[.1,1,10].forEach(function(x){s+='<line x1="'+X(x)+'" x2="'+X(x)+'" y1="'+y0+'" y2="'+(y0+4)+'" stroke="var(--border-strong)"/>'+T_(X(x),y0+17,fE(x*kT),12,'middle')});
+var xf=g.E/kT;if(xf>.02&&xf<40)s+='<line x1="'+X(xf)+'" x2="'+X(xf)+'" y1="'+(y0-H+10)+'" y2="'+y0+'" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/><circle cx="'+X(xf)+'" cy="'+(y0-Math.min(dens(xf)/pkv,1)*H*.95)+'" r="5" fill="var(--ink)"/>'+T_(xf>3?X(xf)-7:X(xf)+7,y0-H+22,'the photon we follow',11.5,xf>3?'end':'start','var(--text-primary)','700');
+return '<svg viewBox="0 0 '+w+' '+h+'" style="max-width:540px" role="img" aria-label="Distribution of photon energies in this region with the bands shaded">'+s+T_(x0+W/2,h-4,'photon energy (log scale)',12,'middle')+T_(4,50,'relative',11.5)+T_(4,63,'number',11.5)+'</svg>'}
+function guessReveal(g,i){var sh=bandShares(g);var rows=BANDS.map(function(b,k){return '<div style="display:grid;grid-template-columns:116px minmax(0,1fr) 96px;gap:8px;align-items:center;margin:3px 0;font-size:15px'+(k==i?';font-weight:700':'')+'"><span style="color:'+b.c+'">'+b.n+(k==i?' (you)':'')+'</span><span style="height:9px;background:var(--surface-1);border-radius:5px;overflow:hidden;display:block"><i style="display:block;height:100%;width:'+Math.max(sh[k]*100,sh[k]>0?.6:0)+'%;background:'+b.c+'"></i></span><span style="text-align:right">'+pcb(sh[k])+'</span></div>'}).join('');return {h:'This is the distribution of photons here.',html:curveBands(g,i)+'<div style="margin:6px 0 8px">'+rows+'</div>'}}
+function guessStep(r){return {type:'guess',q:'The gas here is about '+sciN(REG[r].T)+' K. Which part of the electromagnetic spectrum would you expect many of its thermal photons to occupy?',ch:BANDS.map(function(b){return {t:b.n}}),ex:'Why are there so few photons of the other types here? What would change if this gas were hotter or cooler?',mk:[0,1],abs:0,reg:r}}
+var OKI=[[[0],[2],[1]],[[1,2],[1],[1]],[[0],[2],[1]]];J.forEach(function(j,ji){j.steps.forEach(function(s,si){s.okIdx=OKI[ji][si]});j.steps.unshift(guessStep(j.reg))});
+var S={j:-1,s:0,ph:0,pick:-1,notes:{},done:{},cmp:false,first:{}};
+function key(){return S.j+'.'+S.s}
+function topBand(g){var sh=bandShares(g),m=0;sh.forEach(function(v,k){if(v>sh[m])m=k});return m}
+function isOK(st,p,g){return st.type=='guess'?(g.T<10000?(p===3||p===4):p==topBand(g)):st.okIdx.indexOf(p)>=0}
+function tally(j){var r=0,m=0;Object.keys(S.first).forEach(function(k){if(j!=null&&k.charAt(0)!=String(j))return;if(S.first[k])r++;else m++});return{r:r,m:m}}
+function scoreHTML(j){var t=tally(j);if(t.r+t.m==0)return '';return '<div class="sec sm" style="margin-bottom:8px">First tries: <b style="color:var(--good)">'+t.r+' right</b>, <b style="color:var(--accent)">'+t.m+' missed</b>. Check the saving status above before closing the page.</div>'}
+function regionPanel(g,known){var sun='<svg viewBox="0 0 120 120" width="100%" style="max-width:150px;display:block;margin:0 auto 8px" role="img" aria-label="Sun schematic marking radius '+g.r.toFixed(2)+' solar radii"><circle cx="60" cy="60" r="56" fill="var(--conv)"/><circle cx="60" cy="60" r="39.9" fill="var(--rad)"/><circle cx="60" cy="60" r="14" fill="var(--core)"/><circle cx="60" cy="60" r="56" fill="none" stroke="var(--rim)" stroke-width="2"/><circle cx="'+(60+56*g.r*.7071).toFixed(1)+'" cy="'+(60-56*g.r*.7071).toFixed(1)+'" r="6" fill="var(--ink)" stroke="#fff" stroke-width="2"/></svg>';
+return '<div class="panel side">'+sun+'<h3>'+g.name+'</h3><div class="sec sm">'+g.desc+'</div><div class="facts"><div class="fact"><span class="sec">Radius</span><b>about '+g.r.toFixed(2)+' R</b></div><div class="fact"><span class="sec">Temperature</span><b>'+sciN(g.T)+' K</b></div><div class="fact"><span class="sec">Density</span><b>'+sciN(g.rho)+' g/cm<sup>3</sup></b></div><div class="fact"><span class="sec">Photon we follow</span><b>'+(known?fL(g.lam)+', '+g.band:'to be decided')+'</b></div></div><div class="sec sm" style="margin-top:8px">A navigation aid, not a scaled model of the solar interior.</div></div>'}
+// Only acknowledged server writes are reported as saved.
+const RESPONSE_ENDPOINT='https://script.google.com/macros/s/AKfycbzKi_5AdfxY6pVOjE6P_7Fkc9d31eOOSaokXkbA8zHPey8qlbBvfBTUFkGfZexxuN1-/exec';
+var GROUP=null,ATTEMPT_QUEUE=[],saving=false;
+function uid(){return crypto.randomUUID();}
+function trackingStatus(t){document.getElementById('tracking-status').textContent=t;}
+function persistResponses(){try{sessionStorage.setItem('photon-assignment',JSON.stringify({group:GROUP,queue:ATTEMPT_QUEUE,state:S}));}catch(e){}}
+async function submit(action,data){
+ if(RESPONSE_ENDPOINT==='ENDPOINT_PENDING')throw new Error('Response collection is not ready yet.');
+ var r=await fetch(RESPONSE_ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action:action},data)),redirect:'follow'});
+ if(!r.ok)throw new Error('Connection failed. Please retry.');
+ var payload=await r.json();if(!payload.ok)throw new Error(payload.error||'Response not saved.');return payload.result;
+}
+async function beginGroup(e){e.preventDefault();var names=document.getElementById('group-members').value.split('\n').map(v=>v.trim()).filter(Boolean);if(!names.length)return;var form=document.getElementById('group-form'),btn=form.querySelector('button');btn.disabled=true;trackingStatus('Registering your group…');var rid=form.dataset.requestId||uid();form.dataset.requestId=rid;
+ try{GROUP=await submit('register',{names:names,requestId:rid});persistResponses();form.hidden=true;document.getElementById('assignment-content').hidden=false;trackingStatus('Group registered. Checked answers and explanations will be saved.');R();}catch(err){trackingStatus('Not saved: '+err.message);}finally{btn.disabled=false;}}
+function record(kind,questionId,choice,explanation){if(!GROUP)return;ATTEMPT_QUEUE.push({session:GROUP.session,eventId:uid(),kind:kind,questionId:questionId,choice:choice,explanation:explanation||''});persistResponses();flushResponses();}
+async function flushResponses(){if(saving||!ATTEMPT_QUEUE.length)return;saving=true;trackingStatus('Saving response…');try{await submit('answer',ATTEMPT_QUEUE[0]);ATTEMPT_QUEUE.shift();persistResponses();saving=false;trackingStatus(ATTEMPT_QUEUE.length?'Saving remaining responses…':'Saved to your instructor’s response sheet.');flushResponses();}catch(err){saving=false;trackingStatus('Not saved yet: '+err.message+' Use Retry saving before closing this page.');}}
+window.addEventListener('beforeunload',function(e){persistResponses();if(ATTEMPT_QUEUE.length){e.preventDefault();e.returnValue='Responses are still waiting to save.';}});
+window.addEventListener('load',function(){try{var saved=JSON.parse(sessionStorage.getItem('photon-assignment'));if(saved&&saved.group){GROUP=saved.group;ATTEMPT_QUEUE=saved.queue||[];if(saved.state)S=saved.state;document.getElementById('group-form').hidden=true;document.getElementById('assignment-content').hidden=false;R();trackingStatus(ATTEMPT_QUEUE.length?'Responses waiting to save…':'Group session restored.');flushResponses();}}catch(e){}});
+
+function R(){var el=document.getElementById('app');
+ document.getElementById('tabs').innerHTML=REG.map(function(g,i){return '<button aria-pressed="'+(S.j==i&&!S.cmp)+'" onclick="go('+i+')">'+(i+1)+'. '+g.short+'</button>'}).join('')+'<button aria-pressed="'+S.cmp+'" onclick="cmp()">Compare</button><button onclick="restart()">Restart</button>';
+ if(S.cmp){el.innerHTML=cmpHTML();moreUpd(null,null);return}
+ if(S.j<0){el.innerHTML=startHTML();moreUpd(null,null);return}
+ var jr=J[S.j],g=REG[jr.reg],st=jr.steps[S.s],n=jr.steps.length,known=!(S.s==0&&S.ph<2);
+ var pills=['Predict','Check','Reveal','Explain'].map(function(l,i){return '<span class="pill '+(S.ph==i||(i==3&&S.ph==2)?'on':(S.ph>i?'done':''))+'">'+l+'</span>'}).join('');
+ var h='<div class="layout"><div>'+regionPanel(g,known)+'</div><div><div class="panel">'+scoreHTML()+'<div class="sec sm" style="margin-bottom:4px">Journey '+(S.j+1)+' of 3, step '+(S.s+1)+' of '+n+'</div><div class="pills">'+pills+'</div>';
+ h+='<h2>'+st.q+'</h2><div class="choices">'+st.ch.map(function(c,i){return '<button class="choice'+(S.ph>0?' locked':'')+'" aria-pressed="'+(S.pick==i)+'" '+(S.ph>0?'aria-disabled="true"':'')+' onclick="pick('+i+')"><span class="k">'+'ABCDEF'[i]+'</span><span>'+c.t+'</span></button>'}).join('')+'</div>';
+ if(S.ph==0)h+='<div class="nav"><button class="pri" '+(S.pick<0?'disabled':'')+' onclick="check()">Check my reasoning</button></div>';
+ if(S.ph>=1){h+='<div class="fb"><b>'+(isOK(st,S.pick,g)?'Correct / reasonable.':'Not quite.')+'</b> '+(st.type=='guess'?guessFB(g,S.pick):st.ch[S.pick].fb)+'</div>';if(S.ph==1)h+='<div class="nav"><button class="pri" onclick="reveal()">Reveal what happens</button></div>'}
+ if(S.ph>=2){if(st.type=='guess'){var gr=guessReveal(g,S.pick);h+='<div class="rv"><h3>'+gr.h+'</h3>'+gr.html+'<p style="margin:0">The temperature sets a broad thermal distribution, not one energy for every photon. The curve shows relative photon number per logarithmic energy interval; the bars show fractions in this idealized distribution, using the stated band boundaries. '+FOLLOW[S.j]+'</p></div>'}else{h+='<div class="rv"><h3>'+st.rv.h+'</h3>'+DIAG[st.rv.d]()+'<p style="margin:0">'+st.rv.t+'</p></div>'}h+='<div class="ex"><h3>Explain it in your own words</h3><p>'+st.ex+'</p><textarea id="note" placeholder="Type here. Your explanation is saved when you continue." oninput="S.notes[key()]=this.value">'+(S.notes[key()]||'')+'</textarea></div>';
+  h+='<div class="nav"><button class="pri" '+((S.emAnswers||{})[key()]===undefined?'disabled':'')+' onclick="next()">'+(S.s<n-1?'Next step':'Finish this journey')+'</button>'+((S.emAnswers||{})[key()]===undefined?'<button onclick="openEM()">Answer the spectrum question to continue</button>':'')+'</div>'}
+ h+='<div class="nav" style="margin-top:14px"><button onclick="back()">Back</button><button onclick="go(S.j)">Restart this journey</button></div></div></div></div>';
+ el.innerHTML=h;
+ var mkOn=S.ph>=2?st.mk[1]:st.mk[0];moreUpd(g,mkOn?g.E:null)}
+function startHTML(){return '<div class="start"><p style="max-width:760px;margin-top:14px">Choose a place in the Sun today. First you will guess what kind of photon you would be there, and see how the photons are really distributed. Then, at each step, you will predict what a photon can do, check your reasoning, reveal one possible encounter, and explain what happened. Work in groups of three if you can, and state your prediction out loud before you pick.</p><div class="jgrid">'+REG.map(function(g,i){return '<button class="jc" onclick="go('+i+')"><b style="font-size:18px">'+(i+1)+'. '+g.name+'</b><span class="sec">'+g.desc+'</span><span class="sm">Radius about '+g.r.toFixed(2)+' R · '+sciN(g.T)+' K</span></button>'}).join('')+'</div></div>'}
+function cmpHTML(){return '<div class="panel" style="margin-top:14px"><h2>Compare the three journeys</h2>'+scoreHTML()+'<p class="sec sm">These are the partners and processes that appear in the selected histories. They are not a ranking of every interaction probability.</p><div class="cmpwrap"><table class="cmp"><tr><th></th><th>Fusion core</th><th>Convection boundary</th><th>Photosphere</th></tr>'
++'<tr><td>Conditions</td><td>'+sciN(REG[0].T)+' K, dense, fully ionized H and He</td><td>'+sciN(REG[1].T)+' K, heavier elements keep some electrons</td><td>'+sciN(REG[2].T)+' K, mostly neutral, very thin</td></tr>'
++'<tr><td>Illustrative photon</td><td>'+fL(REG[0].lam)+', X-ray</td><td>'+fL(REG[1].lam)+', soft X-ray</td><td>'+fL(REG[2].lam)+', visible</td></tr>'
++'<tr><td>Interactions met</td><td>Electron scattering, then free-free absorption</td><td>Bound-free absorption in heavier elements</td><td>H⁻ photodetachment</td></tr>'
++'<tr><td>What happens to the photon</td><td>Scattering keeps it, absorption destroys it</td><td>Destroyed, and its energy is shared by collisions</td><td>Destroyed, or it escapes if little optical depth remains</td></tr>'
++'<tr><td>Your first tries</td>'+[0,1,2].map(function(j){var t=tally(j),n=J[j].steps.length;return '<td>'+t.r+' right, '+t.m+' missed'+(t.r+t.m<n?' ('+(n-t.r-t.m)+' not answered)':'')+'</td>'}).join('')+'</tr>'
++'<tr><td>How energy moves on</td><td>Radiative transport</td><td>Convection takes over most of the transport</td><td>Photons leave into space</td></tr></table></div>'
++'<p style="margin-top:12px">Discuss as a group: why are different interactions important in different regions, and why is following energy from the core to the surface different from following one unchanged photon?</p></div>'}
+function go(j){S.j=j;S.s=0;S.ph=0;S.pick=-1;S.cmp=false;R();window.scrollTo(0,0)}
+function restart(){S={j:-1,s:0,ph:0,pick:-1,notes:{},done:{},cmp:false,first:{}};R()}
+function cmp(){S.cmp=true;R()}
+function pick(i){if(S.ph>0)return;S.pick=i;R()}
+function check(){if(S.pick<0||!GROUP)return;record('answer',key(),S.pick);var jr=J[S.j],st=jr.steps[S.s];if(S.first[key()]===undefined)S.first[key()]=isOK(st,S.pick,REG[jr.reg]);S.ph=1;R()}
+function reveal(){S.ph=2;R()}
+function next(){if(!GROUP||S.ph<2||(S.emAnswers||{})[key()]===undefined)return;record('explanation',key(),null,S.notes[key()]||'');var n=J[S.j].steps.length;S.done[S.j]=1;if(S.s<n-1){S.s++;S.ph=0;S.pick=-1;R();window.scrollTo(0,0)}else{if(S.j<2){go(S.j+1)}else{S.cmp=true;R();window.scrollTo(0,0)}}}
+function back(){if(S.cmp){S.cmp=false;if(S.j<0)S.j=2;S.s=J[S.j].steps.length-1;S.ph=0;S.pick=-1;R();return}if(S.ph>0){S.ph=S.ph==2?1:0;if(S.ph==0)S.pick=S.pick;R();return}if(S.s>0){S.s--;S.ph=0;S.pick=-1;R();return}if(S.j>0){go(S.j-1)}else{S.j=-1;R()}}
+/* ---------- explore further ---------- */
+function curveSVG(g,E){var T=g.T,kT=g.kT,w=360,h=170,x0=34,y0=138,W=310,H=108,lo=Math.log(.1),hi=Math.log(30);function X(x){return x0+(Math.log(x)-lo)/(hi-lo)*W}var pk=Math.pow(2.82,3)/(Math.exp(2.82)-1),p='';for(var i=0;i<=120;i++){var x=Math.exp(lo+(hi-lo)*i/120),y=Math.pow(x,3)/(Math.exp(x)-1)/pk;p+=(i?'L':'M')+X(x).toFixed(1)+' '+(y0-y*H).toFixed(1)}
+var s='<line x1="'+x0+'" y1="'+y0+'" x2="'+(x0+W)+'" y2="'+y0+'" stroke="var(--border-strong)"/><path d="'+p+'" fill="none" stroke="var(--accent)" stroke-width="3"/>';
+[.1,1,10].forEach(function(x){s+='<line x1="'+X(x)+'" x2="'+X(x)+'" y1="'+y0+'" y2="'+(y0+4)+'" stroke="var(--border-strong)"/>'+T_(X(x),y0+17,fE(x*kT),12,'middle')});
+if(E){var xe=E/kT;s+='<line x1="'+X(xe)+'" x2="'+X(xe)+'" y1="'+(y0-H-4)+'" y2="'+y0+'" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/>'+T_(X(xe)+6,y0-H+4,'this photon, '+fL(g.lam),12,'start','var(--text-primary)','700')}
+return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="max-width:520px" role="img" aria-label="Representative thermal photon energy distribution at '+Math.round(T)+' K">'+s+T_(x0+W/2,h-2,'photon energy (log scale)',12,'middle')+T_(4,26,'relative',12)+T_(4,40,'number',12)+'</svg>'}
+function specSVG(lam){var segs=[['gamma',-3,-2,'#7A4FD0'],['X-ray',-2,1,'#3B6FD4'],['UV',1,2.6,'#5B4BD4'],['visible',2.6,2.845,'#2EAE6B'],['infrared',2.845,6,'#C2185B'],['radio',6,7,'#8A6A00']],x0=10,W=360,lo=-3,hi=7,s='',X=function(l){return x0+(l-lo)/(hi-lo)*W};segs.forEach(function(g){s+='<rect x="'+X(g[1]).toFixed(1)+'" y="40" width="'+(X(g[2])-X(g[1])).toFixed(1)+'" height="26" fill="'+g[3]+'" opacity=".85"/>';var cx=(X(g[1])+X(g[2]))/2;if(g[2]-g[1]>1)s+=T_(cx,58,g[0],12,'middle','#fff','700')});
+s+=T_(X(2.7),34,'visible',12,'middle');[-3,-1,1,3,5,7].forEach(function(l){s+='<line x1="'+X(l)+'" x2="'+X(l)+'" y1="66" y2="72" stroke="var(--border-strong)"/>'+T_(X(l),86,l==-3?'10⁻³':l==-1?'10⁻¹':l==1?'10':l==3?'10³':l==5?'10⁵':'10⁷',12,'middle')});
+if(lam){var m=X(Math.log10(lam));s+='<path d="M'+m+' 38 L'+(m-6)+' 24 L'+(m+6)+' 24 Z" fill="var(--ink)"/>'+T_(m,18,fL(lam),12,'middle','var(--text-primary)','700')}
+return '<svg viewBox="0 0 380 108" width="100%" style="max-width:520px" role="img" aria-label="Schematic electromagnetic spectrum">'+s+T_(190,104,'wavelength in nanometers (log scale, schematic)',12,'middle')+'</svg>'}
+function emQuizHTML(){
+ if(S.j<0||S.cmp||S.ph<2)return '<p class="sm">Reveal the current encounter first, then answer the spectrum checkpoint here.</p>';
+ var saved=(S.emAnswers||{})[key()];
+ var opts=['Its energy doubles and its frequency doubles.','Its energy halves and its frequency halves.','Its energy stays the same; only its color changes.'];
+ var h='<div class="ex"><h3>Required spectrum checkpoint</h3><p>A photon has half the wavelength of another photon. How do their energies and frequencies compare?</p><div class="choices">';
+ opts.forEach(function(t,i){h+='<button class="choice" aria-pressed="'+(saved===i)+'" onclick="answerEM('+i+')"><span class="k">'+'ABC'[i]+'</span><span>'+t+'</span></button>'});h+='</div>';
+ if(saved!==undefined){h+='<div class="fb" role="status"><b>'+(saved===0?'Correct. ':'Not quite. ')+ '</b>'+ (saved===0?'Shorter wavelength means higher frequency and higher photon energy.':'Wavelength and frequency change inversely. Halving wavelength doubles frequency, so energy doubles too.')+' Both follow c = λν and E = hν. You have completed this checkpoint and can continue.</div><button class="pri" onclick="next()">Continue to next step</button>';}
+ return h+'</div>';
+}
+function answerEM(i){if(!GROUP)return;record('answer',key()+'.em',i);S.emAnswers=S.emAnswers||{};S.emAnswers[key()]=i;R();document.getElementById('more').open=true;}
+function openEM(){document.getElementById('more').open=true;document.getElementById('em-checkpoint').scrollIntoView({behavior:'smooth',block:'center'});}
+
+function moreUpd(g,E){var gg=g||REG[S.j>=0?J[S.j].reg:0];document.getElementById('morebody').innerHTML='<h3>Representative thermal photon energies</h3>'+curveSVG(gg,E)+'<p class="sm">Relative photon number per logarithmic energy interval, <code>dN/dln E ∝ E³ / [exp(E/kT) − 1]</code>, for '+gg.name.toLowerCase()+' at about '+sciN(gg.T)+' K. The curve is normalized to its own peak, so it compares shapes only. It does not show absolute photon counts, energy density, or flux. The marker appears only while the original photon still exists. '+(gg.r>=1?'The 5,800 K curve is a blackbody reference, not a claim of local thermal equilibrium in space.':'')+'</p><h3>Electromagnetic spectrum</h3>'+specSVG(E&&g?g.lam:null)+'<p class="sm">A schematic with a marker for the photon you are following.</p><div id="em-checkpoint">'+emQuizHTML()+'</div><h3>Physics notes</h3>'
++'<p class="sm"><b>Absorption versus scattering.</b> Absorption destroys the photon and passes its energy and momentum to matter. Scattering keeps the photon and changes its direction. In the Thomson limit the energy change is very small.</p><p class="sm"><b>Free-free absorption.</b> An unbound electron absorbs a photon while interacting with an ion and stays unbound. The ion takes up momentum so energy and momentum are both conserved. An isolated free electron cannot absorb a photon completely.</p><p class="sm"><b>After absorption.</b> Collisions redistribute the transferred energy through the gas. Some energy is later emitted as thermal radiation, creating new photons. The absorbed photon does not return. A later photon cannot be uniquely identified as carrying the original energy.</p><p class="sm"><b>Averages are not probabilities.</b> The Rosseland mean describes optically thick radiative transport. Its component shares are not the chance that a particular photon scatters or is absorbed. At one frequency, the chance that an interaction is an absorption is <code>κ<sub>abs,ν</sub> / (κ<sub>abs,ν</sub> + κ<sub>sca,ν</sub>)</code>. The <a href="https://msoaresfurtado.com/tools/solar-opacity.html" style="color:var(--accent)">Solar Opacity Layers</a> page shows how the averaged opacity changes with radius.</p><p class="sm"><b>Limits.</b> This is a conceptual branching activity, not a radiative-transfer calculation. It has no measured branching probabilities, travel times, or exact trajectories. Schematics are not literal electron orbits.</p>'}
+R();
+</script>
+
+</body></html>
