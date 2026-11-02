@@ -174,8 +174,8 @@ function pct(p){return (p<1?'under 1':String(Math.round(p)))+'%'}
 function lab(id,c,t){var el=document.getElementById(id);el.style.fontSize='14px';el.style.lineHeight='1.5';el.innerHTML='<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:'+c+';margin-right:8px"></span>'+t}
 function photon(r,o){var sum=o.v[0]+o.v[1]+o.v[2]+o.v[3],sf=o.v[0]/sum,af=1-sf,m;
 document.getElementById('pb1').style.width=(sf*100)+'%';document.getElementById('pb2').style.width=(af*100)+'%';
-lab('pl1','#1D9E75','<b style="font-weight:600">Scattering, '+pct(sf*100)+' of the opacity.</b> A photon bounces off a free electron. Its direction changes and its energy barely changes.');
-lab('pl2','#B5532A','<b style="font-weight:600">Absorption, '+pct(af*100)+' of the opacity.</b> The surrounding material takes a photon\'s energy and later gives off a new photon, in a random direction.');
+lab('pl1','#1D9E75','<b style="font-weight:600">Scattering, '+pct(sf*100)+' of the opacity.</b> Scattering redirects radiation. A photon bounces off a free electron and keeps nearly all of its energy.');
+lab('pl2','#B5532A','<b style="font-weight:600">Absorption, '+pct(af*100)+' of the opacity.</b> Absorption transfers energy to matter. The matter later emits new radiation, in a new direction.');
 if(sf>.5)m='Scattering provides most of the opacity here. Photons bounce around and lose almost no energy, so they wander outward slowly in a random walk.';
 else if(sf>.1)m='Both matter here. Scattering only turns a photon around. Absorption moves its energy into the surrounding material, which later gives off new photons at the local temperature.';
 else m='Absorption provides almost all of the opacity here. An absorbed photon hands its energy to the surrounding material, which then gives off new photons at the local temperature.';
