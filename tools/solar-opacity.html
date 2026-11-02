@@ -80,9 +80,6 @@ svg{max-width:100%}
 </div><div><div id="pt" class="sec" style="margin:16px 0 4px"></div>
 <div style="display:flex;height:14px;border-radius:7px;overflow:hidden;margin:4px 0 6px;background:var(--surface-1)"><div id="pb1" style="background:#1D9E75;width:0"></div><div id="pb2" style="background:#B5532A;width:0"></div></div>
 <div style="display:flex;flex-direction:column;gap:6px"><div id="pl1"></div><div id="pl2"></div></div>
-<div id="pet" class="sec" style="margin:16px 0 4px"></div>
-<svg id="pe" width="100%" viewBox="0 0 520 190" role="img"><title>Chance a photon scatters versus photon energy</title><desc>Curve showing how the chance that a photon's next interaction is a scatter rises with photon energy at the selected radius, from a simple model.</desc></svg>
-<div id="pec" class="sec" style="margin:2px 0 4px"></div>
 <div id="pmsg" style="margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--surface-1)"></div>
 <div id="pnote" class="sec" style="margin-top:6px"></div>
 </div></div>
@@ -155,7 +152,7 @@ hs('T',fmtSci(t)+' K',15.8);hs('D',fmtSci(p)+' g/cm^3',15.8);hs('K',fmt(o.tot),1
 for(var i=0;i<4;i++){var v=o.v[i],pc=Math.max(0,Math.min(100,(Math.log10(Math.max(v,1e-9))+2)/7.5*100));document.getElementById('br'+i).style.width=pc+'%';hs('bv'+i,fmt(v),13,i==d);var c=document.getElementById('dt'+i),xm=document.getElementById('xm'+i),low=v<Math.pow(10,YLO);c.setAttribute('cx',X(r));c.setAttribute('cy',Y(Math.max(v,Math.pow(10,YLO))));c.setAttribute('visibility',low?'hidden':'visible');xm.setAttribute('visibility',low?'visible':'hidden');xm.setAttribute('transform','translate('+X(r)+','+(Y0+H-9)+')')}
 var tt=document.getElementById('dtt');tt.setAttribute('cx',X(r));tt.setAttribute('cy',Y(Math.max(o.tot,Math.pow(10,YLO))));
 var m=document.getElementById('mk');m.setAttribute('x1',X(r));m.setAttribute('x2',X(r));
-var el=document.getElementById('why');el.innerHTML='<div id="w1" style="margin-bottom:4px"></div><div id="w2"></div>';var srt=[0,1,2,3].sort(function(a,b){return o.v[b]-o.v[a]}),nm=function(i){return S[i].n.toLowerCase().replace('h^-','H^-')};hs('w1','Dominant: '+nm(d)+(o.v[srt[1]]>.8*o.v[srt[0]]?', about tied with '+nm(srt[1]):''),15,1);hs('w2',WH[w],14);sunUpd(r,o,d);photon(r,o);peUpd(r,o)}
+var el=document.getElementById('why');el.innerHTML='<div id="w1" style="margin-bottom:4px"></div><div id="w2"></div>';var srt=[0,1,2,3].sort(function(a,b){return o.v[b]-o.v[a]}),nm=function(i){return S[i].n.toLowerCase().replace('h^-','H^-')};hs('w1','Dominant: '+nm(d)+(o.v[srt[1]]>.8*o.v[srt[0]]?', about tied with '+nm(srt[1]):''),15,1);hs('w2',WH[w],14);sunUpd(r,o,d);photon(r,o)}
 
 var CX=125,CY=122,SR=110,bob=0,curR=.3,curC='#3B6FD4';
 var sh='<circle cx="'+CX+'" cy="'+CY+'" r="'+SR+'" fill="#F8CDB0" stroke="#F2B33D" stroke-width="3"/><circle cx="'+CX+'" cy="'+CY+'" r="'+(SR*.713)+'" fill="#F0A44B"/><circle cx="'+CX+'" cy="'+CY+'" r="'+(SR*.25)+'" fill="#F7D154"/>';
@@ -199,22 +196,6 @@ var D=[
 {t:'Total opacity (Rosseland mean)',b:'Opacity depends on a photon\'s energy, and the gas is much more transparent at some energies than at others. The Rosseland mean combines all of them into one number. It is a weighted average of the inverse of the opacity, so the most transparent energies count the most, because that is where radiation leaks out. It is the right average for energy slowly diffusing through dense gas, and it is the opacity stellar models use. The unit is cm^2/g, the area that blocks light per gram of gas, so a larger number means light escapes more slowly. It is roughly the sum of the four sources.',e:''}];
 function showDef(i){var p=document.getElementById('def');if(p.dataset.i==String(i)&&!p.hidden){p.hidden=true;return}p.dataset.i=i;document.getElementById('ddot').style.background=i<4?S[i].c:tp;hs('dh',D[i].t,15,1);hs('db',D[i].b,14);hs('de',D[i].e,13,1);document.getElementById('de').hidden=!D[i].e;p.hidden=false}
 
-var PU=[],PW=[],PS=[];(function(){var n=500,a=Math.log(1e-3),b=Math.log(1e2);for(var i=0;i<n;i++){var u=Math.exp(a+(b-a)*i/(n-1)),e=Math.expm1(u),w=Math.pow(u,4)*Math.exp(u)/(e*e);if(!isFinite(w))w=0;PU.push(u);PW.push(w*u);PS.push(Math.pow(u,-3)*(-Math.expm1(-u)))}})();
-function calibA(es,kt){var num=0,i;for(i=0;i<PU.length;i++)num+=PW[i];var lo=-12,hi=12;for(var it=0;it<60;it++){var m=(lo+hi)/2,A=Math.pow(10,m),den=0;for(i=0;i<PU.length;i++)den+=PW[i]/(es+A*PS[i]);if(num/den<kt)lo=m;else hi=m}return Math.pow(10,(lo+hi)/2)}
-function fE(e){return e>=1000?(e/1000).toPrecision(2)+' keV':e.toPrecision(2)+' eV'}
-hs('pet','Chance that a photon scatters at its next interaction, by photon energy',13);
-hs('pec','This uses a smooth absorption shape with no absorption edges or lines, so it is a simple illustration.',12);
-function peUpd(r,o){var es=o.v[0],kt=o.tot,A=calibA(es,kt),kT=8.617e-5*fT(r),W=456,H=130,X0=46,Y0=12,lo=Math.log10(.3);
-function xe(u){return X0+(Math.log10(u)-lo)/2*W}function ye(p){return Y0+(1-p)*H}
-var h='<rect x="'+X0+'" y="'+Y0+'" width="'+W+'" height="'+H+'" fill="none" stroke="var(--border-strong)" stroke-width="0.5"/>';
-[0,.5,1].forEach(function(p){h+='<line x1="'+X0+'" x2="'+(X0+W)+'" y1="'+ye(p)+'" y2="'+ye(p)+'" stroke="var(--border)" stroke-width="0.5"/>'+ST(Math.round(p*100)+'%',X0-6,ye(p)+4,12,'end',ts)});
-[.3,1,3,10,30].forEach(function(u){h+='<line x1="'+xe(u)+'" x2="'+xe(u)+'" y1="'+(Y0+H)+'" y2="'+(Y0+H+4)+'" stroke="var(--border-strong)" stroke-width="0.8"/>'+ST(fE(u*kT),xe(u),Y0+H+18,12,'middle',ts)});
-h+=ST('Photon energy',X0+W/2,Y0+H+40,13,'middle',tp);
-var share=es/kt;h+='<line x1="'+X0+'" x2="'+(X0+W)+'" y1="'+ye(share)+'" y2="'+ye(share)+'" stroke="var(--text-secondary)" stroke-width="1" stroke-dasharray="2 3"/>'+ST('share of the opacity: '+pct(share*100),X0+W-4,Math.min(ye(share)-5,Y0+H-6),12,'end',ts);
-var xm=xe(2.82);h+='<line x1="'+xm+'" x2="'+xm+'" y1="'+Y0+'" y2="'+(Y0+H)+'" stroke="var(--text-secondary)" stroke-width="1" stroke-dasharray="3 3"/>'+ST('typical thermal photon',xm+5,Y0+14,12,'start',ts);
-var d='';for(var i=0;i<=200;i++){var u=Math.pow(10,lo+2*i/200),p=es/(es+A*Math.pow(u,-3)*(-Math.expm1(-u)));d+=(i?'L':'M')+xe(u).toFixed(1)+' '+ye(p).toFixed(1)}
-h+='<path d="'+d+'" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linejoin="round"/>';
-document.getElementById('pe').innerHTML=h}
 function go(v){if(v<ZA||v>ZB)setZoom(0);document.getElementById('s').value=v;upd()}
 document.getElementById('s').oninput=upd;upd();
 </script>
