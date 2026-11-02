@@ -11,16 +11,16 @@
 :root{
   --bg:#FBF8F3; --surface-1:#F1ECE3; --surface-2:#FBF8F3;
   --text-primary:#2B2622; --text-secondary:#6B6259;
-  --border:#E3DCD0; --border-strong:#C9BFB0; --accent:#B5532A;
+  --border:#E3DCD0; --border-strong:#C9BFB0; --accent:#B5532A; --core-text:#6B4F00; --conv-text:#8A3A18; --core-line:#8A6A00;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#1D1A17; --surface-1:#292521; --surface-2:#1D1A17;
   --text-primary:#EFE9E0; --text-secondary:#A89E92;
-  --border:#38322C; --border-strong:#554C42; --accent:#E08A5E; color-scheme:dark}}
+  --border:#38322C; --border-strong:#554C42; --accent:#E08A5E; --core-text:#F2D16A; --conv-text:#F5A987; --core-line:#E3BC4B; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#1D1A17; --surface-1:#292521; --surface-2:#1D1A17;
   --text-primary:#EFE9E0; --text-secondary:#A89E92;
-  --border:#38322C; --border-strong:#554C42; --accent:#E08A5E; color-scheme:dark}
+  --border:#38322C; --border-strong:#554C42; --accent:#E08A5E; --core-text:#F2D16A; --conv-text:#F5A987; --core-line:#E3BC4B; color-scheme:dark}
 body{background:var(--bg);color:var(--text-primary);padding-block:8px 16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-family:'Avenir Next',Avenir,'Nunito Sans',system-ui,sans-serif}
 svg text{font-family:inherit}
 main{max-width:1480px;margin:0 auto}
@@ -119,8 +119,8 @@ h+=pth(paths[4],tp,2.5)+'</g>';
 for(var j=0;j<4;j++){var fl=Math.pow(10,YLO);for(var i=1;i<=N;i++){if((paths[j][i-1]>=fl)!=(paths[j][i]>=fl))h+=xmark(X(ZA+(ZB-ZA)*i/N),Y0+H-9,S[j].c)}}
 var dec=Math.max(1,Math.ceil(-Math.log10((ZB-ZA)/5)));for(var q=0;q<=5;q++){var rt=ZA+(ZB-ZA)*q/5;h+=ST(rt.toFixed(dec),X(rt),Y0+H+26,15,'middle',ts)}
 h+=ST('Fraction of stellar radius, r/R',X0+W/2,Y0+H+60,18,'middle',tp);
-var xc=X(.25);if(ZA<.25){h+='<line x1="'+xc+'" x2="'+xc+'" y1="'+(Y0+38)+'" y2="'+(Y0+H)+'" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3"/><line x1="'+(X0+6)+'" x2="'+(xc-6)+'" y1="'+(Y0+48)+'" y2="'+(Y0+48)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(X0+6)+'" x2="'+(X0+6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(xc-6)+'" x2="'+(xc-6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/>'+ST('Core',(X0+xc)/2,Y0+74,17,'middle','#6B4F00',1)}
-if(ZA<.6)h+=ST(ZA<.25?'Radiative zone (includes the core)':'Radiative zone',(X(Math.max(ZA,0))+cx0)/2,Y0+28,18,'middle',tp);h+=ST('Convective zone',cx0+10,(ZA<.6?Y0+28:Y0+H-14),18,'start','#8A3A18',1);
+var xc=X(.25);if(ZA<.25){h+='<line x1="'+xc+'" x2="'+xc+'" y1="'+(Y0+38)+'" y2="'+(Y0+H)+'" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="4 3"/><line x1="'+(X0+6)+'" x2="'+(xc-6)+'" y1="'+(Y0+48)+'" y2="'+(Y0+48)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(X0+6)+'" x2="'+(X0+6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/><line x1="'+(xc-6)+'" x2="'+(xc-6)+'" y1="'+(Y0+43)+'" y2="'+(Y0+53)+'" stroke="#8A6A00" stroke-width="2"/>'+ST('Core',(X0+xc)/2,Y0+74,17,'middle','var(--core-text)',1)}
+if(ZA<.6)h+=ST(ZA<.25?'Radiative zone (includes the core)':'Radiative zone',(X(Math.max(ZA,0))+cx0)/2,Y0+28,18,'middle',tp);h+=ST('Convective zone',cx0+10,(ZA<.6?Y0+28:Y0+H-14),18,'start','var(--conv-text)',1);
 h+=ST('κ (cm^2/g)',20,Y0+H/2,18,'middle',tp,0,1);
 h+='<line id="mk" x1="0" x2="0" y1="'+Y0+'" y2="'+(Y0+H)+'" stroke="'+tp+'" stroke-width="1" stroke-dasharray="3 3"/>';
 h+='<circle id="dtt" r="6" fill="'+tp+'" stroke="var(--surface-2)" stroke-width="1"/>';
