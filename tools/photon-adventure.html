@@ -282,7 +282,7 @@ var REGHASH=['core','convection-boundary','photosphere','radiative-interior'];
 var HASHMAP={'core':0,'fusion-core':0,'radiative-interior':3,'radiative':3,'convection-boundary':1,'photosphere':2};
 function setHash(h){try{history.replaceState(null,'',h?'#'+h:location.pathname+location.search)}catch(e){}}
 function go(j){if(!unlocked(j))return;S.j=j;S.s=0;S.ph=0;S.pick=-1;S.cmp=false;setHash(REGHASH[j]);R();window.scrollTo(0,0)}
-function fromHash(){var h=(location.hash||'').replace('#','').toLowerCase();if(h in HASHMAP){var j=HASHMAP[h];if(unlocked(j)&&S.j!==j){S.j=j;S.s=0;S.ph=0;S.pick=-1;S.cmp=false;R()}}}
+function fromHash(){var h=(location.hash||'').replace('#','').toLowerCase();if(h==='reset'){try{sessionStorage.removeItem('photon-assignment')}catch(e){}GROUP=null;ATTEMPT_QUEUE=[];setHash('');if(document.readyState==='complete')location.reload();return}if(h in HASHMAP){var j=HASHMAP[h];if(unlocked(j)&&S.j!==j){S.j=j;S.s=0;S.ph=0;S.pick=-1;S.cmp=false;R()}}}
 function restart(){S={j:-1,s:0,ph:0,pick:-1,notes:{},done:{},cmp:false,first:{}};R()}
 function cmp(){if(!allComplete())return;S.cmp=true;R()}
 function pick(i){if(S.ph>0)return;if(J[S.j].steps[S.s].requireAll&&((S.found||{})[key()]||[]).includes(i))return;S.pick=i;R()}
