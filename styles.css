@@ -201,6 +201,7 @@ a:visited {
 .figure-clusters      { background-image: url('photos/research_clusters.jpg'); }
 .figure-ages          { background-image: url('photos/research_ages.jpg'); }
 .research-content h3 {
+    font-style: italic;
     font-family: var(--serif);
     font-size: 1.1em;
     font-weight: 700;
@@ -432,5 +433,6 @@ footer .sub {
 /* Keep the shared footer rule as delicate as the site-wide borders. */
 #site-footer { border-top: 1px solid var(--rule-color) !important; }
 hr { border: 0; border-top: 1px solid var(--rule-color); }
+
 
 
