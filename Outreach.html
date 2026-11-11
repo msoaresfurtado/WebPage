@@ -31,16 +31,7 @@
         }
 
         .outreach-layout { display:block; }
-        .outreach-carousel { float:right; width:140px; margin:0 0 14px 24px; }
-        .outreach-slides { width:140px; height:140px; border-radius:12px; overflow:hidden; background:var(--bg-subtle,#eee8da); }
-        .outreach-slides img { display:block; width:140px; height:140px; object-fit:contain; }
-        .outreach-slides img[hidden] { display:none; }
-        .carousel-controls { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-top:7px; }
-        .carousel-controls button { border:1px solid var(--border-light,#d5cdbd); border-radius:5px; background:transparent; color:var(--accent-color,#7a0000); padding:4px 6px; cursor:pointer; font-size:12px; }
-        .carousel-controls button:focus-visible { outline:2px solid var(--accent-color,#7a0000); outline-offset:2px; }
-        .outreach-carousel figcaption { margin-top:5px; font-size:11px; color:var(--text-muted,#555); text-align:center; }
-        @media (max-width:400px) { .outreach-carousel { margin-left:14px; } }
-        .botanical-divider { clear:both; height:28px; margin:26px 0 14px; background:url("outreach-divider-sage.png") center center / 100% auto no-repeat; }
+        .botanical-divider { clear:both; height:18px; margin:26px 0 14px; opacity:0.6; background:url("outreach-divider-sage.png") center center / 100% 180px no-repeat; }
         .botanical-divider + h3 { margin-top:0; }
     </style>
 </head>
@@ -54,24 +45,6 @@
         <div class="outreach-layout">
         <div class="content">
             <h3>Peter Livingston Scholars Program</h3>
-        <figure class="outreach-carousel" aria-label="Outreach photo carousel" aria-roledescription="carousel">
-            <div class="outreach-slides">
-                <img src="outreach-photo-1.jpg" alt="A participant looks through a telescope at an outdoor astronomy event" width="140" height="140">
-                <img src="outreach-photo-2.jpg" alt="An astronomy presentation brings people together at a community venue" width="140" height="140" hidden>
-                <img src="outreach-photo-3.jpg" alt="A speaker presents astronomy research in an auditorium" width="140" height="140" hidden>
-                <img src="outreach-photo-4.jpg" alt="Young visitors explore a hands-on science exhibit" width="140" height="140" hidden>
-                <img src="outreach-photo-5.jpg" alt="Researchers share a moment together beside a classroom whiteboard" width="140" height="140" hidden>
-                <img src="outreach-photo-6.jpg" alt="Visitors engage with an astronomy demonstration at a Princeton outreach table" width="140" height="140" hidden>
-                <img src="outreach-photo-7.jpg" alt="Participants gather around a telescope during an outdoor astronomy activity" width="140" height="140" hidden>
-                <img src="outreach-photo-8.jpg" alt="Conference participants gather at the Aspen Center for Physics" width="140" height="140" hidden>
-            </div>
-            <div class="carousel-controls" hidden>
-                <button type="button" data-carousel="previous" aria-label="Previous photo">&#8249;</button>
-                <button type="button" data-carousel="pause" aria-label="Pause photo rotation">Pause</button>
-                <button type="button" data-carousel="next" aria-label="Next photo">&#8250;</button>
-            </div>
-            <figcaption>Outreach moments <span data-carousel-count>1 / 8</span></figcaption>
-        </figure>
             <p>Leading the <a href="https://www.astro.wisc.edu/undergraduate-program/department-awards/" target="_blank" rel="noopener noreferrer">Peter Livingston Scholars Program</a> is a major focus of my mentoring and outreach work. The program reduces financial barriers to research, supporting UW–Madison undergraduate students as they work with mentors in the Department of Astronomy. I shape its vision, oversee its operations, and work to sustain its long-term support.</p>
             <p>As of October 2026, the program has supported 21 scholars, whose research has contributed to <a href="https://scixplorer.org/public-libraries/Mg4VUcRWS0C4kAYwWpN-Vg" target="_blank" rel="noopener noreferrer">seven papers published in peer-reviewed journals</a>.</p>
             <p>This work is made possible by the generosity of <strong>Sharon Stark</strong>, in loving memory of her late husband, <strong>Peter Livingston</strong>. Peter was a longtime member and former chair of the UW–Madison Department of Astronomy’s <a href="https://www.astro.wisc.edu/alumni/board-of-visitors/" target="_blank" rel="noopener noreferrer">Board of Visitors</a>. <a href="https://madisoncommons.org/q-a-with-sharon-stark-longtime-madisonian-and-friend-of-madison-commons/" target="_blank" rel="noopener noreferrer">Read about Sharon’s commitment to UW–Madison</a>.</p>
@@ -115,45 +88,13 @@
 
         </div>
 
+        <img src="photos/outreach.png" alt="Outreach activities" class="bottom-image">
+
         <!-- Footer loaded from external file -->
         <div id="footer-container"></div>
     </div>
 
     <script>
-        (function () {
-            const carousel = document.querySelector('.outreach-carousel');
-            const slides = Array.from(carousel.querySelectorAll('.outreach-slides img'));
-            const pauseButton = carousel.querySelector('[data-carousel="pause"]');
-            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-            let current = 0;
-            let paused = reducedMotion.matches;
-            let timer;
-            let hovering = false;
-            let focused = false;
-            function show(index) {
-                current = (index + slides.length) % slides.length;
-                slides.forEach((slide, i) => { slide.hidden = i !== current; });
-                carousel.querySelector('[data-carousel-count]').textContent = (current + 1) + ' / ' + slides.length;
-            }
-            function sync() {
-                clearInterval(timer);
-                pauseButton.textContent = paused ? 'Play' : 'Pause';
-                pauseButton.setAttribute('aria-label', paused ? 'Start photo rotation' : 'Pause photo rotation');
-                if (!paused && !hovering && !focused && !document.hidden) timer = setInterval(() => show(current + 1), 3000);
-            }
-            carousel.querySelector('.carousel-controls').hidden = false;
-            pauseButton.addEventListener('click', () => { paused = !paused; sync(); });
-            carousel.querySelector('[data-carousel="previous"]').addEventListener('click', () => { show(current - 1); sync(); });
-            carousel.querySelector('[data-carousel="next"]').addEventListener('click', () => { show(current + 1); sync(); });
-            carousel.addEventListener('mouseenter', () => { hovering = true; sync(); });
-            carousel.addEventListener('mouseleave', () => { hovering = false; sync(); });
-            carousel.addEventListener('focusin', () => { focused = true; sync(); });
-            carousel.addEventListener('focusout', event => { if (!carousel.contains(event.relatedTarget)) { focused = false; sync(); } });
-            document.addEventListener('visibilitychange', sync);
-            reducedMotion.addEventListener('change', event => { paused = event.matches; sync(); });
-            sync();
-        }());
-
         // Load the shared site header
         fetch('header.html')
             .then(response => response.text())
@@ -195,6 +136,7 @@
     </script>
 </body>
 </html>
+
 
 
 
