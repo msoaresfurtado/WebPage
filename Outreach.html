@@ -29,6 +29,19 @@
             border: 1px solid var(--border-light);
             box-shadow: 0 4px 15px rgba(0,0,0,0.12);
         }
+
+        .outreach-layout { display:block; }
+        .outreach-carousel { float:right; width:140px; margin:0 0 14px 24px; }
+        .outreach-slides { width:140px; height:140px; border-radius:12px; overflow:hidden; background:var(--bg-subtle,#eee8da); }
+        .outreach-slides img { display:block; width:140px; height:140px; object-fit:contain; }
+        .outreach-slides img[hidden] { display:none; }
+        .carousel-controls { display:flex; align-items:center; justify-content:space-between; gap:4px; margin-top:7px; }
+        .carousel-controls button { border:1px solid var(--border-light,#d5cdbd); border-radius:5px; background:transparent; color:var(--accent-color,#7a0000); padding:4px 6px; cursor:pointer; font-size:12px; }
+        .carousel-controls button:focus-visible { outline:2px solid var(--accent-color,#7a0000); outline-offset:2px; }
+        .outreach-carousel figcaption { margin-top:5px; font-size:11px; color:var(--text-muted,#555); text-align:center; }
+        @media (max-width:400px) { .outreach-carousel { margin-left:14px; } }
+        .botanical-divider { clear:both; height:28px; margin:26px 0 14px; background:url("outreach-divider-sage.png") center center / 100% auto no-repeat; }
+        .botanical-divider + h3 { margin-top:0; }
     </style>
 </head>
 <body>
@@ -38,23 +51,46 @@
 
         <h1 class="page-title">Outreach</h1>
 
+        <div class="outreach-layout">
         <div class="content">
             <h3>Peter Livingston Scholars Program</h3>
+        <figure class="outreach-carousel" aria-label="Outreach photo carousel" aria-roledescription="carousel">
+            <div class="outreach-slides">
+                <img src="outreach-photo-1.jpg" alt="A participant looks through a telescope at an outdoor astronomy event" width="140" height="140">
+                <img src="outreach-photo-2.jpg" alt="An astronomy presentation brings people together at a community venue" width="140" height="140" hidden>
+                <img src="outreach-photo-3.jpg" alt="A speaker presents astronomy research in an auditorium" width="140" height="140" hidden>
+                <img src="outreach-photo-4.jpg" alt="Young visitors explore a hands-on science exhibit" width="140" height="140" hidden>
+                <img src="outreach-photo-5.jpg" alt="Researchers share a moment together beside a classroom whiteboard" width="140" height="140" hidden>
+                <img src="outreach-photo-6.jpg" alt="Visitors engage with an astronomy demonstration at a Princeton outreach table" width="140" height="140" hidden>
+                <img src="outreach-photo-7.jpg" alt="Participants gather around a telescope during an outdoor astronomy activity" width="140" height="140" hidden>
+                <img src="outreach-photo-8.jpg" alt="Conference participants gather at the Aspen Center for Physics" width="140" height="140" hidden>
+            </div>
+            <div class="carousel-controls" hidden>
+                <button type="button" data-carousel="previous" aria-label="Previous photo">&#8249;</button>
+                <button type="button" data-carousel="pause" aria-label="Pause photo rotation">Pause</button>
+                <button type="button" data-carousel="next" aria-label="Next photo">&#8250;</button>
+            </div>
+            <figcaption>Outreach moments <span data-carousel-count>1 / 8</span></figcaption>
+        </figure>
             <p>Leading the <a href="https://www.astro.wisc.edu/undergraduate-program/department-awards/" target="_blank" rel="noopener noreferrer">Peter Livingston Scholars Program</a> is a major focus of my mentoring and outreach work. The program reduces financial barriers to research, supporting UW–Madison undergraduate students as they work with mentors in the Department of Astronomy. I shape its vision, oversee its operations, and work to sustain its long-term support.</p>
             <p>As of October 2026, the program has supported 21 scholars, whose research has contributed to <a href="https://scixplorer.org/public-libraries/Mg4VUcRWS0C4kAYwWpN-Vg" target="_blank" rel="noopener noreferrer">seven papers published in peer-reviewed journals</a>.</p>
             <p>This work is made possible by the generosity of <strong>Sharon Stark</strong>, in loving memory of her late husband, <strong>Peter Livingston</strong>. Peter was a longtime member and former chair of the UW–Madison Department of Astronomy’s <a href="https://www.astro.wisc.edu/alumni/board-of-visitors/" target="_blank" rel="noopener noreferrer">Board of Visitors</a>. <a href="https://madisoncommons.org/q-a-with-sharon-stark-longtime-madisonian-and-friend-of-madison-commons/" target="_blank" rel="noopener noreferrer">Read about Sharon’s commitment to UW–Madison</a>.</p>
+            <div class="botanical-divider" aria-hidden="true"></div>
             <h3>Mentoring Early Career Scientists</h3>
             <p>
                 Mentoring is pivotal to student success and well-being. Throughout my academic journey, I have had the privilege to work with <a href="https://msoaresfurtado.github.io/WebPage/Team.html">a number of talented high school, undergraduate, and graduate students</a>. I have found that mentoring strengthens my science communication, leads to greater innovation and scientific insight, and continually renews my passion for academic work. In 2023, I was awarded the <a href="https://uwpa.wisc.edu/events-overview/postdoc-excellence-awards/" target="_blank" rel="noopener noreferrer">Postdoc Excellence Award in Mentoring</a> by the University of Wisconsin-Madison Postdoctoral Association.
             </p>
+            <div class="botanical-divider" aria-hidden="true"></div>
             <h3>RADIAL Program</h3>
             <p>
                 The <a href="https://www.astro.wisc.edu/undergraduate-program/radial/" target="_blank" rel="noopener noreferrer">RADIAL program</a> brings together a dedicated team of mentors and talented summer students to collaborate on advanced research projects in astronomy. As Site Director, I help to define the strategic vision, secure funding to sustain and expand local initiatives, and recruit mentors who bring expertise and innovation to the program. I focus on connecting these mentors with promising students, ensuring they gain meaningful research experience while developing the technical and professional skills required to meet real-world challenges and contribute to the advancement of STEM.
             </p>
+            <div class="botanical-divider" aria-hidden="true"></div>
             <h3>University Partnerships</h3>
             <p>
                 I've been privileged to work closely with a community of skilled academics who are deeply committed to meaningful science outreach. These exceptional leaders have not only inspired me, but they have also taught me the skills required to cultivate inclusive communities. More specifically, I have worked closely with the <a href="https://lamat.science.ucsc.edu/" target="_blank" rel="noopener noreferrer">Lamat Institute</a> for almost a decade. Today, I serve as an Advisory Board member, summer instructor, and student mentor for the program. As a student at UCSC, I worked with the <a href="https://ace.science.ucsc.edu/" target="_blank" rel="noopener noreferrer">Academic Excellence Program</a> (ACE). As an ACE Peer Mentor, I played a crucial role in facilitating small group discussions and activities, aiming to deepen the students' understanding of physics concepts.
             </p>
+            <div class="botanical-divider" aria-hidden="true"></div>
             <h3>Community Partnerships</h3>
             <p>
                 Partnering with the <a href="https://www.mpm.edu/" target="_blank" rel="noopener noreferrer">Milwaukee Public Museum</a> (MPM) has provided a meaningful opportunity to share my scientific work with the broader public. In alignment with the principles of the <a href="https://www.wisc.edu/wisconsin-idea/" target="_blank" rel="noopener noreferrer">Wisconsin Idea</a>, this mutually beneficial partnership leverages university resources and expertise to create educational programs that are accessible to all members of the community. I recently had the opportunity to film a planetarium show that was written and directed by Bob Bonadurer, the MPM Planetarium Director. Titled <a href="https://youtu.be/2EthSfXzu1w?si=i-ieVHN11dW_mpR5" target="_blank" rel="noopener noreferrer">"Lights Out! Eclipses: Whys, Wonders, and Wows"</a>, the show delves deep into the fascinating science of eclipses, unraveling the mysteries behind these spectacular celestial events.
@@ -65,6 +101,7 @@
             <p>
                 Before coming to Madison, I worked with a talented group of astronomers to cocreate the <a href="https://astronomyontap.org/locations/trenton-nj/" target="_blank" rel="noopener noreferrer">Astronomy on Tap chapter in Trenton, New Jersey</a>. I am currently an active participant in the <a href="https://astronomyontap.org/locations/madison-wi/" target="_blank" rel="noopener noreferrer">Astronomy on Tap chapter in Madison, Wisconsin</a>. I have also had the opportunity to team up with the Astronomy on Tap chapters in Pennsylvania and Las Vegas.
             </p>
+            <div class="botanical-divider" aria-hidden="true"></div>
             <h3>Conference Organization</h3>
             <p>I co-organized the <a href="https://planet-galaxy-workshop.github.io/" target="_blank" rel="noopener noreferrer">Planets in the Galactic Context Workshop</a> at the Center for Computational Astrophysics (CCA) in 2026. The meeting brought together expertise in exoplanets, stellar astrophysics, and Galactic astronomy at a pivotal moment for these fields. Surveys increasingly measure the same stars, linking planet discoveries with stellar ages, chemical abundances, and motions through the Milky Way. Combining these overlapping datasets and complementary expertise allows us to place planetary systems in their Galactic context at an unprecedented scale—and investigate how the Galaxy’s history shapes the planets that form within it.</p>
             <p>
@@ -72,7 +109,10 @@
             <p>In March 2023, I co-organized <a href="https://sites.google.com/view/late-stage-exoplanets-2023/home" target="_blank" rel="noopener noreferrer">Exoplanet Systems and Stellar Life Cycles: Late-Stage and Post-MS Systems</a> at the <a href="https://www.aspenphys.org/" target="_blank" rel="noopener noreferrer">Aspen Center for Physics</a>. The meeting brought together experts in stellar evolution, planetary dynamics, and exoplanet demographics to investigate what happens to planetary systems as their host stars age. A central goal was to connect observations of surviving planets and the chemical traces of engulfed worlds with models of planetary evolution. These connections help us reconstruct the histories and compositions of planetary systems, including those around evolved stars and white dwarfs. I secured travel support to help early-career scientists participate.</p>
             <p> In Fall 2025, I helped to co-organize the <a href="https://gleam.astro.wisc.edu/" target="_blank" rel="noopener noreferrer">Great Lakes Exoplanet Area Meeting</a> at UW-Madison, again securing travel support to ensure broad participation among early-career scholars.
             </p>
-            <img src="https://msoaresfurtado.github.io/WebPage/photos/outreach.png" alt="Outreach activities" class="bottom-image">
+
+        </div>
+
+
         </div>
 
         <!-- Footer loaded from external file -->
@@ -80,6 +120,40 @@
     </div>
 
     <script>
+        (function () {
+            const carousel = document.querySelector('.outreach-carousel');
+            const slides = Array.from(carousel.querySelectorAll('.outreach-slides img'));
+            const pauseButton = carousel.querySelector('[data-carousel="pause"]');
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+            let current = 0;
+            let paused = reducedMotion.matches;
+            let timer;
+            let hovering = false;
+            let focused = false;
+            function show(index) {
+                current = (index + slides.length) % slides.length;
+                slides.forEach((slide, i) => { slide.hidden = i !== current; });
+                carousel.querySelector('[data-carousel-count]').textContent = (current + 1) + ' / ' + slides.length;
+            }
+            function sync() {
+                clearInterval(timer);
+                pauseButton.textContent = paused ? 'Play' : 'Pause';
+                pauseButton.setAttribute('aria-label', paused ? 'Start photo rotation' : 'Pause photo rotation');
+                if (!paused && !hovering && !focused && !document.hidden) timer = setInterval(() => show(current + 1), 3000);
+            }
+            carousel.querySelector('.carousel-controls').hidden = false;
+            pauseButton.addEventListener('click', () => { paused = !paused; sync(); });
+            carousel.querySelector('[data-carousel="previous"]').addEventListener('click', () => { show(current - 1); sync(); });
+            carousel.querySelector('[data-carousel="next"]').addEventListener('click', () => { show(current + 1); sync(); });
+            carousel.addEventListener('mouseenter', () => { hovering = true; sync(); });
+            carousel.addEventListener('mouseleave', () => { hovering = false; sync(); });
+            carousel.addEventListener('focusin', () => { focused = true; sync(); });
+            carousel.addEventListener('focusout', event => { if (!carousel.contains(event.relatedTarget)) { focused = false; sync(); } });
+            document.addEventListener('visibilitychange', sync);
+            reducedMotion.addEventListener('change', event => { paused = event.matches; sync(); });
+            sync();
+        }());
+
         // Load the shared site header
         fetch('header.html')
             .then(response => response.text())
