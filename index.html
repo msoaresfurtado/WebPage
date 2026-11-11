@@ -9,6 +9,14 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><polygon points='12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9' fill='%237a0000'/></svg>">
     <!-- Shared site theme -->
     <link rel="stylesheet" href="styles.css?v=18">
+    <style>
+        .highlight-disclosure { border-bottom: 1px solid var(--border-light); padding: 16px 0; }
+        .highlight-disclosure summary { cursor: pointer; color: var(--accent-color); font-weight: 700; font-size: 1.1em; }
+        .highlight-disclosure summary:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 5px; }
+        .highlight-disclosure .learn-more { display: inline-block; margin-left: 12px; font-size: .8em; font-weight: normal; text-decoration: underline; }
+        .highlight-disclosure[open] .learn-more { display: none; }
+        .highlight-disclosure p { margin: 14px 0; }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -32,26 +40,27 @@
             </div>
         </section>
         <div class="intro-text">
-            <p>I lead a research group at UW–Madison investigating how stars and planetary systems evolve. We combine space-based observations with spectroscopy from observatories around the globe and computational modeling to study stellar ages, discover and characterize young exoplanets, and understand how stars and planets evolve together.</p>
+            <p>I lead a research group at UW–Madison investigating how stars and planetary systems evolve. We measure stellar ages and discover and characterize young exoplanets. Our tools include space-based observations, spectrographs around the globe, and computational models.</p>
+            <p>We also study the chemical enrichment of stars across Galactic timescales. Their elemental abundances offer a window into the chemical inventory of the planets that form around them.</p>
             <p>Before joining UW-Madison faculty in 2024, I was a <a href="https://www.nasa.gov/feature/goddard/2021/nasa-awards-postdoctoral-fellowships-for-2021" target="_blank" rel="noopener noreferrer">NASA Hubble Postdoctoral Fellow</a> here at UW–Madison and a Science Affiliate at the <a href="https://space.mit.edu/" target="_blank" rel="noopener noreferrer">MIT Kavli Institute for Astrophysics and Space Research</a>. I am affiliated with the <a href="https://wicor.wisc.edu/" target="_blank" rel="noopener noreferrer">Wisconsin Center for Origins Research (WiCOR)</a>.</p>
         </div>
         <section aria-labelledby="highlights-title">
             <h2 id="highlights-title" class="section-title">Selected Research Highlights</h2>
-            <article class="course-card">
-                <h3>HD 63433 d: a nearby young Earth-sized planet</h3>
+            <details class="highlight-disclosure">
+                <summary>HD 63433 d: a nearby young Earth-sized planet<span class="learn-more">Learn more</span></summary>
                 <p>My research with my former student Benjamin Capistrant led to the discovery of HD 63433 d, an Earth-sized planet orbiting a Sun-like star in the roughly 400-million-year-old Ursa Major moving group. Benjamin and I are equal-contribution lead authors on the discovery paper. Our study combined TESS transit measurements with stellar kinematics, rotation, and abundances to place this young world in its evolutionary context.</p>
                 <a href="https://arxiv.org/abs/2401.04785" target="_blank" rel="noopener noreferrer">Read the discovery paper — THYME XI</a>
-            </article>
-            <article class="course-card">
-                <h3>TOI-4364 b: a young mini-Neptune in the Hyades</h3>
+            </details>
+            <details class="highlight-disclosure">
+                <summary>TOI-4364 b: a young mini-Neptune in the Hyades<span class="learn-more">Learn more</span></summary>
                 <p>My group discovered and characterized TOI-4364 b through research led by my former student Adam Distler, whom I mentored, in collaboration with the THYME team. The study combines TESS and ground-based observations to establish a roughly two-Earth-radius planet around a young M dwarf. Its position near the radius valley makes it a valuable test of how planetary atmospheres evolve.</p>
                 <a href="https://arxiv.org/abs/2410.11990" target="_blank" rel="noopener noreferrer">Read the discovery paper — THYME XII</a>
-            </article>
-            <article class="course-card">
-                <h3>Identifying the chemical traces of engulfed planets</h3>
+            </details>
+            <details class="highlight-disclosure">
+                <summary>Identifying the chemical traces of engulfed planets<span class="learn-more">Learn more</span></summary>
                 <p>I led a study combining MESA stellar models with GALAH lithium measurements to predict when a swallowed giant planet could leave a detectable chemical signature. We mapped the strength and survival time of that signature across stellar evolution, identifying promising stars to target and regimes where other enrichment mechanisms are needed.</p>
                 <a href="https://arxiv.org/abs/2002.05275" target="_blank" rel="noopener noreferrer">Read the lithium-engulfment study</a>
-            </article>
+            </details>
         </section>
         <section aria-labelledby="mentoring-title">
             <h2 id="mentoring-title" class="section-title">Mentoring &amp; Research Leadership</h2>
@@ -247,5 +256,6 @@
     </script>
 </body>
 </html>
+
 
 
