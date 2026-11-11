@@ -13,9 +13,9 @@
     --link-color: #000099;     /* dark blue: hyperlinks */
     --text-color: #1a1b1c;
     --text-muted: #555;
-    --bg-color: #efe9db;       /* cream page background (one shade darker) */
+    --bg-color: #f4efe5;       /* lighter warm cream page background */
     --page-bg: #f9f4ea;        /* content column (a hair darker than original) */
-    --bg-subtle: #f1ebdd;      /* cards / subtle fills */
+    --bg-subtle: #f5f0e5;      /* lighter cards / subtle fills */
     --border-light: #d8d4c4;   /* tan borders */
     --serif: 'Spectral', Georgia, "Times New Roman", serif;
 }
@@ -426,3 +426,4 @@ footer .sub {
     .supporters-logos img.logo-wide-hs { height: 50px; max-width: 250px; }
     .supporters-logos img.logo-doe { height: 78px; max-width: 78px; }
 }
+
