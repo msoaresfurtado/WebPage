@@ -176,7 +176,7 @@ a:visited {
     padding: 16px;
     background: var(--bg-subtle);
     border: 1px solid var(--border-light);
-    border-left: 1px solid var(--accent-color);
+    border-left: 1px solid #89656A;
     border-radius: 6px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -292,7 +292,7 @@ footer .sub {
 .course-card {
     background: var(--bg-subtle);
     border: 1px solid var(--border-light);
-    border-left: 1px solid var(--accent-color);
+    border-left: 1px solid #89656A;
     border-radius: 6px;
     padding: 20px 24px;
     margin-bottom: 20px;
@@ -435,4 +435,10 @@ footer .sub {
 hr { border: 0; border-top: 1px solid var(--rule-color); }
 
 
+
+
+/* Delicate rosewood outlines for portraits, research artwork, and photographs. */
+.profile-picture, .research-figure, .team-image, .content-image, .bottom-image {
+    border: 1px solid #89656A !important;
+}
 
