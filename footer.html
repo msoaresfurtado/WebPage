@@ -1,4 +1,5 @@
 <footer id="site-footer">
+    <div class="footer-hydrangea" aria-hidden="true"></div>
     <div class="footer-content">
         <div class="footer-contact">
             <a href="mailto:mmsoares@wisc.edu" aria-label="Email Melinda Soares-Furtado" title="Email Melinda"><img src="https://msoaresfurtado.com/email-watercolor.png" alt="" aria-hidden="true" width="32" height="28" style="display:block;object-fit:contain;"></a>
@@ -20,10 +21,15 @@
 <style>
 #site-footer {
     margin-top: 28px;
-    padding: 20px 0 15px 0;
-    border-top: 2px solid var(--accent-color, #7a0000);
+    padding: 0 0 15px 0;
+    border-top: 0 !important;
     font-size: 13px;
     color: var(--text-muted, #555);
+}
+.footer-hydrangea {
+    height: 30px;
+    margin-bottom: 18px;
+    background: url('https://msoaresfurtado.com/hydrangea-divider.png') center center / 100% auto no-repeat;
 }
 .footer-content {
     display: flex;
@@ -87,6 +93,7 @@
     }
 }
 </style>
+
 
 
 
