@@ -8,15 +8,15 @@
    ===================================================================== */
 
 :root {
-    --accent-color: #7a0000;   /* maroon: headings, rules, accents, borders */
-    --highlight-color: #9b0000;/* brighter maroon: hovers */
-    --link-color: #000099;     /* dark blue: hyperlinks */
+    --accent-color: #A33D69;   /* maroon: headings, rules, accents, borders */
+    --highlight-color: #A33D69;/* brighter maroon: hovers */
+    --link-color: #465AB0;     /* dark blue: hyperlinks */
     --text-color: #1a1b1c;
     --text-muted: #555;
-    --bg-color: #f4efe5;       /* lighter warm cream page background */
-    --page-bg: #f9f4ea;        /* content column (a hair darker than original) */
-    --bg-subtle: #f5f0e5;      /* lighter cards / subtle fills */
-    --rule-color: rgba(122, 0, 0, 0.4); /* delicate burgundy separators */
+    --bg-color: #f7f3eb;       /* lighter warm cream page background */
+    --page-bg: #fcf8f0;        /* content column (a hair darker than original) */
+    --bg-subtle: #f8f4ec;      /* lighter cards / subtle fills */
+    --rule-color: rgba(163, 61, 105, 0.4); /* delicate burgundy separators */
     --border-light: #e0dbce;   /* tan borders */
     --serif: 'Spectral', Georgia, "Times New Roman", serif;
 }
@@ -176,7 +176,7 @@ a:visited {
     padding: 16px;
     background: var(--bg-subtle);
     border: 1px solid var(--border-light);
-    border-left: 1px solid #89656A;
+    border-left: 1px solid #A33D69;
     border-radius: 6px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -217,7 +217,7 @@ a:visited {
 }
 /* Join Section */
 .join-section {
-    background: linear-gradient(135deg, #f6f2e8 0%, #efe8d8 100%);
+    background: linear-gradient(135deg, #f9f6ef 0%, #f5efe3 100%);
     border-radius: 8px;
     padding: 22px 26px;
     margin: 28px 0;
@@ -292,7 +292,7 @@ footer .sub {
 .course-card {
     background: var(--bg-subtle);
     border: 1px solid var(--border-light);
-    border-left: 1px solid #89656A;
+    border-left: 1px solid #A33D69;
     border-radius: 6px;
     padding: 20px 24px;
     margin-bottom: 20px;
@@ -437,8 +437,9 @@ hr { border: 0; border-top: 1px solid var(--rule-color); }
 
 
 
-/* Delicate rosewood outlines for portraits, research artwork, and photographs. */
+/* Delicate berry rose outlines for portraits, research artwork, and photographs. */
 .profile-picture, .research-figure, .team-image, .content-image, .bottom-image {
-    border: 1px solid #89656A !important;
+    border: 1px solid #A33D69 !important;
 }
+
 

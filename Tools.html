@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tools — Soares-Furtado Research Group</title>
     <meta name="description" content="Research tools for the Soares-Furtado group: ChronoStar (stellar ages), SkyPlanner (telescope pointing), and SALT-query.">
-    <link rel="icon" type="image/png" href="https://msoaresfurtado.com/engulfment-watercolor.png">
+    <link rel="icon" type="image/png" href="https://msoaresfurtado.com/hydrangea-favicon.png">
     <!-- Shared site theme -->
-    <link rel="stylesheet" href="styles.css?v=20261111-1710">
+    <link rel="stylesheet" href="styles.css?v=20261111-1955">
     <!-- Tools-page-specific layout (theme/colors come from styles.css) -->
     <style>
         .tools-grid { display: grid; gap: 14px; }
@@ -20,7 +20,7 @@
             padding: 14px 18px;
             background: var(--bg-subtle);
             border: 1px solid var(--border-light);
-            border-left: 3px solid var(--accent-color);
+            border-left: 1px solid var(--accent-color);
             border-radius: 6px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -28,7 +28,7 @@
         .tool-icon {
             width: 70px;
             height: 70px;
-            border: 2px solid var(--accent-color);
+            border: 1px solid var(--accent-color);
             border-radius: 50%;
             background-size: cover;
             background-position: center;
@@ -46,7 +46,7 @@
             color: var(--accent-color);
             margin: 0 0 4px 0;
         }
-        .tool-content h3 a { color: var(--accent-color); text-decoration: none; }
+        .tool-content h3 a { color: var(--link-color); text-decoration: none; }
         .tool-content h3 a:hover { color: var(--highlight-color); }
         .tool-content p { margin: 0; font-size: 0.9em; color: var(--text-muted); }
         .tool-link {
@@ -178,12 +178,13 @@
             })
             .catch(error => {
                 document.getElementById('footer-container').innerHTML = `
-                    <footer style="margin-top:50px; padding:18px 0; border-top:2px solid #7a0000; text-align:center; font-size:13px; color:#555;">
-                        <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#000099;">mmsoares@wisc.edu</a> ⊕ Updated 06/2026</div>
+                    <footer style="margin-top:50px; padding:18px 0; border-top:1px solid #A33D69; text-align:center; font-size:13px; color:#555;">
+                        <div>✉ <a href="mailto:mmsoares@wisc.edu" style="color:#465AB0;">mmsoares@wisc.edu</a> ⊕ Updated 06/2026</div>
                         <div style="margin-top:8px; font-size:11px; opacity:0.6;">University of Wisconsin-Madison · Departments of Astronomy &amp; Physics</div>
                     </footer>`;
             });
     </script>
 </body>
 </html>
+
 
