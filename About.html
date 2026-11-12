@@ -31,12 +31,18 @@
                 margin: 0 auto 20px auto;
             }
         }
-        .about-photos { float:right; width:286px; margin:-38px 0 20px 25px; }
+        .about-photos { float:right; width:250px; margin:-38px 0 20px 25px; }
         .about-photo { margin:0 0 18px; }
         .about-photo .content-image { float:none; width:100%; max-width:none; margin:0; display:block; }
         .about-photo figcaption { font-size:11px; line-height:1.4; color:var(--text-muted); margin-top:7px; }
         @media (max-width:768px) { .about-photos { float:none; width:100%; max-width:360px; margin:0 auto 20px; } }
-    </style>
+    
+        .hobbies-block { display:flow-root; }
+        .hobbies-art { float:left; width:140px; margin:3px 17px 8px 0; }
+        .hobbies-art img { display:block; width:100%; height:auto; border:1px solid var(--accent-color); border-radius:8px; }
+        .hobbies-art figcaption { font-size:10px; line-height:1.35; color:var(--text-muted); margin-top:6px; }
+        @media(max-width:768px) { .hobbies-art { width:110px; margin-right:13px; } }
+        </style>
 </head>
 <body>
     <div class="container">
@@ -59,9 +65,12 @@
             <p>
                 I grew up on a dairy farm in California’s Santa Clara Valley, and was a proud member of the Future Farmers of America (FFA) in high school. My personal background is rooted in a first-generation college experience, which began at <a href="https://www.gavilan.edu/" target="_blank" rel="noopener noreferrer">Gavilan Community College</a>. My family migrated from the <a href="https://vimeo.com/317880007" target="_blank" rel="noopener noreferrer">Povoação and Nordeste municipalities</a> of <a href="https://vimeo.com/304666918" target="_blank" rel="noopener noreferrer">São Miguel, Azores</a> in the late 1960s. A closer look at the history of the Azores, now an autonomous, self-governing region of Portugal, can be explored <a href="https://www.worldhistory.org/article/1758/the-portuguese-colonization-of-the-azores/" target="_blank" rel="noopener noreferrer">here</a>. For a glimpse of the island, watch <a href="https://www.youtube.com/watch?v=riDBcINNyns" target="_blank" rel="noopener noreferrer">São Miguel from above</a>, a drone film by eCKsplorer.
             </p>
+            <div class="hobbies-block">
+            <figure class="hobbies-art"><img src="melinda-dogs-watercolor.jpg" alt="Watercolor illustration of Melinda with two golden retrievers on a tiny planet" width="600" height="800" loading="lazy"><figcaption>A nod to <em>Le Petit Prince</em>. I don’t actually hike with them on tiny exoplanets.</figcaption></figure>
             <p>
                 My hobbies include photography, gardening, kayaking, and amassing an ever-growing collection of books. I’m particularly fond of old astronomy textbooks and popular science books, and I recommend the writings of Cecilia Payne-Gaposchkin and, of course, the legendary Carl Sagan. I’m also loving early-morning weight training at <a href="https://madabolic.com/locations/madison" target="_blank" rel="noopener noreferrer">MADabolic Madison</a> and hiking with my two energetic golden retrievers, Murphy and Lilybelle.
             </p>
+            </div>
         </div>
 
         <!-- Footer loaded from external file -->
@@ -70,7 +79,7 @@
 
     <script>
         // Load the shared site header
-        fetch('header.html?v=20261111-2015')
+        fetch('header.html?v=20261111-2101')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;
