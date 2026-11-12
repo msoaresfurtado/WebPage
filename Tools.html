@@ -30,15 +30,16 @@
             height: 70px;
             border: 1px solid var(--accent-color);
             border-radius: 50%;
-            background-size: cover;
+            background-size: contain;
+            background-repeat: no-repeat;
             background-position: center;
             flex-shrink: 0;
         }
-        .icon-cra { background-image: url('https://raw.githubusercontent.com/msoaresfurtado/WebPage/main/tools/orion.jpg'); }
-        .icon-chrono { background-image: url('https://raw.githubusercontent.com/msoaresfurtado/WebPage/main/tools/hrdiagram.jpg'); }
-        .icon-photon { background-image: url('tools/photon-adventure-icon.svg'); }
-        .icon-solar { background-image: url('https://raw.githubusercontent.com/msoaresfurtado/WebPage/main/tools/solar-opacity-icon.png'); }
-        .icon-salt { background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Southern_African_Large_Telescope.jpg/1280px-Southern_African_Large_Telescope.jpg'); }
+        .icon-cra { background-image: url('skyplanner-tool-watercolor.png'); }
+        .icon-chrono { background-image: url('chronostar-tool-watercolor.png'); }
+        .icon-photon { background-image: url('photon-tool-watercolor.png'); }
+        .icon-solar { background-image: url('opacity-tool-watercolor.png'); }
+        .icon-salt { background-image: url('salt-tool-watercolor.png'); }
         .tool-content h3 {
             font-family: var(--serif);
             font-size: 1.15em;
@@ -132,7 +133,7 @@
                 <a href="https://msoaresfurtado.com/tools/solar-opacity.html" class="tool-link">Launch →</a>
             </article>
             <article class="tool-card">
-                <div class="tool-icon icon-photon" role="img" aria-label="A golden light wave on a dark background"></div>
+                <div class="tool-icon icon-photon" role="img" aria-label="A photon scattering outward through the Sun"></div>
                 <div class="tool-content">
                     <h3><a href="tools/photon-adventure.html">A Photon’s Adventure</a></h3>
                     <p>Take a little light on a big journey. Predict, check, and explore how radiation interacts with matter inside the Sun today.</p>
@@ -147,7 +148,7 @@
 
     <script>
         // Load the shared site header
-        fetch('header.html')
+        fetch('header.html?v=20261111-2035')
             .then(response => response.text())
             .then(data => {
                 document.getElementById('header-container').innerHTML = data;
@@ -186,5 +187,6 @@
     </script>
 </body>
 </html>
+
 
 

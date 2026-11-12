@@ -10,12 +10,28 @@
     <!-- Shared site theme -->
     <link rel="stylesheet" href="styles.css?v=20261111-1955">
     <style>
-        .highlight-disclosure { border-bottom: 1px solid var(--border-light); padding: 16px 0; }
+        .highlight-disclosure { border-bottom: 1px solid var(--border-light); padding: 16px 0 16px 12px; }
         .highlight-disclosure summary { cursor: pointer; color: var(--accent-color); font-weight: 700; font-size: 1.1em; }
         .highlight-disclosure summary:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 5px; }
         .highlight-disclosure .learn-more { display: inline-block; margin-left: 12px; font-size: .8em; font-weight: normal; text-decoration: underline; }
         .highlight-disclosure[open] .learn-more { display: none; }
         .highlight-disclosure p { margin: 14px 0; }
+    /* Refined name treatment and compact mobile introduction. */
+        .profile-title { font-weight:700; color:#A33D69; }
+        .profile-name { -webkit-text-stroke: 0.35px #465AB0; paint-order: stroke fill; }
+        @media (max-width:768px) {
+            .profile-section { gap:14px; margin:20px 0 16px; }
+            .profile-name { line-height:1.25; margin-bottom:7px; }
+            .profile-title { margin-bottom:8px; }
+            .profile-links { margin-bottom:0; }
+            .intro-text { text-align:left; font-size:16px; line-height:1.65; }
+        }
+    
+        .supporters-logos { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; align-items:center; margin:16px 0; }
+        .supporters-logos a { display:flex; align-items:center; justify-content:center; height:116px; min-width:0; }
+        .supporters-logos img { width:100%; max-width:210px; height:100%; max-height:90px; object-fit:contain; margin:0; }
+        .supporters-logos img.logo-nasa, .supporters-logos img.logo-nsf, .supporters-logos img.logo-doe, .supporters-logos img.logo-square-xl-sm, .supporters-logos img.logo-wide-lamat { max-width:90px; }
+        @media(max-width:600px) { .supporters-logos { gap:12px; } .supporters-logos a { height:80px; } .supporters-logos img { max-height:65px; } }
     </style>
 </head>
 <body>
@@ -25,7 +41,7 @@
         <section class="profile-section">
             <div class="profile-picture" role="img" aria-label="Portrait of Melinda Soares-Furtado"></div>
             <div class="profile-info">
-                <h1 class="profile-name">Professor Melinda Soares-Furtado</h1>
+                <h1 class="profile-name">Melinda Soares-Furtado, PhD</h1>
                 <div class="profile-title">
                     Assistant Professor · Departments of Astronomy &amp; Physics<br>
                     University of Wisconsin-Madison
@@ -67,7 +83,7 @@
             <p>As <strong>Director of the Peter Livingston Scholars Program</strong>, I help shape the program’s research vision, secure funding, and connect students with research mentors. <a href="Outreach.html">Learn about my mentoring and outreach work</a>.</p>
         </section>
         <h2 class="section-title">Scientific Research</h2>
-        <p>Below is a selection of ongoing research projects. Visit our <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team page</a> to learn about the talented researchers contributing to these investigations.</p>
+        <p>Below is a selection of ongoing research projects. Visit my <a href="https://msoaresfurtado.github.io/WebPage/Team.html">Team page</a> to learn about the talented researchers contributing to these investigations.</p>
         <div class="research-grid">
             <!-- Stellar Ages -->
             <article class="research-card">
@@ -136,8 +152,8 @@
         </ul>
         <!-- ===== Research Group / Opportunities ===== -->
         <div class="join-section">
-            <h2>Our Research Group</h2>
-            <p>Our group brings together researchers studying stellar ages, young planets, planetary engulfment, and stellar populations. Students lead projects that connect observations with computational models, including the planet discoveries highlighted above. <a href="Team.html">Explore our team and alumni</a>. Our research directions include:</p>
+            <h2>My Research Group</h2>
+            <p>My group brings together researchers studying stellar ages, young planets, planetary engulfment, and stellar populations. Students lead projects that connect observations with computational models, including the planet discoveries highlighted above. <a href="Team.html">Explore my team and alumni</a>. My research directions include:</p>
             <ul>
                 <li><strong>Stellar age determination</strong> — developing machine learning approaches for gyrochronology and spectroscopic age indicators</li>
                 <li><strong>Young exoplanet detection</strong> — searching for planets (and exomoons!) in stellar associations using TESS, JWST, and Roman</li>
@@ -155,10 +171,10 @@
             </p>
             <div class="supporters-logos">
                 <a href="https://www.wisc.edu/" target="_blank" rel="noopener noreferrer" aria-label="University of Wisconsin-Madison">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_uw_madison.png" alt="University of Wisconsin-Madison" class="logo-square-xxl">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/logo_uw_madison.png" alt="University of Wisconsin-Madison" class="logo-square-xxl">
                 </a>
                 <a href="https://www.warf.org/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Alumni Research Foundation">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_warf.png" alt="Wisconsin Alumni Research Foundation" class="logo-wide-md">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/logo_warf.png" alt="Wisconsin Alumni Research Foundation" class="logo-wide-md">
                 </a>
                 <a href="https://www.nasa.gov/" target="_blank" rel="noopener noreferrer" aria-label="NASA">
                     <img src="nasa-transparent.svg" alt="NASA" class="logo-nasa">
@@ -169,29 +185,29 @@
                     <img src="livingston-transparent.png" alt="Peter Livingston Scholars Program" class="logo-wide-lg">
                 </a>
                 <a href="https://www.nsf.gov/" target="_blank" rel="noopener noreferrer" aria-label="National Science Foundation">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nsf.png" alt="National Science Foundation" class="logo-nsf">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/logo_nsf.png" alt="National Science Foundation" class="logo-nsf">
                 </a>
                 <a href="https://sloan.org/" target="_blank" rel="noopener noreferrer" aria-label="Alfred P. Sloan Foundation">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_sloan.png" alt="Alfred P. Sloan Foundation" class="logo-wide-sloan">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/logo_sloan.png" alt="Alfred P. Sloan Foundation" class="logo-wide-sloan">
                 </a>
             </div>
             <div class="supporters-logos supporters-logos-row3">
                 <a href="https://lamat.science.ucsc.edu/" target="_blank" rel="noopener noreferrer" aria-label="LAMAT">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_lamat.png" alt="LAMAT" class="logo-wide-lamat">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/logo_lamat.png" alt="LAMAT" class="logo-wide-lamat">
                 </a>
                 <a href="https://www.hsfoundation.org/" target="_blank" rel="noopener noreferrer" aria-label="Heising-Simons Foundation">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/HSF.png" alt="Heising-Simons Foundation" class="logo-wide-hs">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/HSF.png" alt="Heising-Simons Foundation" class="logo-wide-hs">
                 </a>
                 <a href="https://spacegrant.carthage.edu/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Space Grant Consortium">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_wsgc.png" alt="Wisconsin Space Grant Consortium" class="logo-square-xl-sm">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/logo_wsgc.png" alt="Wisconsin Space Grant Consortium" class="logo-square-xl-sm">
                 </a>
             </div>
             <div class="supporters-logos supporters-logos-row4">
                 <a href="https://public.nrao.edu/" target="_blank" rel="noopener noreferrer" aria-label="National Radio Astronomy Observatory">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_nrao.png" alt="National Radio Astronomy Observatory" class="logo-wide">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/logo_nrao.png" alt="National Radio Astronomy Observatory" class="logo-wide">
                 </a>
                 <a href="https://www.ed.gov/" target="_blank" rel="noopener noreferrer" aria-label="U.S. Department of Education">
-                    <img src="https://msoaresfurtado.github.io/WebPage/photos/logo_doe.png" alt="U.S. Department of Education" class="logo-doe">
+                    <img loading="lazy" decoding="async" src="https://msoaresfurtado.github.io/WebPage/photos/logo_doe.png" alt="U.S. Department of Education" class="logo-doe">
                 </a>
                 <a href="https://wicor.wisc.edu/" target="_blank" rel="noopener noreferrer" aria-label="Wisconsin Center for Origins Research">
                     <img src="wicor-transparent.png" alt="Wisconsin Center for Origins Research (WiCOR)" class="logo-wide-wicor">
@@ -256,6 +272,7 @@
     </script>
 </body>
 </html>
+
 
 
 
